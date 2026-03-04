@@ -1,0 +1,483 @@
+<script lang="ts">
+  import { logger } from '../../../utils/logger';
+
+  import type { Card } from '../../../data/types';
+  import { formatRelativeTimeDetailed } from '../../../utils/helpers';
+
+  interface Props {
+    card: Card;
+    isMobile?: boolean;
+  }
+
+  let { card, isMobile = false }: Props = $props();
+
+  // 获取测试统计数据
+  const testStats = $derived(card.stats?.testStats);
+
+  // 调试日志
+  $effect(() => {
+    logger.debug('[TestStatsTab] 卡片数据:', {
+      cardPurpose: card.cardPurpose,
+      hasStats: !!card.stats,
+      hasTestStats: !!testStats,
+      testStats: testStats
+    });
+  });
+
+  // 计算正确率
+  const accuracy = $derived.by(() => {
+    if (!testStats || testStats.totalAttempts === 0) return 0;
+    return Math.round((testStats.correctAttempts / testStats.totalAttempts) * 100);
+  });
+
+  // 计算平均响应时间（秒）
+  const avgResponseTimeSec = $derived.by(() => {
+    if (!testStats || testStats.averageResponseTime === 0) return 0;
+    return (testStats.averageResponseTime / 1000).toFixed(2);
+  });
+
+  // 格式化时间（毫秒转秒）
+  function formatTime(ms: number): string {
+    if (ms === 0) return '0秒';
+    const seconds = (ms / 1000).toFixed(2);
+    return `${seconds}秒`;
+  }
+
+  // 获取正确率等级
+  function getAccuracyLevel(acc: number): string {
+    if (acc >= 90) return '优秀';
+    if (acc >= 75) return '良好';
+    if (acc >= 60) return '及格';
+    return '需加强';
+  }
+
+  // 获取正确率颜色类
+  function getAccuracyColorClass(acc: number): string {
+    if (acc >= 90) return 'excellent';
+    if (acc >= 75) return 'good';
+    if (acc >= 60) return 'pass';
+    return 'weak';
+  }
+</script>
+
+<div class="test-stats-tab" class:mobile={isMobile} role="tabpanel" id="stats-panel">
+  {#if testStats && testStats.totalAttempts > 0}
+    <!-- 核心指标 -->
+    <section class="info-section" class:mobile={isMobile}>
+      <h3 class="section-title with-accent-bar accent-blue" class:mobile={isMobile}>
+        核心指标
+      </h3>
+      
+      <div class="info-grid" class:mobile={isMobile}>
+        <div class="info-row" class:mobile={isMobile}>
+          <span class="info-label">总测试次数</span>
+          <span class="info-value">{testStats.totalAttempts} 次</span>
+        </div>
+
+        <div class="info-row" class:mobile={isMobile}>
+          <span class="info-label">正确次数</span>
+          <span class="info-value success">{testStats.correctAttempts} 次</span>
+        </div>
+
+        <div class="info-row" class:mobile={isMobile}>
+          <span class="info-label">错误次数</span>
+          <span class="info-value error">{testStats.incorrectAttempts} 次</span>
+        </div>
+
+        <div class="info-row" class:mobile={isMobile}>
+          <span class="info-label">正确率</span>
+          <span class="info-value accuracy {getAccuracyColorClass(accuracy)}">
+            {accuracy}% ({getAccuracyLevel(accuracy)})
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 表现指标 -->
+    <section class="info-section" class:mobile={isMobile}>
+      <h3 class="section-title with-accent-bar accent-purple" class:mobile={isMobile}>
+        表现指标
+      </h3>
+      
+      <div class="info-grid" class:mobile={isMobile}>
+        <!-- 时间表现 -->
+        <div class="info-row" class:mobile={isMobile}>
+          <span class="info-label">平均响应时间</span>
+          <span class="info-value">
+            <span class="time-badge">{avgResponseTimeSec}秒</span>
+          </span>
+        </div>
+
+        <div class="info-row" class:mobile={isMobile}>
+          <span class="info-label">最快响应时间</span>
+          <span class="info-value">
+            <span class="time-badge fastest">{formatTime(testStats.fastestTime)}</span>
+          </span>
+        </div>
+
+        <!-- 得分表现 -->
+        <div class="info-row" class:mobile={isMobile}>
+          <span class="info-label">最佳得分</span>
+          <span class="info-value">
+            <span class="score-badge best">{testStats.bestScore}</span>
+          </span>
+        </div>
+
+        <div class="info-row" class:mobile={isMobile}>
+          <span class="info-label">平均得分</span>
+          <span class="info-value">
+            <span class="score-badge avg">{testStats.averageScore}</span>
+          </span>
+        </div>
+
+        <div class="info-row" class:mobile={isMobile}>
+          <span class="info-label">最近得分</span>
+          <span class="info-value">
+            <span class="score-badge recent">{testStats.lastScore}</span>
+          </span>
+        </div>
+
+        <!-- 学习状态 -->
+        <div class="info-row" class:mobile={isMobile}>
+          <span class="info-label">连续正确</span>
+          <span class="info-value">
+            <span class="streak-badge">{testStats.consecutiveCorrect}次</span>
+          </span>
+        </div>
+
+        <div class="info-row" class:mobile={isMobile}>
+          <span class="info-label">错题本</span>
+          <span class="info-value">
+            {#if testStats.isInErrorBook}
+              <span class="status-badge in-error-book">已加入</span>
+            {:else}
+              <span class="status-badge not-in-error-book">未加入</span>
+            {/if}
+          </span>
+        </div>
+
+        {#if testStats.lastTestDate}
+          <div class="info-row" class:mobile={isMobile}>
+            <span class="info-label">最后测试</span>
+            <span class="info-value">
+              <span class="time-muted">{formatRelativeTimeDetailed(testStats.lastTestDate)}</span>
+            </span>
+          </div>
+        {/if}
+      </div>
+    </section>
+
+  {:else}
+    <!-- 无测试数据 -->
+    <section class="info-section" class:mobile={isMobile}>
+      <div class="no-data">
+        <div class="no-data-title">暂无测试数据</div>
+        <div class="no-data-desc">开始答题后，这里将显示您的测试统计信息</div>
+      </div>
+    </section>
+  {/if}
+</div>
+
+<style>
+  .test-stats-tab {
+    padding: var(--size-4-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-4-4);
+    overflow-y: auto;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .info-section {
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-m);
+    padding: var(--size-4-4);
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--size-4-2);
+    position: relative;
+    padding-left: 16px;
+    font-size: var(--font-ui-medium);
+    font-weight: 600;
+    color: var(--text-normal);
+    margin-bottom: var(--size-4-4);
+    /* 🔧 移除 padding-bottom，避免彩色侧边条偏移 */
+    line-height: 1.4;
+  }
+
+  /* 彩色条样式 */
+  .section-title.with-accent-bar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 2px;
+  }
+
+  .section-title.accent-blue::before {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(37, 99, 235, 0.6));
+  }
+
+  .section-title.accent-purple::before {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(147, 51, 234, 0.6));
+  }
+
+  .section-title.accent-orange::before {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.8), rgba(234, 88, 12, 0.6));
+  }
+
+  .section-title.accent-green::before {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(22, 163, 74, 0.6));
+  }
+
+  /* 信息网格 */
+  .info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-4-3);
+  }
+
+  .info-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: var(--size-4-3);
+    align-items: center;
+  }
+
+  .info-label {
+    font-size: var(--font-ui-small);
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .info-value {
+    font-size: var(--font-ui-medium);
+    color: var(--text-normal);
+    text-align: right;
+  }
+
+  .info-value.success {
+    color: #22c55e;
+    font-weight: 600;
+  }
+
+  .info-value.error {
+    color: #ef4444;
+    font-weight: 600;
+  }
+
+  .info-value.accuracy {
+    font-weight: 700;
+  }
+
+  .info-value.accuracy.excellent {
+    color: #22c55e;
+  }
+
+  .info-value.accuracy.good {
+    color: #3b82f6;
+  }
+
+  .info-value.accuracy.pass {
+    color: #f59e0b;
+  }
+
+  .info-value.accuracy.weak {
+    color: #ef4444;
+  }
+
+  /* 徽章样式 */
+  .time-badge,
+  .score-badge,
+  .status-badge,
+  .streak-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--radius-s);
+    font-size: var(--font-ui-small);
+    font-weight: 600;
+    border: 1px solid;
+  }
+
+  .time-badge {
+    background: #dbeafe;
+    color: #1e40af;
+    border-color: #93c5fd;
+  }
+
+  .time-badge.fastest {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #6ee7b7;
+  }
+
+  .score-badge {
+    background: #e0e7ff;
+    color: #4338ca;
+    border-color: #c7d2fe;
+  }
+
+  .score-badge.best {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #6ee7b7;
+    font-weight: 700;
+  }
+
+  .score-badge.avg {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+  }
+
+  .score-badge.recent {
+    background: #f3e8ff;
+    color: #6b21a8;
+    border-color: #d8b4fe;
+  }
+
+  .status-badge.in-error-book {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+  }
+
+  .status-badge.not-in-error-book {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #6ee7b7;
+  }
+
+  .streak-badge {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+    font-size: var(--font-ui-small);
+    font-weight: 600;
+  }
+
+  .time-muted {
+    color: var(--text-muted);
+    font-size: var(--font-ui-small);
+  }
+
+  /* 无数据状态 */
+  .no-data {
+    text-align: center;
+    padding: var(--size-4-8) var(--size-4-4);
+    background: var(--background-secondary);
+    border-radius: var(--radius-m);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .no-data-title {
+    font-size: var(--font-ui-large);
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: var(--size-4-3);
+  }
+
+  .no-data-desc {
+    font-size: var(--font-ui-medium);
+    color: var(--text-muted);
+    opacity: 0.8;
+  }
+
+  /* 滚动条样式 */
+  .test-stats-tab::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .test-stats-tab::-webkit-scrollbar-track {
+    background: var(--background-secondary);
+    border-radius: 4px;
+  }
+
+  .test-stats-tab::-webkit-scrollbar-thumb {
+    background: var(--background-modifier-border);
+    border-radius: 4px;
+  }
+
+  .test-stats-tab::-webkit-scrollbar-thumb:hover {
+    background: var(--background-modifier-border-hover);
+  }
+
+  /* 响应式适配 */
+  @media (max-width: 600px) {
+    .info-row {
+      grid-template-columns: 100px 1fr;
+    }
+  }
+
+  /* ==================== 📱 移动端适配样式 ==================== */
+  
+  /* 移动端容器 */
+  .test-stats-tab.mobile {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  /* 移动端区块 */
+  .info-section.mobile {
+    padding: 12px;
+  }
+
+  /* 移动端标题 */
+  .section-title.mobile {
+    font-size: 14px;
+    margin-bottom: 12px;
+    padding-left: 12px;
+    line-height: 1.2;
+  }
+
+  .section-title.mobile.with-accent-bar::before {
+    height: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* 移动端列表样式 */
+  .info-grid.mobile {
+    gap: 0;
+  }
+
+  .info-row.mobile {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--background-modifier-border-hover);
+  }
+
+  .info-row.mobile:last-child {
+    border-bottom: none;
+  }
+
+  .info-row.mobile .info-label {
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
+  .info-row.mobile .info-value {
+    flex: 1;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

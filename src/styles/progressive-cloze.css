@@ -1,0 +1,275 @@
+/**
+ * 渐进式挖空样式
+ * 
+ * 为渐进式挖空的学习界面提供美观的样式
+ * 支持亮色和暗色主题
+ */
+
+/* ========== 容器样式 ========== */
+
+.progressive-cloze-container {
+  position: relative;
+  padding: 24px;
+  line-height: 1.8;
+  font-size: 16px;
+  border-radius: 8px;
+  background: var(--background-primary);
+}
+
+.progressive-cloze-container .cloze-content {
+  margin-bottom: 16px;
+  min-height: 60px;
+}
+
+/* ========== 挖空样式 ========== */
+
+/* 挖空占位符（隐藏状态） */
+.cloze-blank {
+  display: inline-block;
+  padding: 3px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 6px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.cloze-blank:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* 挖空答案（显示状态） */
+.cloze-answer {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(102, 126, 234, 0.15);
+  border-bottom: 2px solid #667eea;
+  color: #667eea;
+  font-weight: 600;
+  border-radius: 3px;
+  animation: revealAnswer 0.3s ease-out;
+}
+
+@keyframes revealAnswer {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 其他挖空（已揭示） */
+.cloze-revealed {
+  color: var(--text-normal);
+  opacity: 0.7;
+}
+
+/* ========== 高亮标记 ========== */
+
+.highlight {
+  background: rgba(255, 193, 7, 0.25);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--text-normal);
+  font-weight: 500;
+}
+
+/* ========== 进度指示器 ========== */
+
+.cloze-progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.progress-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* 🔧 修复：限定作用域，避免污染其他组件的progress-bar */
+.cloze-progress-indicator .progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--background-modifier-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.cloze-progress-indicator .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* ========== 父卡片样式 ========== */
+
+.progressive-cloze-parent-card {
+  padding: 24px;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  border: 2px dashed var(--background-modifier-border);
+}
+
+.parent-card-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background: var(--background-primary);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border-left: 4px solid #667eea;
+}
+
+.info-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.info-text {
+  flex: 1;
+}
+
+.info-text strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-normal);
+  font-size: 16px;
+}
+
+.info-text p {
+  margin: 4px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.parent-card-content {
+  padding: 16px;
+  background: var(--background-primary);
+  border-radius: 6px;
+  font-family: var(--font-monospace);
+  font-size: 14px;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ========== 错误状态 ========== */
+
+.progressive-cloze-container.error {
+  border: 2px solid var(--background-modifier-error);
+  background: var(--background-modifier-error);
+  color: var(--text-error);
+  padding: 16px;
+  border-radius: 6px;
+}
+
+/* ========== 暗色主题适配 ========== */
+
+.theme-dark .cloze-blank {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  box-shadow: 0 2px 8px rgba(74, 85, 104, 0.3);
+}
+
+.theme-dark .cloze-blank:hover {
+  box-shadow: 0 4px 12px rgba(74, 85, 104, 0.4);
+}
+
+.theme-dark .cloze-answer {
+  background: rgba(147, 167, 219, 0.2);
+  border-bottom-color: #93a7db;
+  color: #93a7db;
+}
+
+.theme-dark .highlight {
+  background: rgba(255, 193, 7, 0.15);
+}
+
+/* ========== 响应式设计 ========== */
+
+@media (max-width: 768px) {
+  .progressive-cloze-container {
+    padding: 16px;
+    font-size: 15px;
+  }
+  
+  .cloze-blank {
+    padding: 2px 12px;
+    font-size: 14px;
+  }
+  
+  .cloze-progress-indicator {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .progress-text {
+    text-align: center;
+  }
+}
+
+/* ========== 打印样式 ========== */
+
+/* ✅ 保留 !important：打印样式需要强制覆盖所有屏幕样式 */
+/* 参考：.augment/rules/core/04-anti-force-methods.md */
+@media print {
+  .cloze-blank {
+    background: white !important;
+    color: black !important;
+    border: 2px solid black;
+    box-shadow: none !important;
+  }
+  
+  .cloze-progress-indicator {
+    display: none;
+  }
+}
+
+/* ========== 动画效果 ========== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.progressive-cloze-container {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ========== 辅助类 ========== */
+
+.cloze-highlight-context {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.cloze-hint {
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+
+
+
+
+
+

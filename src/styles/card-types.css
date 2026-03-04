@@ -1,0 +1,375 @@
+/**
+ * 题型特定样式文件
+ * 为不同的卡片题型提供专门的视觉样式和交互效果
+ */
+
+/* ==========================================================================
+   基础问答题样式 (BASIC_QA)
+   ========================================================================== */
+
+.weave-card--basic-qa {
+  --card-accent-color: var(--interactive-accent);
+  --card-bg-color: var(--weave-surface, var(--background-primary));
+  --card-border-color: var(--weave-border, var(--background-modifier-border));
+}
+
+.weave-card--basic-qa .question-section {
+  background: var(--card-bg-color);
+  border: 2px solid var(--card-border-color);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: var(--weave-radius-md, 0.5rem);
+  box-shadow: var(--weave-shadow-sm, 0 1px 2px 0 rgb(0 0 0 / 0.05));
+}
+
+.weave-card--basic-qa .answer-section {
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  padding: 1.5rem;
+  border-radius: var(--weave-radius-md, 0.5rem);
+  transition: all var(--weave-duration-normal, 300ms) ease;
+}
+
+.weave-card--basic-qa .answer-section.hidden {
+  opacity: 0.3;
+  transform: translateY(10px);
+}
+
+.weave-card--basic-qa .answer-section.revealed {
+  opacity: 1;
+  transform: translateY(0);
+  border-color: var(--card-accent-color);
+}
+
+.weave-card--basic-qa .reveal-button {
+  background: var(--card-accent-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--weave-radius-md, 0.5rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--weave-duration-fast, 200ms) ease;
+  margin: 1rem 0;
+}
+
+.weave-card--basic-qa .reveal-button:hover {
+  background: color-mix(in srgb, var(--card-accent-color) 90%, black);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   选择题样式 (MULTIPLE_CHOICE)
+   ========================================================================== */
+
+.weave-card--multiple-choice {
+  --card-accent-color: var(--weave-success, #10b981);
+  --card-bg-color: var(--weave-surface, var(--background-primary));
+  --card-border-color: var(--weave-border, var(--background-modifier-border));
+}
+
+.weave-card--multiple-choice .question-section {
+  background: var(--card-bg-color);
+  border: 2px solid var(--card-border-color);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: var(--weave-radius-md, 0.5rem);
+}
+
+.weave-card--multiple-choice .options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.weave-card--multiple-choice .option-item {
+  background: var(--card-bg-color);
+  border: 2px solid var(--card-border-color);
+  padding: 1rem 1.25rem;
+  border-radius: var(--weave-radius-md, 0.5rem);
+  cursor: pointer;
+  transition: all var(--weave-duration-fast, 200ms) ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.weave-card--multiple-choice .option-item:hover {
+  border-color: var(--card-accent-color);
+  background: color-mix(in srgb, var(--card-accent-color) 5%, var(--card-bg-color));
+  transform: translateX(4px);
+}
+
+.weave-card--multiple-choice .option-item.selected {
+  border-color: var(--card-accent-color);
+  background: color-mix(in srgb, var(--card-accent-color) 10%, var(--card-bg-color));
+}
+
+.weave-card--multiple-choice .option-item.correct {
+  border-color: var(--weave-success, #10b981);
+  background: color-mix(in srgb, var(--weave-success, #10b981) 10%, var(--card-bg-color));
+}
+
+.weave-card--multiple-choice .option-item.incorrect {
+  border-color: var(--weave-error, #ef4444);
+  background: color-mix(in srgb, var(--weave-error, #ef4444) 10%, var(--card-bg-color));
+}
+
+.weave-card--multiple-choice .option-label {
+  font-weight: 600;
+  color: var(--card-accent-color);
+  margin-right: 0.75rem;
+  min-width: 1.5rem;
+  display: inline-block;
+}
+
+.weave-card--multiple-choice .explanation-section {
+  background: color-mix(in srgb, var(--weave-info, #3b82f6) 5%, var(--card-bg-color));
+  border: 1px solid var(--weave-info, #3b82f6);
+  padding: 1rem;
+  border-radius: var(--weave-radius-md, 0.5rem);
+  margin-top: 1rem;
+}
+
+/* ==========================================================================
+   挖空题样式 (CLOZE_DELETION)
+   ========================================================================== */
+
+.weave-card--cloze-deletion {
+  --card-accent-color: var(--weave-warning, #f59e0b);
+  --card-bg-color: var(--weave-surface, var(--background-primary));
+  --card-border-color: var(--weave-border, var(--background-modifier-border));
+}
+
+.weave-card--cloze-deletion .content-section {
+  background: var(--card-bg-color);
+  border: 2px solid var(--card-border-color);
+  padding: 1.5rem;
+  border-radius: var(--weave-radius-md, 0.5rem);
+  line-height: 1.6;
+}
+
+.weave-card--cloze-deletion .cloze-blank {
+  background: var(--card-accent-color);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--weave-radius-sm, 0.25rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--weave-duration-fast, 200ms) ease;
+  display: inline-block;
+  min-width: 3rem;
+  text-align: center;
+  margin: 0 0.125rem;
+}
+
+.weave-card--cloze-deletion .cloze-blank:hover {
+  background: color-mix(in srgb, var(--card-accent-color) 90%, black);
+  transform: scale(1.05);
+}
+
+.weave-card--cloze-deletion .cloze-blank.revealed {
+  background: var(--weave-success, #10b981);
+  animation: cloze-reveal 0.3s ease-out;
+}
+
+.weave-card--cloze-deletion .cloze-controls {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.weave-card--cloze-deletion .cloze-button {
+  background: var(--card-accent-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--weave-radius-sm, 0.25rem);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--weave-duration-fast, 200ms) ease;
+}
+
+.weave-card--cloze-deletion .cloze-button:hover {
+  background: color-mix(in srgb, var(--card-accent-color) 90%, black);
+}
+
+.weave-card--cloze-deletion .progress-indicator {
+  background: var(--card-border-color);
+  height: 4px;
+  border-radius: 2px;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.weave-card--cloze-deletion .progress-bar {
+  background: var(--card-accent-color);
+  height: 100%;
+  transition: width var(--weave-duration-normal, 300ms) ease;
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   填空题样式 (FILL_IN_BLANK)
+   ========================================================================== */
+
+.weave-card--fill-in-blank {
+  --card-accent-color: var(--weave-info, #3b82f6);
+  --card-bg-color: var(--weave-surface, var(--background-primary));
+  --card-border-color: var(--weave-border, var(--background-modifier-border));
+}
+
+.weave-card--fill-in-blank .content-section {
+  background: var(--card-bg-color);
+  border: 2px solid var(--card-border-color);
+  padding: 1.5rem;
+  border-radius: var(--weave-radius-md, 0.5rem);
+  line-height: 1.6;
+}
+
+.weave-card--fill-in-blank .blank-input {
+  background: var(--card-bg-color);
+  border: 2px solid var(--card-border-color);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--weave-radius-sm, 0.25rem);
+  font-family: inherit;
+  font-size: inherit;
+  min-width: 6rem;
+  margin: 0 0.25rem;
+  transition: all var(--weave-duration-fast, 200ms) ease;
+}
+
+.weave-card--fill-in-blank .blank-input:focus {
+  outline: none;
+  border-color: var(--card-accent-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--card-accent-color) 20%, transparent);
+}
+
+.weave-card--fill-in-blank .blank-input.correct {
+  border-color: var(--weave-success, #10b981);
+  background: color-mix(in srgb, var(--weave-success, #10b981) 10%, var(--card-bg-color));
+}
+
+.weave-card--fill-in-blank .blank-input.incorrect {
+  border-color: var(--weave-error, #ef4444);
+  background: color-mix(in srgb, var(--weave-error, #ef4444) 10%, var(--card-bg-color));
+}
+
+.weave-card--fill-in-blank .controls-section {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.weave-card--fill-in-blank .check-button {
+  background: var(--card-accent-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--weave-radius-md, 0.5rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--weave-duration-fast, 200ms) ease;
+}
+
+.weave-card--fill-in-blank .check-button:hover {
+  background: color-mix(in srgb, var(--card-accent-color) 90%, black);
+}
+
+.weave-card--fill-in-blank .progress-text {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   动画效果
+   ========================================================================== */
+
+@keyframes cloze-reveal {
+  0% {
+    transform: scale(1);
+    background: var(--weave-warning, #f59e0b);
+  }
+  50% {
+    transform: scale(1.1);
+    background: var(--weave-success, #10b981);
+  }
+  100% {
+    transform: scale(1);
+    background: var(--weave-success, #10b981);
+  }
+}
+
+@keyframes answer-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes option-select {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ==========================================================================
+   响应式设计
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .weave-card--basic-qa .question-section,
+  .weave-card--basic-qa .answer-section,
+  .weave-card--multiple-choice .question-section,
+  .weave-card--cloze-deletion .content-section,
+  .weave-card--fill-in-blank .content-section {
+    padding: 1rem;
+  }
+
+  .weave-card--multiple-choice .option-item {
+    padding: 0.75rem 1rem;
+  }
+
+  .weave-card--fill-in-blank .controls-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .weave-card--fill-in-blank .check-button {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   主题适配
+   ========================================================================== */
+
+.theme-dark .weave-card--basic-qa,
+.theme-dark .weave-card--multiple-choice,
+.theme-dark .weave-card--cloze-deletion,
+.theme-dark .weave-card--fill-in-blank {
+  --card-bg-color: var(--background-primary-alt);
+  --card-border-color: var(--background-modifier-border-hover);
+}
+
+.theme-light .weave-card--basic-qa,
+.theme-light .weave-card--multiple-choice,
+.theme-light .weave-card--cloze-deletion,
+.theme-light .weave-card--fill-in-blank {
+  --card-bg-color: var(--background-primary);
+  --card-border-color: var(--background-modifier-border);
+}

@@ -1,0 +1,74 @@
+# ============================================
+# Weave 公开仓库 .gitignore
+# ============================================
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+/main.js
+/styles.css
+
+# Build cache
+*.tsbuildinfo
+.vite/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.production
+.env.test
+
+# ============================================
+# Security: activation codes and keys
+# ============================================
+*.pem
+*.key
+*private-key*
+*private_key*
+generated-*.json
+generated-*.txt
+codes-*.txt
+codes-*.json
+*activation-code*
+*activation-codes*
+
+# ============================================
+# Development artifacts (not for public)
+# ============================================
+check.log
+type-errors*.txt
+*.backup
+*.bak
+debug-logs/
+test-activation-codes/
+*.activation
+*.license
+BUILD_REPORT.md
+
+# Temporary compilation artifacts
+.proprietary-build-temp/
+tsconfig.proprietary-temp.json

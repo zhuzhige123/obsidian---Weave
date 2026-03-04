@@ -1,0 +1,112 @@
+/**
+ * 表格单元格通用样式
+ * 用于统一各单元格组件的基础样式，避免重复定义
+ */
+
+/* 单元格内容容器 */
+.weave-cell-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 20px;
+}
+
+/* 文本样式 */
+.weave-text-muted {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.weave-text-content {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: var(--text-normal);
+  line-height: 1.4;
+}
+
+.weave-text-normal {
+  color: var(--text-normal);
+  font-size: 0.875rem;
+}
+
+/* 特殊文本样式 */
+.weave-uuid-text {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--font-monospace);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* 链接按钮样式 */
+.weave-link-button {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--text-accent);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-s);
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  max-width: 100%;
+}
+
+.weave-link-button:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-accent-hover);
+}
+
+/* ✅ 移除 !important：源文档链接样式使用更具体的选择器 */
+.weave-app .weave-source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: transparent;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--text-accent);
+  cursor: pointer;
+  padding: 0.25rem 0;
+  border-radius: 0;
+  transition: color 0.15s ease;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.weave-app .weave-source-link:hover {
+  background: transparent;
+  background-color: transparent;
+  color: var(--text-accent-hover);
+  text-decoration: underline;
+}
+
+.weave-app .weave-source-link:active,
+.weave-app .weave-source-link:focus {
+  background: transparent;
+  background-color: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+/* 块引用指示器样式 */
+.weave-has-block-indicator {
+  opacity: 0.7;
+  color: var(--text-accent);
+  margin-left: -0.125rem;
+}
+
+/* 单元格占位符 */
+.weave-cell-placeholder {
+  color: var(--text-faint);
+  font-style: italic;
+  font-size: 0.875rem;
+}
+

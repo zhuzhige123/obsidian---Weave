@@ -1,0 +1,424 @@
+/* Weave Design Tokens */
+/*
+  目标：仅让以下内容跟随 Obsidian：
+  - 深浅主题选择（通过 body.theme-dark / body.theme-light）
+  - 字体族（--font-interface / --font-text）
+  - 界面底色（--background-primary 作为应用容器背景）
+
+  其它颜色、边框、悬停、文本主/次色、组件表面色，全部使用 Weave 自定义调色板，
+  并通过 .theme-dark / .theme-light 分别定义。
+  
+  🔥 更新：边框变量已提升到全局作用域，确保所有组件可访问
+*/
+
+/* 基础设计度量（不依赖 Obsidian 变量） */
+:root {
+  /* Spacing (8px grid) */
+  --weave-space-xs: 0.25rem;
+  --weave-space-sm: 0.5rem;
+  --weave-space-md: 1rem;
+  --weave-space-lg: 1.5rem;
+  --weave-space-xl: 2rem;
+  --weave-space-2xl: 3rem;
+
+  /* Radius */
+  --weave-radius-sm: 0.375rem;
+  --weave-radius-md: 0.5rem;
+  --weave-radius-lg: 0.75rem;
+  --weave-radius-xl: 1rem;
+
+  /* Font Size System */
+  --weave-font-size-xs: 0.75rem;    /* 12px */
+  --weave-font-size-sm: 0.875rem;   /* 14px */
+  --weave-font-size-md: 1rem;       /* 16px */
+  --weave-font-size-lg: 1.125rem;   /* 18px */
+  --weave-font-size-xl: 1.25rem;    /* 20px */
+
+  /* 添加缺失的间距变量别名 - 兼容现有组件 */
+  --weave-spacing-xs: var(--weave-space-xs);
+  --weave-spacing-sm: var(--weave-space-sm);
+  --weave-spacing-md: var(--weave-space-md);
+  --weave-spacing-lg: var(--weave-space-lg);
+  --weave-spacing-xl: var(--weave-space-xl);
+  --weave-spacing-2xl: var(--weave-space-2xl);
+
+  /* 添加缺失的文本尺寸变量别名 - 兼容现有组件 */
+  --weave-text-xs: var(--weave-font-size-xs);
+  --weave-text-sm: var(--weave-font-size-sm);
+  --weave-text-md: var(--weave-font-size-md);
+  --weave-text-lg: var(--weave-font-size-lg);
+  --weave-text-xl: var(--weave-font-size-xl);
+
+  /* 添加缺失的动画时长变量 */
+  --weave-duration-fast: 0.15s;
+  --weave-duration-normal: 0.2s;
+  --weave-duration-slow: 0.3s;
+
+  /* 添加缺失的模态窗背景变量 */
+  --weave-overlay: rgba(0, 0, 0, 0.8);
+  --weave-bg: var(--background-primary);
+  --weave-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* Shadows */
+  --weave-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --weave-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --weave-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --weave-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+  /* Z-index */
+  --weave-z-dropdown: 1000;
+  --weave-z-modal-backdrop: 1040;
+  --weave-z-modal: 1050;
+  --weave-z-popover: 1060;
+  --weave-z-tooltip: 1070;
+
+  /* Breakpoints */
+  --breakpoint-mobile: 768px;
+  --breakpoint-tablet: 1024px;
+  --breakpoint-desktop: 1280px;
+}
+
+/* 默认为浅色调色板（无主题类时） */
+.weave-app {
+  /* 主题色 - 跟随 Obsidian */
+  --weave-accent-color: var(--interactive-accent);
+  --weave-gradient-primary: linear-gradient(135deg, var(--interactive-accent) 0%, var(--interactive-accent) 100%);
+  --weave-gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --weave-gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+
+  /* 功能色 */
+  --weave-success: #10b981;
+  --weave-warning: #f59e0b;
+  --weave-error: #ef4444;
+  --weave-info: #3b82f6;
+
+  /* AnkiConnect 同步方向颜色 */
+  --weave-sync-to: var(--interactive-accent);
+  --weave-sync-from: #06b6d4;
+  --weave-sync-bi: #ec4899;
+
+  /* 学习状态颜色 */
+  --weave-new-card: #3b82f6;
+  --weave-learning-card: #f59e0b;
+  --weave-review-card: #10b981;
+  --weave-relearning-card: #ef4444;
+
+  /* 扩展的颜色变量 - 与 anki-* 变量对应 */
+  --weave-primary: var(--interactive-accent);
+  --weave-primary-light: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+  --weave-background: var(--background-primary);
+  --weave-border-light: rgba(17, 24, 39, 0.08);
+  --weave-error-light: rgba(239, 68, 68, 0.1);
+  --weave-info-rgb: 59, 130, 246;
+
+  /* 组件表面/边框/文本/悬停（浅色） - 优化对比度 */
+  --weave-surface: var(--background-primary);
+  --weave-secondary-bg: var(--background-secondary);
+  
+  /* 边框变量已在:root全局定义，这里无需重复 */
+  --weave-border-hover: rgba(17, 24, 39, 0.28);
+  --weave-hover: rgba(17, 24, 39, 0.06); /* 轻微提高：05% -> 06% */
+  --weave-active: rgba(17, 24, 39, 0.12); /* 提高对比度：10% -> 12% */
+  --weave-text-primary: #0f172a; /* 更深的颜色：gray-900 -> slate-900 */
+  --weave-text-secondary: #475569; /* 更深的颜色：gray-500 -> slate-600 */
+  --weave-text-faint: #64748b; /* 更深的颜色：gray-400 -> slate-500 */
+  --weave-text-on-accent: #ffffff; /* 在强调色背景上的文本颜色 */
+  --weave-scrollbar-track: #f3f4f6; /* gray-100 */
+  --weave-scrollbar-thumb: #e5e7eb; /* gray-200 */
+
+  /* Background System */
+  --weave-primary-bg: var(--background-primary);
+  --weave-hover-bg: var(--weave-hover);
+
+  /* CodeMirror 编辑器专用变量 - 浅色模式 */
+  --cm-editor-bg: #ffffff;
+  --cm-editor-text: #0f172a; /* 更深的文本颜色以提高对比度 */
+  --cm-editor-border: rgba(17, 24, 39, 0.18); /* 与其他边框保持一致 */
+  --cm-editor-cursor: var(--interactive-accent);
+  --cm-editor-selection: color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+  --cm-editor-active-line: rgba(17, 24, 39, 0.04); /* 轻微提高可见性 */
+  --cm-editor-gutter-bg: #f8f9fa;
+  --cm-editor-gutter-text: #475569; /* 更深的颜色以提高对比度 */
+  --cm-editor-line-number: #64748b; /* 更深的颜色以提高对比度 */
+  --cm-editor-line-number-active: #475569; /* 更深的颜色以提高对比度 */
+
+  /* 语法高亮 - 浅色模式 */
+  --cm-syntax-keyword: #d73a49;
+  --cm-syntax-string: #032f62;
+  --cm-syntax-comment: #6a737d;
+  --cm-syntax-number: #005cc5;
+  --cm-syntax-operator: #d73a49;
+  --cm-syntax-punctuation: #24292e;
+  --cm-syntax-tag: #22863a;
+  --cm-syntax-attribute: #6f42c1;
+  --cm-syntax-link: #0366d6;
+}
+
+/* 🌙 深色模式（边框变量已移除，改用currentColor方案） */
+
+/* 深色主题下的自定义调色板（不继承 Obsidian 的文本/边框等变量） */
+body.theme-dark .weave-app {
+  --weave-accent-color: var(--interactive-accent);
+  --weave-gradient-primary: linear-gradient(135deg, var(--interactive-accent) 0%, var(--interactive-accent) 100%);
+  --weave-gradient-secondary: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+  --weave-gradient-accent: linear-gradient(135deg, #22d3ee 0%, #60a5fa 100%);
+
+  /* 扩展的颜色变量 - 深色模式 */
+  --weave-primary: var(--interactive-accent);
+  --weave-primary-light: color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+  --weave-background: var(--background-primary);
+  --weave-border-light: rgba(255, 255, 255, 0.08);
+  --weave-error-light: rgba(239, 68, 68, 0.2);
+  --weave-info-rgb: 59, 130, 246;
+
+  --weave-surface: var(--background-primary);         /* zinc-900 */
+  --weave-secondary-bg: var(--background-secondary);
+  
+  /* 边框变量已在body.theme-dark全局定义，这里无需重复 */
+  --weave-border-hover: rgba(255, 255, 255, 0.25);
+  --weave-hover: rgba(255, 255, 255, 0.08); /* 轻微提高：0.06 -> 0.08 */
+  --weave-active: rgba(255, 255, 255, 0.15); /* 提高对比度：0.12 -> 0.15 */
+  --weave-text-primary: #f1f5f9;     /* 提高对比度：gray-200 -> slate-100 */
+  --weave-text-secondary: #94a3b8;   /* 提高对比度：gray-400 -> slate-400 */
+  --weave-text-faint: #64748b;       /* 提高对比度：gray-500 -> slate-500 */
+  --weave-text-on-accent: #ffffff;   /* 在强调色背景上的文本颜色 */
+  --weave-scrollbar-track: #0b0b0c;
+  --weave-scrollbar-thumb: #27272a;  /* zinc-800 */
+
+  /* Background System - Dark Theme */
+  --weave-primary-bg: var(--background-primary);
+  --weave-hover-bg: var(--weave-hover);
+
+  /* CodeMirror 编辑器专用变量 - 深色模式 */
+  --cm-editor-bg: #1a1a1a;
+  --cm-editor-text: #e1e4e8;
+  --cm-editor-border: rgba(255, 255, 255, 0.15);
+  --cm-editor-cursor: var(--interactive-accent);
+  --cm-editor-selection: color-mix(in srgb, var(--interactive-accent) 25%, transparent);
+  --cm-editor-active-line: rgba(255, 255, 255, 0.05);
+  --cm-editor-gutter-bg: #0d1117;
+  --cm-editor-gutter-text: #7d8590;
+  --cm-editor-line-number: #6e7681;
+  --cm-editor-line-number-active: #adbac7;
+
+  /* 语法高亮 - 深色模式 */
+  --cm-syntax-keyword: #ff7b72;
+  --cm-syntax-string: #a5d6ff;
+  --cm-syntax-comment: #8b949e;
+  --cm-syntax-number: #79c0ff;
+  --cm-syntax-operator: #ff7b72;
+  --cm-syntax-punctuation: #e1e4e8;
+  --cm-syntax-tag: #7ee787;
+  --cm-syntax-attribute: #d2a8ff;
+  --cm-syntax-link: #58a6ff;
+
+  /* 记忆分析专用颜色 - 深色模式 */
+  --memory-analysis-bg: #0f1419;
+  --memory-analysis-surface: #1a1f2e;
+  --memory-analysis-border: rgba(255, 255, 255, 0.08);
+  --memory-analysis-text-primary: #f8fafc;
+  --memory-analysis-text-secondary: #cbd5e1;
+  --memory-analysis-text-muted: #94a3b8;
+  --memory-analysis-accent: var(--interactive-accent);
+  --memory-analysis-success: #10b981;
+  --memory-analysis-warning: #f59e0b;
+  --memory-analysis-error: #ef4444;
+  --memory-analysis-info: #3b82f6;
+
+  /* 图表颜色 - 深色模式 */
+  --chart-grid: rgba(255, 255, 255, 0.05);
+  --chart-axis: rgba(255, 255, 255, 0.2);
+  --chart-fsrs-line: var(--interactive-accent);
+  --chart-actual-line: #10b981;
+  --chart-gap-fill: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+  --chart-point-bg: #1a1f2e;
+  --chart-tooltip-bg: rgba(15, 20, 25, 0.95);
+  --chart-tooltip-border: rgba(255, 255, 255, 0.1);
+
+  /* 深色模式下的按钮悬停颜色 */
+  --weave-primary-hover: var(--interactive-accent-hover);
+  --weave-danger-hover: #dc2626;
+  --weave-success-hover: #059669;
+  --weave-warning-hover: #d97706;
+  --weave-info-hover: #2563eb;
+
+  /* 深色模式下的模态框颜色 */
+  --weave-modal-bg: #111218;
+  --weave-modal-surface: #0d0e14;
+  --weave-modal-panel: #0f1016;
+  --weave-modal-overlay: rgba(0, 0, 0, 0.8);
+
+  /* 深色模式下的标签颜色 */
+  --weave-tag-blue-bg: rgba(59, 130, 246, 0.2);
+  --weave-tag-blue-text: rgb(147, 197, 253);
+  --weave-tag-blue-border: rgba(59, 130, 246, 0.4);
+  --weave-tag-purple-bg: color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+  --weave-tag-purple-text: color-mix(in srgb, var(--interactive-accent) 80%, white);
+  --weave-tag-purple-border: color-mix(in srgb, var(--interactive-accent) 40%, transparent);
+  --weave-tag-pink-bg: rgba(236, 72, 153, 0.2);
+  --weave-tag-pink-text: rgb(251, 207, 232);
+  --weave-tag-pink-border: rgba(236, 72, 153, 0.4);
+  --weave-tag-red-bg: rgba(239, 68, 68, 0.2);
+  --weave-tag-red-text: rgb(252, 165, 165);
+  --weave-tag-red-border: rgba(239, 68, 68, 0.4);
+  --weave-tag-orange-bg: rgba(245, 158, 11, 0.2);
+  --weave-tag-orange-text: rgb(253, 186, 116);
+  --weave-tag-orange-border: rgba(245, 158, 11, 0.4);
+  --weave-tag-green-bg: rgba(34, 197, 94, 0.2);
+  --weave-tag-green-text: rgb(134, 239, 172);
+  --weave-tag-green-border: rgba(34, 197, 94, 0.4);
+  --weave-tag-cyan-bg: rgba(6, 182, 212, 0.2);
+  --weave-tag-cyan-text: rgb(165, 243, 252);
+  --weave-tag-cyan-border: rgba(6, 182, 212, 0.4);
+  --weave-tag-gray-bg: rgba(107, 114, 128, 0.2);
+  --weave-tag-gray-text: rgb(209, 213, 219);
+  --weave-tag-gray-border: rgba(107, 114, 128, 0.4);
+}
+
+/* 浅色主题下的自定义调色板 */
+body.theme-light .weave-app {
+  --weave-accent-color: var(--interactive-accent);
+  --weave-gradient-primary: linear-gradient(135deg, var(--interactive-accent) 0%, var(--interactive-accent) 100%);
+  --weave-gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --weave-gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+
+  --weave-surface: var(--background-primary);
+  --weave-secondary-bg: var(--background-secondary);
+  --weave-border: rgba(17, 24, 39, 0.18); /* 与默认定义保持一致 */
+  --weave-border-hover: rgba(17, 24, 39, 0.28); /* 与默认定义保持一致 */
+  --weave-hover: rgba(17, 24, 39, 0.06); /* 与默认定义保持一致 */
+  --weave-active: rgba(17, 24, 39, 0.12); /* 与默认定义保持一致 */
+  --weave-text-primary: #0f172a; /* 与默认定义保持一致 */
+  --weave-text-secondary: #475569; /* 与默认定义保持一致 */
+  --weave-text-faint: #64748b; /* 与默认定义保持一致 */
+  --weave-text-on-accent: #ffffff;   /* 在强调色背景上的文本颜色 - 浅色模式下保持白色以确保对比度 */
+  --weave-scrollbar-track: #f3f4f6;
+  --weave-scrollbar-thumb: #e5e7eb;
+
+  /* 浅色模式下的功能色 */
+  --weave-success: #10b981;
+  --weave-warning: #f59e0b;
+  --weave-error: #ef4444;
+  --weave-info: #3b82f6;
+
+  /* 浅色模式下的按钮悬停颜色 */
+  --weave-primary-hover: var(--interactive-accent-hover);
+  --weave-danger-hover: #dc2626;
+  --weave-success-hover: #059669;
+  --weave-warning-hover: #d97706;
+  --weave-info-hover: #2563eb;
+
+  /* 浅色模式下的模态框颜色 */
+  --weave-modal-bg: #ffffff;
+  --weave-modal-surface: #f8f9fa;
+  --weave-modal-panel: #ffffff;
+  --weave-modal-overlay: rgba(0, 0, 0, 0.5);
+
+  /* 浅色模式下的标签颜色 */
+  --weave-tag-blue-bg: rgba(59, 130, 246, 0.15);
+  --weave-tag-blue-text: rgb(59, 130, 246);
+  --weave-tag-blue-border: rgba(59, 130, 246, 0.3);
+  --weave-tag-purple-bg: color-mix(in srgb, var(--interactive-accent) 15%, transparent);
+  --weave-tag-purple-text: var(--interactive-accent);
+  --weave-tag-purple-border: color-mix(in srgb, var(--interactive-accent) 30%, transparent);
+  --weave-tag-pink-bg: rgba(236, 72, 153, 0.15);
+  --weave-tag-pink-text: rgb(236, 72, 153);
+  --weave-tag-pink-border: rgba(236, 72, 153, 0.3);
+  --weave-tag-red-bg: rgba(239, 68, 68, 0.15);
+  --weave-tag-red-text: rgb(239, 68, 68);
+  --weave-tag-red-border: rgba(239, 68, 68, 0.3);
+  --weave-tag-orange-bg: rgba(245, 158, 11, 0.15);
+  --weave-tag-orange-text: rgb(245, 158, 11);
+  --weave-tag-orange-border: rgba(245, 158, 11, 0.3);
+  --weave-tag-green-bg: rgba(34, 197, 94, 0.15);
+  --weave-tag-green-text: rgb(34, 197, 94);
+  --weave-tag-green-border: rgba(34, 197, 94, 0.3);
+  --weave-tag-cyan-bg: rgba(6, 182, 212, 0.15);
+  --weave-tag-cyan-text: rgb(6, 182, 212);
+  --weave-tag-cyan-border: rgba(6, 182, 212, 0.3);
+  --weave-tag-gray-bg: rgba(107, 114, 128, 0.15);
+  --weave-tag-gray-text: rgb(107, 114, 128);
+  --weave-tag-gray-border: rgba(107, 114, 128, 0.3);
+
+  /* 记忆分析专用颜色 - 浅色模式 */
+  --memory-analysis-bg: #ffffff;
+  --memory-analysis-surface: #f8fafc;
+  --memory-analysis-border: rgba(0, 0, 0, 0.06);
+  --memory-analysis-text-primary: #0f172a;
+  --memory-analysis-text-secondary: #334155;
+  --memory-analysis-text-muted: #64748b;
+  --memory-analysis-accent: var(--interactive-accent);
+  --memory-analysis-success: #059669;
+  --memory-analysis-warning: #d97706;
+  --memory-analysis-error: #dc2626;
+  --memory-analysis-info: #2563eb;
+
+  /* 图表颜色 - 浅色模式 */
+  --chart-grid: rgba(0, 0, 0, 0.05);
+  --chart-axis: rgba(0, 0, 0, 0.2);
+  --chart-fsrs-line: var(--interactive-accent);
+  --chart-actual-line: #059669;
+  --chart-gap-fill: color-mix(in srgb, var(--interactive-accent) 8%, transparent);
+  --chart-point-bg: #ffffff;
+  --chart-tooltip-bg: rgba(255, 255, 255, 0.95);
+  --chart-tooltip-border: rgba(0, 0, 0, 0.1);
+}
+
+/* 全局视图背景 */
+/* ✅ 移除 !important：.weave-view-content 类选择器已有足够优先级 */
+.weave-view-content {
+  background: var(--weave-surface);
+  height: 100%;
+  padding: var(--weave-space-lg);
+}
+
+/* 统一功能按钮样式 - 参考模板管理界面 */
+.weave-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: auto;
+}
+
+.weave-action-btn:hover:not(:disabled) {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.weave-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.weave-action-btn.primary {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.weave-action-btn.primary:hover:not(:disabled) {
+  background: var(--interactive-accent-hover);
+  border-color: var(--interactive-accent-hover);
+}
+
+.weave-action-btn.danger:hover:not(:disabled) {
+  background: var(--background-modifier-error);
+  border-color: var(--text-error);
+  color: var(--text-error);
+}
+
+.weave-action-btn.success:hover:not(:disabled) {
+  background: var(--background-modifier-success);
+  border-color: var(--text-success);
+  color: var(--text-success);
+}

@@ -1,0 +1,382 @@
+/**
+ * Weave 插件手机端响应式设计
+ * 针对 480px 以下设备的 UI 适配
+ * 
+ * ⚠️ 重要：此文件的媒体查询样式仅在桌面端生效
+ * 在 Obsidian 移动端（body.is-mobile），使用 obsidian-mobile.css 中的设备类样式
+ * 
+ * 断点体系：
+ * - xs: < 320px (极小屏幕)
+ * - sm: < 480px (手机端)
+ * - md: 480px - 768px (平板端)
+ * - lg: 768px - 1024px (小桌面)
+ * - xl: > 1024px (大桌面)
+ * 
+ * 调试模式：
+ * 在 body 或 .weave-app 上添加 .force-mobile-view 类可强制显示移动端样式
+ * 在控制台执行: document.body.classList.add('force-mobile-view')
+ */
+
+/* ==================== 强制移动端模式（调试用） ==================== */
+/* ✅ 保留 !important：调试工具类，需要强制覆盖所有样式 */
+/* 参考：.augment/rules/core/04-anti-force-methods.md - 工具类覆盖是合理场景 */
+/* 这些样式用于开发调试，在控制台执行: document.body.classList.add('force-mobile-view') */
+
+.force-mobile-view .weave-app,
+.weave-app.force-mobile-view {
+  /* 容器和间距调整 */
+  --weave-container-padding: var(--size-4-2, 8px);
+  --weave-space-md: 0.625rem;
+  --weave-space-lg: 0.875rem;
+  --weave-font-size-base: 0.875rem;
+  --weave-font-size-sm: 0.75rem;
+}
+
+.force-mobile-view .deck-grid-card,
+.force-mobile-view .chinese-elegant-card {
+  width: 100% !important;
+  margin: 0 !important;
+  height: 180px !important;
+}
+
+.force-mobile-view .vertical-toolbar {
+  width: 56px !important;
+  padding: 0.5rem 0 !important;
+}
+
+.force-mobile-view .vertical-toolbar .btn-label {
+  display: none !important;
+}
+
+.force-mobile-view .grid-card-view .cards-grid {
+  grid-template-columns: 1fr !important;
+  gap: 12px !important;
+  padding: 8px !important;
+}
+
+.force-mobile-view .rating-modern .rate-grid,
+.force-mobile-view .rate-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 8px !important;
+}
+
+/* ==================== 手机端媒体查询 (max-width: 480px) ==================== */
+/* ⚠️ 这些样式仅在桌面端窄窗口时生效，不在 Obsidian 移动端生效 */
+/* Obsidian 移动端使用 obsidian-mobile.css 中的 body.is-mobile 样式 */
+@media (max-width: 480px) {
+  /* 排除 Obsidian 移动端 - 移动端使用 obsidian-mobile.css */
+  body:not(.is-mobile) .weave-app {
+    --weave-container-padding: var(--size-4-2, 8px);
+    --weave-space-md: 0.625rem;
+    --weave-space-lg: 0.875rem;
+    --weave-font-size-base: 0.875rem;
+    --weave-font-size-sm: 0.75rem;
+  }
+
+  /* 触控目标保持最小 44px */
+  body:not(.is-mobile) .weave-app .weave-button,
+  body:not(.is-mobile) .weave-app .weave-card-action,
+  body:not(.is-mobile) .weave-app button {
+    min-height: var(--weave-touch-sm, 44px);
+    min-width: var(--weave-touch-sm, 44px);
+  }
+
+  /* 主要操作按钮使用更大尺寸 */
+  body:not(.is-mobile) .weave-app .weave-button.primary,
+  body:not(.is-mobile) .weave-app .study-btn,
+  body:not(.is-mobile) .weave-app .show-answer-btn {
+    min-height: var(--weave-touch-md, 48px);
+  }
+
+  /* 隐藏非必要元素（仅在桌面端窄窗口时隐藏特定元素） */
+  /* ⚠️ 注意：hide-on-mobile 类应该在移动端隐藏，不在这里处理 */
+  /* 移动端的 hide-on-mobile 规则在 obsidian-mobile.css 中定义 */
+  /* ✅ 保留 !important：响应式隐藏工具类，需要强制覆盖 */
+  /* 参考：.augment/rules/core/04-anti-force-methods.md */
+  body:not(.is-mobile) .weave-app .weave-hide-mobile-sm {
+    display: none !important;
+  }
+
+  /* 页面标题缩小 */
+  body:not(.is-mobile) .weave-app .page-title,
+  body:not(.is-mobile) .weave-app .section-title {
+    font-size: 1.125rem;
+  }
+
+  /* 卡片网格单列布局 */
+  body:not(.is-mobile) .weave-app .card-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  /* 表格响应式 */
+  body:not(.is-mobile) .weave-app .weave-table {
+    font-size: 0.8125rem;
+  }
+
+  body:not(.is-mobile) .weave-app .weave-table th,
+  body:not(.is-mobile) .weave-app .weave-table td {
+    padding: 8px 6px;
+  }
+
+  /* 输入框和选择框 */
+  body:not(.is-mobile) .weave-app input,
+  body:not(.is-mobile) .weave-app select,
+  body:not(.is-mobile) .weave-app textarea {
+    font-size: 16px; /* 防止 iOS 自动缩放 */
+  }
+
+  /* 工具栏紧凑模式 */
+  body:not(.is-mobile) .weave-app .toolbar,
+  body:not(.is-mobile) .weave-app .header-actions {
+    gap: 4px;
+    padding: 8px;
+  }
+
+  body:not(.is-mobile) .weave-app .toolbar-button {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+
+  /* 搜索框 */
+  body:not(.is-mobile) .weave-app .search-input,
+  body:not(.is-mobile) .weave-app .toolbar-search-input {
+    min-width: 120px;
+    max-width: 100%;
+  }
+}
+
+/* ==================== 极小屏幕媒体查询 (max-width: 320px) ==================== */
+/* ⚠️ 这些样式仅在桌面端极窄窗口时生效，不在 Obsidian 移动端生效 */
+@media (max-width: 320px) {
+  body:not(.is-mobile) .weave-app {
+    --weave-container-padding: var(--size-4-1, 4px);
+    --weave-font-size-base: 0.8125rem;
+    --weave-font-size-sm: 0.6875rem;
+  }
+
+  /* 页面标题进一步缩小 */
+  body:not(.is-mobile) .weave-app .page-title,
+  body:not(.is-mobile) .weave-app .section-title {
+    font-size: 1rem;
+  }
+
+  /* 按钮文字隐藏，只显示图标 */
+  body:not(.is-mobile) .weave-app .toolbar-button .button-text,
+  body:not(.is-mobile) .weave-app .weave-button .button-label {
+    display: none;
+  }
+
+  /* 工具栏更紧凑 */
+  body:not(.is-mobile) .weave-app .toolbar,
+  body:not(.is-mobile) .weave-app .header-actions {
+    gap: 2px;
+    padding: 4px;
+  }
+
+  body:not(.is-mobile) .weave-app .toolbar-button {
+    padding: 4px 6px;
+  }
+
+  /* 隐藏更多非必要元素 */
+  /* ✅ 保留 !important：响应式隐藏工具类 */
+  body:not(.is-mobile) .weave-app .weave-hide-mobile-xs {
+    display: none !important;
+  }
+
+  /* 牌组卡片进一步缩小 */
+  /* ✅ 移除 !important：body:not(.is-mobile) 选择器已有足够优先级 */
+  body:not(.is-mobile) .deck-grid-card,
+  body:not(.is-mobile) .chinese-elegant-card {
+    height: 160px;
+  }
+
+  body:not(.is-mobile) .deck-grid-card .deck-title,
+  body:not(.is-mobile) .chinese-elegant-card .card-title {
+    font-size: 18px;
+  }
+
+  body:not(.is-mobile) .deck-grid-card .stat-number,
+  body:not(.is-mobile) .chinese-elegant-card .stat-value {
+    font-size: 12px;
+  }
+
+  body:not(.is-mobile) .deck-grid-card .stat-label,
+  body:not(.is-mobile) .chinese-elegant-card .stat-label {
+    font-size: 10px;
+  }
+
+  /* 评分按钮单列布局 */
+  /* ✅ 移除 !important：选择器已有足够优先级 */
+  body:not(.is-mobile) .rating-modern .rate-grid,
+  body:not(.is-mobile) .rate-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* 侧边栏隐藏 */
+  /* ✅ 保留 !important：响应式隐藏，需要强制覆盖 */
+  body:not(.is-mobile) .vertical-toolbar {
+    display: none !important;
+  }
+
+  body:not(.is-mobile) .sidebar-content {
+    display: none !important;
+  }
+
+  /* 学习界面全屏 */
+  /* ✅ 移除 !important：选择器已有足够优先级 */
+  body:not(.is-mobile) .study-content {
+    grid-template-columns: 1fr;
+  }
+
+  /* 考试配置单列 */
+  /* ✅ 移除 !important：选择器已有足够优先级 */
+  body:not(.is-mobile) .weave-quiz-config-options,
+  body:not(.is-mobile) .quiz-config-options,
+  body:not(.is-mobile) .config-options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==================== 移动端工具类 ==================== */
+/* ⚠️ 这些媒体查询工具类仅在桌面端窄窗口时生效 */
+/* ✅ 保留 !important：响应式显示/隐藏工具类，需要强制覆盖 */
+/* 参考：.augment/rules/core/04-anti-force-methods.md */
+
+/* 仅在移动端显示 */
+.weave-show-mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 480px) {
+  body:not(.is-mobile) .weave-show-mobile-only {
+    display: flex !important;
+  }
+}
+
+/* 仅在桌面端显示 */
+@media (max-width: 480px) {
+  body:not(.is-mobile) .weave-hide-mobile {
+    display: none !important;
+  }
+}
+
+/* 移动端全宽 */
+@media (max-width: 480px) {
+  body:not(.is-mobile) .weave-mobile-full-width {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
+/* 移动端堆叠布局 */
+/* ✅ 保留 !important：响应式布局工具类，需要强制覆盖 */
+@media (max-width: 480px) {
+  body:not(.is-mobile) .weave-mobile-stack {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+}
+
+/* ==================== 滚动优化 ==================== */
+.weave-scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.weave-scrollable::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.weave-scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.weave-scrollable::-webkit-scrollbar-thumb {
+  background: var(--background-modifier-border);
+  border-radius: 3px;
+}
+
+/* ==================== 触控优化 ==================== */
+/* ⚠️ 这些样式仅在桌面端触控设备时生效，Obsidian 移动端使用 obsidian-mobile.css */
+@media (pointer: coarse) {
+  /* 增加触控目标间距 - 仅桌面端 */
+  body:not(.is-mobile) .weave-app .weave-button + .weave-button,
+  body:not(.is-mobile) .weave-app button + button {
+    margin-left: 8px;
+  }
+
+  /* 触控反馈 - 仅桌面端 */
+  body:not(.is-mobile) .weave-app .weave-button:active,
+  body:not(.is-mobile) .weave-app button:active {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+
+  /* 禁用悬停效果（触控设备不需要）- 仅桌面端 */
+  body:not(.is-mobile) .weave-app .weave-button:hover,
+  body:not(.is-mobile) .weave-app button:hover {
+    transform: none;
+  }
+}
+
+/* ==================== iOS 安全区域支持 ==================== */
+/* ⚠️ 这些样式仅在桌面端生效，Obsidian 移动端使用 obsidian-mobile.css */
+@supports (padding: env(safe-area-inset-bottom)) {
+  body:not(.is-mobile) .weave-app {
+    --weave-safe-area-top: env(safe-area-inset-top, 0px);
+    --weave-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --weave-safe-area-left: env(safe-area-inset-left, 0px);
+    --weave-safe-area-right: env(safe-area-inset-right, 0px);
+  }
+
+  /* 固定定位元素避开安全区域 */
+  body:not(.is-mobile) .weave-app .weave-fixed-bottom,
+  body:not(.is-mobile) .weave-app .fixed-bottom {
+    padding-bottom: calc(var(--weave-space-md, 1rem) + var(--weave-safe-area-bottom));
+  }
+
+  body:not(.is-mobile) .weave-app .weave-fixed-top,
+  body:not(.is-mobile) .weave-app .fixed-top {
+    padding-top: calc(var(--weave-space-md, 1rem) + var(--weave-safe-area-top));
+  }
+
+  /* 全屏模态窗安全区域 */
+  @media (max-width: 480px) {
+    body:not(.is-mobile) .weave-app .weave-modal-content.fullscreen {
+      padding-top: var(--weave-safe-area-top);
+      padding-bottom: var(--weave-safe-area-bottom);
+      padding-left: var(--weave-safe-area-left);
+      padding-right: var(--weave-safe-area-right);
+    }
+  }
+}
+
+/* ==================== 减少动画模式 ==================== */
+/* ✅ 保留 !important：无障碍功能，需要强制覆盖所有动画 */
+/* 参考：.augment/rules/core/04-anti-force-methods.md - 无障碍功能是合理的 !important 使用场景 */
+@media (prefers-reduced-motion: reduce) {
+  .weave-app *,
+  .weave-app *::before,
+  .weave-app *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==================== 高对比度模式 ==================== */
+@media (prefers-contrast: high) {
+  .weave-app .weave-button,
+  .weave-app button {
+    border: 2px solid currentColor;
+  }
+
+  .weave-app .weave-card {
+    border: 2px solid var(--text-normal);
+  }
+}

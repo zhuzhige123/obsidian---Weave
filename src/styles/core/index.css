@@ -1,0 +1,342 @@
+/**
+ * Weave插件核心样式 - 合并版本
+ * 将原本分散的@import依赖合并到一个文件中，提升构建性能
+ * 
+ * 合并的文件：
+ * - tokens.css (设计令牌)
+ * - animations.css (通用动画)
+ * - utility-classes.css (工具类)
+ * - modern-components.css (现代组件)
+ * 
+ * 注意：保持weave-命名空间隔离
+ */
+
+/* ===== 1. 设计令牌 (来自tokens.css) ===== */
+/* 深色主题下的设计令牌（默认） */
+.weave-app {
+  /* 基础颜色调色板 */
+  --weave-primary: var(--interactive-accent);
+  --weave-primary-hover: var(--interactive-accent-hover);
+  --weave-secondary: var(--text-muted);
+  --weave-success: #22c55e;
+  --weave-warning: #f59e0b;
+  --weave-danger: #ef4444;
+  --weave-info: #3b82f6;
+  
+  /* 文本颜色 */
+  --weave-text-primary: var(--text-normal);
+  --weave-text-secondary: var(--text-muted);
+  --weave-text-accent: var(--text-accent);
+  --weave-text-on-accent: var(--text-on-accent);
+  
+  /* 背景颜色 */
+  --weave-bg-primary: var(--background-primary);
+  --weave-bg-secondary: var(--background-secondary);
+  --weave-bg-modifier-hover: var(--background-modifier-hover);
+  --weave-bg-modifier-border: var(--background-modifier-border);
+  
+  /* 间距系统 */
+  --weave-space-xs: 0.25rem;
+  --weave-space-sm: 0.5rem;
+  --weave-space-md: 1rem;
+  --weave-space-lg: 1.5rem;
+  --weave-space-xl: 2rem;
+  --weave-space-2xl: 3rem;
+  
+  /* 字体大小 */
+  --weave-font-size-xs: 0.75rem;
+  --weave-font-size-sm: 0.875rem;
+  --weave-font-size-base: 1rem;
+  --weave-font-size-lg: 1.125rem;
+  --weave-font-size-xl: 1.25rem;
+  --weave-font-size-2xl: 1.5rem;
+  
+  /* 圆角系统 */
+  --weave-radius-sm: 4px;
+  --weave-radius-md: 6px;
+  --weave-radius-lg: 8px;
+  --weave-radius-xl: 12px;
+  
+  /* 阴影系统 */
+  --weave-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --weave-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --weave-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --weave-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+  
+  /* z-index 层级系统 */
+  --weave-z-overlay: 1000;
+  --weave-z-top: 10000;
+
+  /* 过渡效果 */
+  --weave-transition: all 0.2s ease;
+  --weave-transition-fast: all 0.1s ease;
+  --weave-transition-slow: all 0.3s ease;
+  
+  /* 标签颜色系统 */
+  --weave-tag-blue-bg: rgba(59, 130, 246, 0.2);
+  --weave-tag-blue-text: rgb(147, 197, 253);
+  --weave-tag-blue-border: rgba(59, 130, 246, 0.4);
+  --weave-tag-purple-bg: color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+  --weave-tag-purple-text: color-mix(in srgb, var(--interactive-accent) 80%, white);
+  --weave-tag-purple-border: color-mix(in srgb, var(--interactive-accent) 40%, transparent);
+  --weave-tag-red-bg: rgba(239, 68, 68, 0.2);
+  --weave-tag-red-text: rgb(252, 165, 165);
+  --weave-tag-red-border: rgba(239, 68, 68, 0.4);
+  --weave-tag-green-bg: rgba(34, 197, 94, 0.2);
+  --weave-tag-green-text: rgb(134, 239, 172);
+  --weave-tag-green-border: rgba(34, 197, 94, 0.4);
+  --weave-tag-gray-bg: rgba(107, 114, 128, 0.2);
+  --weave-tag-gray-text: rgb(209, 213, 219);
+  --weave-tag-gray-border: rgba(107, 114, 128, 0.4);
+  
+  /* 字体设置 */
+  font-family: var(--font-interface);
+  font-size: var(--font-ui-medium, 14px);
+}
+
+/* 浅色主题适配 */
+.theme-light .weave-app {
+  --weave-tag-blue-bg: rgba(59, 130, 246, 0.15);
+  --weave-tag-blue-text: rgb(59, 130, 246);
+  --weave-tag-blue-border: rgba(59, 130, 246, 0.3);
+  --weave-tag-purple-bg: color-mix(in srgb, var(--interactive-accent) 15%, transparent);
+  --weave-tag-purple-text: var(--interactive-accent);
+  --weave-tag-purple-border: color-mix(in srgb, var(--interactive-accent) 30%, transparent);
+  --weave-tag-red-bg: rgba(239, 68, 68, 0.15);
+  --weave-tag-red-text: rgb(239, 68, 68);
+  --weave-tag-red-border: rgba(239, 68, 68, 0.3);
+  --weave-tag-green-bg: rgba(34, 197, 94, 0.15);
+  --weave-tag-green-text: rgb(34, 197, 94);
+  --weave-tag-green-border: rgba(34, 197, 94, 0.3);
+  --weave-tag-gray-bg: rgba(107, 114, 128, 0.15);
+  --weave-tag-gray-text: rgb(107, 114, 128);
+  --weave-tag-gray-border: rgba(107, 114, 128, 0.3);
+}
+
+/* ===== 2. 通用动画 (来自animations.css) ===== */
+@keyframes weave-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes weave-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes weave-slide-up {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes weave-slide-down {
+  from { 
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes weave-scale-in {
+  from { 
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes weave-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* 动画工具类 */
+.weave-animate-fade-in {
+  animation: weave-fade-in 0.2s ease-out;
+}
+
+.weave-animate-slide-up {
+  animation: weave-slide-up 0.3s ease-out;
+}
+
+.weave-animate-scale-in {
+  animation: weave-scale-in 0.2s ease-out;
+}
+
+/* ===== 3. 基础组件 (来自modern-components.css核心部分) ===== */
+/* 按钮基础样式 */
+.weave-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--weave-space-xs);
+  padding: var(--weave-space-sm) var(--weave-space-md);
+  border: none;
+  border-radius: var(--weave-radius-md);
+  font-size: var(--weave-font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--weave-transition);
+  background: var(--weave-bg-modifier-hover);
+  color: var(--weave-text-primary);
+}
+
+.weave-btn:hover {
+  background: var(--weave-bg-modifier-border);
+  transform: translateY(-1px);
+  box-shadow: var(--weave-shadow-md);
+}
+
+.weave-btn:active {
+  transform: translateY(0);
+}
+
+/* 顶部工具栏按钮（扁平化）：统一移除突起/底框效果 */
+.weave-topbar-btn.weave-btn {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.weave-topbar-btn.weave-btn:hover:not(.weave-btn--disabled):not(.weave-btn--loading) {
+  background: var(--weave-bg-modifier-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+.weave-topbar-btn.weave-btn:active:not(.weave-btn--disabled):not(.weave-btn--loading) {
+  background: var(--weave-bg-modifier-border);
+  box-shadow: none;
+  transform: none;
+}
+
+/* 按钮变体 */
+.weave-btn--primary {
+  background: var(--weave-primary);
+  color: var(--weave-text-on-accent);
+}
+
+.weave-btn--primary:hover {
+  background: var(--weave-primary-hover);
+}
+
+.weave-btn--sm {
+  padding: var(--weave-space-xs) var(--weave-space-sm);
+  font-size: var(--weave-font-size-xs);
+}
+
+.weave-btn--lg {
+  padding: var(--weave-space-md) var(--weave-space-lg);
+  font-size: var(--weave-font-size-base);
+}
+
+/* 标签基础样式 */
+.weave-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--weave-radius-sm);
+  font-size: var(--weave-font-size-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: var(--weave-transition);
+  background: var(--weave-tag-gray-bg);
+  color: var(--weave-tag-gray-text);
+  border: 1px solid var(--weave-tag-gray-border);
+}
+
+.weave-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--weave-shadow-sm);
+}
+
+/* 标签颜色变体 */
+.weave-tag-blue {
+  background: var(--weave-tag-blue-bg);
+  color: var(--weave-tag-blue-text);
+  border-color: var(--weave-tag-blue-border);
+}
+
+.weave-tag-purple {
+  background: var(--weave-tag-purple-bg);
+  color: var(--weave-tag-purple-text);
+  border-color: var(--weave-tag-purple-border);
+}
+
+.weave-tag-red {
+  background: var(--weave-tag-red-bg);
+  color: var(--weave-tag-red-text);
+  border-color: var(--weave-tag-red-border);
+}
+
+.weave-tag-green {
+  background: var(--weave-tag-green-bg);
+  color: var(--weave-tag-green-text);
+  border-color: var(--weave-tag-green-border);
+}
+
+/* ===== 4. 工具类 (来自utility-classes.css精简版) ===== */
+/* 间距工具类 */
+.weave-mt-0 { margin-top: 0; }
+.weave-mt-xs { margin-top: var(--weave-space-xs); }
+.weave-mt-sm { margin-top: var(--weave-space-sm); }
+.weave-mt-md { margin-top: var(--weave-space-md); }
+.weave-mt-lg { margin-top: var(--weave-space-lg); }
+
+.weave-mb-0 { margin-bottom: 0; }
+.weave-mb-xs { margin-bottom: var(--weave-space-xs); }
+.weave-mb-sm { margin-bottom: var(--weave-space-sm); }
+.weave-mb-md { margin-bottom: var(--weave-space-md); }
+.weave-mb-lg { margin-bottom: var(--weave-space-lg); }
+
+.weave-p-0 { padding: 0; }
+.weave-p-xs { padding: var(--weave-space-xs); }
+.weave-p-sm { padding: var(--weave-space-sm); }
+.weave-p-md { padding: var(--weave-space-md); }
+.weave-p-lg { padding: var(--weave-space-lg); }
+
+/* Flexbox工具类 */
+.weave-flex { display: flex; }
+.weave-flex-col { flex-direction: column; }
+.weave-items-center { align-items: center; }
+.weave-justify-center { justify-content: center; }
+.weave-justify-between { justify-content: space-between; }
+.weave-flex-1 { flex: 1; }
+
+/* 显示工具类 */
+.weave-hidden { display: none; }
+.weave-block { display: block; }
+
+/* 文本工具类 */
+.weave-text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weave-text-center { text-align: center; }
+.weave-text-right { text-align: right; }
+
+/* ===== 5. 响应式断点 ===== */
+@media (max-width: 768px) {
+  .weave-app {
+    --weave-space-md: 0.75rem;
+    --weave-space-lg: 1rem;
+  }
+  
+  .weave-btn {
+    padding: var(--weave-space-xs) var(--weave-space-sm);
+    font-size: var(--weave-font-size-xs);
+  }
+}

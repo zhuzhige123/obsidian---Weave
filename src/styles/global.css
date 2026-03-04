@@ -1,0 +1,447 @@
+/* Anki Obsidian Plugin - Global Styles */
+/* 混合式现代化设计系统 - 类Cursor风格 + Obsidian变量 */
+
+/* ⚠️ 样式隔离规范
+ * 1. 所有全局样式类必须使用 .weave- 前缀，避免污染Obsidian全局作用域
+ * 2. 所有CSS变量定义必须在 .weave-app 作用域内，不得修改 :root
+ * 3. 避免使用通用类名（如 .container, .button 等）
+ * 4. 组件内部样式优先使用 Svelte 的 <style> 标签（自动隔离）
+ */
+
+/* 🚀 优化后的导入结构 - 减少@import依赖链，提升构建性能 */
+@import './core/index.css';              /* 核心样式：tokens + animations + components + utilities */
+@import './codemirror-theme.css';        /* CodeMirror编辑器主题 */
+@import './settings-common.css';         /* 设置界面样式 */
+@import './mobile-responsive.css';       /* 📱 手机端响应式适配（媒体查询 - 仅桌面端窄窗口） */
+@import './obsidian-mobile.css';         /* 📱 Obsidian 设备类样式（优先 - 实际移动设备 + 平板端） */
+
+/* 统一组件样式 */
+@import './vertical-toolbar.css';        /* 侧边栏工具栏统一规范 */
+
+/* 特殊功能样式（按需加载） */
+@import './modal-components.css';        /* 模态窗组件 */
+@import './choice-card.css';             /* 选择题卡片 */
+@import './data-management.css';         /* 数据管理 */
+@import './metadata-beautifier.css';     /* 元数据美化 */
+@import './preview-components.css';      /* 预览组件 */
+
+/* 在插件容器内重映射 Obsidian 变量到 Weave 设计令牌，实现样式去耦 */
+.weave-app {
+  /* 字体设置 - 使用Obsidian的原生字体 */
+  font-family: var(--font-interface);
+  font-size: var(--font-ui-medium, 14px);
+
+  /* 特殊阴影效果 - 插件专用变量 */
+  --weave-shadow-glow: 0 4px 12px rgba(139, 92, 246, 0.3);
+
+  /* 字体变量映射 */
+  --weave-font-interface: var(--font-interface);
+  --weave-font-text: var(--font-text);
+  --weave-font-monospace: var(--font-monospace);
+  --weave-font-size-ui: var(--font-ui-medium, 14px);
+  --weave-font-size-text: var(--font-text-size, 16px);
+
+  /* 组件表层和阴影/边框/文本/悬停统一使用 Weave 自定义值 */
+  --background-modifier-border: var(--weave-border);
+  --background-modifier-border-hover: color-mix(in oklab, var(--weave-border), var(--weave-text-primary) 20%);
+
+  /* 主编辑区优化 - 充分利用更大的空间 */
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  --background-modifier-hover: var(--weave-hover);
+
+  --text-normal: var(--weave-text-primary);
+  --text-muted: var(--weave-text-secondary);
+  --text-faint: var(--weave-text-faint);
+  --text-accent: var(--weave-accent-color);
+  --text-accent-hover: var(--weave-accent-color);
+  --text-on-accent: var(--weave-text-on-accent);
+  --background-modifier-border-focus: var(--weave-accent-color);
+
+
+
+  /* Weave 主色跟随 Obsidian 主题色 */
+  /* 注意：不要在这里覆盖 --interactive-accent，让它保持 Obsidian 原生值 */
+
+  /* CodeMirror 文本显示优化 */
+  --text-selection: rgba(139, 92, 246, 0.2);
+  --editor-cursor: var(--weave-accent-color);
+
+  /* ✨ 编辑器内容区padding - UX最佳实践 */
+  --weave-editor-padding-y: 20px;  /* 上下间距：提供垂直呼吸空间 */
+  --weave-editor-padding-x: 24px;  /* 左右间距：避免文字贴边，符合黄金比例 */
+  --weave-editor-min-height: 80px;  /* 最小高度 */
+}
+
+/* 滚动条样式优化（使用 Weave 变量） */
+.weave-app ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.weave-app ::-webkit-scrollbar-track {
+  background: var(--weave-scrollbar-track);
+  border-radius: 4px;
+}
+
+.weave-app ::-webkit-scrollbar-thumb {
+  background: var(--weave-scrollbar-thumb);
+  border-radius: 4px;
+  transition: background var(--weave-duration-normal) ease;
+}
+
+.weave-app ::-webkit-scrollbar-thumb:hover {
+  background: var(--weave-text-secondary);
+}
+
+/* 字体工具类 */
+/* ✅ 移除 !important：提高选择器优先级 */
+.weave-app .weave-font-interface {
+  font-family: var(--weave-font-interface);
+  font-size: var(--weave-font-size-ui);
+}
+
+.weave-app .weave-font-text {
+  font-family: var(--weave-font-text);
+  font-size: var(--weave-font-size-text);
+}
+
+.weave-app .weave-font-monospace {
+  font-family: var(--weave-font-monospace);
+}
+
+/* 移除 Obsidian markdown 渲染中的 blockquote 侧边颜色条 */
+/* ✅ 移除 !important：使用 :where() 降低优先级，让用户样式可以覆盖 */
+.weave-app :where(:global(.markdown-preview-view) blockquote),
+.weave-app :where(:global(.markdown-rendered) blockquote),
+.weave-app :where(blockquote) {
+  border-left: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+
+/* 确保markdown渲染内容支持文本选择和链接交互 */
+/* ✅ 移除 !important：提高选择器优先级 */
+.weave-app :global(.markdown-preview-view),
+.weave-app :global(.markdown-rendered) {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* 确保链接可以点击和悬停 */
+/* ✅ 移除 !important：已有足够的选择器优先级 */
+.weave-app :global(.markdown-preview-view) a,
+.weave-app :global(.markdown-rendered) a,
+.weave-app a.internal-link,
+.weave-app a.external-link {
+  pointer-events: auto;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-accent);
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.weave-app :global(.markdown-preview-view) a:hover,
+.weave-app :global(.markdown-rendered) a:hover,
+.weave-app a.internal-link:hover,
+.weave-app a.external-link:hover {
+  text-decoration: underline;
+  color: var(--text-accent-hover);
+}
+
+/* 全局工具类 */
+.weave-gradient-text {
+  background: var(--weave-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* .weave-card 样式已移至 modern-components.css，避免重复定义 */
+
+/* 保留 weave-divider，这是一个常用的工具类 */
+.weave-divider {
+  height: 1px;
+  background: var(--weave-border);
+  margin: var(--weave-space-md) 0;
+}
+
+/* 状态指示器 */
+.weave-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: var(--weave-space-xs);
+}
+
+.weave-status-new {
+  background: var(--weave-new-card);
+}
+
+.weave-status-learning {
+  background: var(--weave-learning-card);
+}
+
+.weave-status-review {
+  background: var(--weave-review-card);
+}
+
+.weave-status-relearning {
+  background: var(--weave-relearning-card);
+}
+
+/* 数字徽章 */
+.weave-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 var(--weave-space-xs);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.weave-badge-primary {
+  background: var(--weave-gradient-primary);
+  color: var(--text-on-accent);
+}
+
+.weave-badge-success {
+  background: var(--weave-success);
+  color: var(--text-on-accent);
+}
+
+.weave-badge-warning {
+  background: var(--weave-warning);
+  color: var(--text-on-accent);
+}
+
+.weave-badge-error {
+  background: var(--weave-error);
+  color: var(--text-on-accent);
+}
+
+/* 动画定义 - 统一在 animations.css 中管理 */
+
+/* 学习统计颜色 */
+.weave-stat-new {
+  color: var(--weave-new-card);
+}
+
+.weave-stat-learning {
+  color: var(--weave-learning-card);
+}
+
+.weave-stat-review {
+  color: var(--weave-review-card);
+}
+
+.weave-stat-relearning {
+  color: var(--weave-relearning-card);
+}
+
+/* 响应式工具类 */
+/* ✅ 保留 !important：工具类设计意图是强制覆盖所有 display 值 */
+/* 参考：.augment/rules/core/04-anti-force-methods.md - 响应式隐藏是合理的 !important 使用场景 */
+@media (max-width: 768px) {
+  .weave-hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .weave-hide-desktop {
+    display: none !important;
+  }
+}
+
+/* 主编辑区模式专门样式 */
+.weave-main-editor-mode {
+  /* 确保在主编辑区充分利用空间 */
+  height: 100%;
+  overflow: hidden;
+}
+
+.weave-main-editor-mode .weave-app {
+  /* 移除最小高度限制，使用父容器的高度 */
+  min-height: unset;
+  height: 100%;
+}
+
+.weave-main-editor-mode .weave-app-inner {
+  /* 确保内容区域充满整个容器 */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.weave-main-editor-mode .weave-main-content {
+  /* 主内容区域占据剩余空间 */
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 主编辑区模式下的网格视图优化 */
+.weave-main-editor-mode .weave-card-grid {
+  /* 在主编辑区可以使用更多列 */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+/* 主编辑区模式下的响应式断点调整 */
+.weave-main-editor-mode .responsive-container.responsive-desktop {
+  --columns: 3;
+  --grid-gap: 1.5rem;
+  --content-padding: 2rem;
+}
+
+/* 打印样式 */
+/* ✅ 保留 !important：工具类设计意图是强制隐藏打印内容 */
+/* 参考：.augment/rules/core/04-anti-force-methods.md - 工具类覆盖是合理的 !important 使用场景 */
+@media print {
+  .weave-no-print {
+    display: none !important;
+  }
+}
+
+/* 拖拽反馈样式 */
+.weave-drag-feedback {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  padding: 12px;
+  box-shadow: var(--shadow-s);
+  max-width: 300px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.weave-drag-feedback.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.weave-drag-feedback.valid-target {
+  border-color: var(--text-accent);
+  background: var(--text-accent-hover);
+}
+
+.weave-drag-feedback-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weave-drag-feedback-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.weave-drag-feedback-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.weave-drag-feedback-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-normal);
+  margin-bottom: 2px;
+}
+
+.weave-drag-feedback-preview {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 拖拽覆盖层样式 */
+.weave-drag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(var(--color-accent-rgb), 0.1);
+  border: 2px dashed var(--color-accent);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  /* ⚠️ 移除 backdrop-filter - 会导致渲染问题 */
+  /* backdrop-filter: blur(2px); */
+  animation: dragPulse 1.5s ease-in-out infinite;
+}
+
+.weave-drag-message {
+  text-align: center;
+  padding: 2rem;
+  background: var(--background-primary);
+  border-radius: 8px;
+  box-shadow: var(--shadow-s);
+  border: 1px solid var(--border-color);
+}
+
+.weave-drag-message h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--color-accent);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.weave-drag-message p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+@keyframes dragPulse {
+  0%, 100% {
+    border-color: var(--color-accent);
+    background: rgba(var(--color-accent-rgb), 0.1);
+  }
+  50% {
+    border-color: var(--text-accent);
+    background: rgba(var(--color-accent-rgb), 0.2);
+  }
+}
+
+
+/* ===== 增量阅读 - 锚点高亮样式 ===== */
+/* ✅ 移除 !important：使用更具体的选择器 */
+.weave-app .weave-anchor-highlight {
+  background-color: var(--text-highlight-bg, rgba(255, 208, 0, 0.4));
+  animation: weave-anchor-flash 2s ease-out forwards;
+}
+
+@keyframes weave-anchor-flash {
+  0% {
+    background-color: var(--text-highlight-bg, rgba(255, 208, 0, 0.6));
+  }
+  50% {
+    background-color: var(--text-highlight-bg, rgba(255, 208, 0, 0.3));
+  }
+  100% {
+    background-color: transparent;
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "extends": ["./.eslintrc.json"],
+  "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "CallExpression[callee.property.name='stopPropagation']",
+        "message": "❌ Svelte 5: stopPropagation 会破坏事件委托系统。请使用 preventDefault 或条件判断。参考: svelte5-event-handler.ts"
+      },
+      {
+        "selector": "CallExpression[callee.property.name='stopImmediatePropagation']",
+        "message": "❌ Svelte 5: stopImmediatePropagation 会破坏事件系统。请使用其他方案。"
+      },
+      {
+        "selector": "CallExpression[callee.object.name='document'][callee.property.name='addEventListener'][arguments.2.properties.0.key.name='capture'][arguments.2.properties.0.value.value=true]",
+        "message": "⚠️ 危险: 全局事件捕获可能影响 Obsidian 本体功能。请限制在插件容器内。"
+      }
+    ],
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "Event",
+        "property": "stopPropagation",
+        "message": "❌ Svelte 5 不兼容 stopPropagation"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["*.svelte"],
+      "processor": "svelte3/svelte3",
+      "rules": {
+        "svelte/no-stoppropagation": "error",
+        "svelte/prefer-preventdefault": "warn",
+        "svelte/no-global-event-capture": "error"
+      }
+    }
+  ]
+}

@@ -1,0 +1,585 @@
+/* 🎨 现代扁平化选择题界面样式 */
+
+:root {
+  /* 🎨 扁平化设计令牌 - 颜色系统 */
+  --flat-primary: #2563eb;
+  --flat-primary-light: #3b82f6;
+  --flat-primary-dark: #1d4ed8;
+  --flat-primary-alpha: rgba(37, 99, 235, 0.1);
+
+  --flat-success: #10b981;
+  --flat-success-light: #34d399;
+  --flat-success-dark: #059669;
+  --flat-success-alpha: rgba(16, 185, 129, 0.1);
+
+  --flat-error: #ef4444;
+  --flat-error-light: #f87171;
+  --flat-error-dark: #dc2626;
+  --flat-error-alpha: rgba(239, 68, 68, 0.1);
+
+  --flat-warning: #f59e0b;
+  --flat-warning-light: #fbbf24;
+  --flat-warning-dark: #d97706;
+  --flat-warning-alpha: rgba(245, 158, 11, 0.1);
+
+  /* 🎨 背景色系 - 完全适配Obsidian主题 */
+  --flat-bg: var(--background-primary);
+  --flat-surface: var(--background-primary);
+  --flat-surface-hover: var(--background-modifier-hover);
+  --flat-surface-active: var(--background-modifier-active-hover);
+
+  /* 🎨 边框色系 - 完全适配Obsidian主题 */
+  --flat-border: var(--background-modifier-border);
+  --flat-border-hover: var(--background-modifier-border-hover);
+  --flat-border-focus: var(--interactive-accent);
+
+  /* 🎨 文字色系 - 完全适配Obsidian主题 */
+  --flat-text-primary: var(--text-normal);
+  --flat-text-secondary: var(--text-muted);
+  --flat-text-tertiary: var(--text-faint);
+
+  /* 🎨 阴影系统 */
+  --flat-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --flat-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --flat-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --flat-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* 🎨 圆角系统 */
+  --flat-radius-sm: 0.375rem;
+  --flat-radius-md: 0.5rem;
+  --flat-radius-lg: 0.75rem;
+  --flat-radius-xl: 1rem;
+  --flat-radius-2xl: 1.5rem;
+  --flat-radius-full: 9999px;
+
+  /* 🎨 间距系统 */
+  --flat-space-xs: 0.25rem;
+  --flat-space-sm: 0.5rem;
+  --flat-space-md: 1rem;
+  --flat-space-lg: 1.5rem;
+  --flat-space-xl: 2rem;
+  --flat-space-2xl: 3rem;
+
+  /* 🎨 动画系统 */
+  --flat-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --flat-transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --flat-transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 🌙 深色模式特殊适配 */
+.theme-dark {
+  --flat-primary-alpha: rgba(37, 99, 235, 0.15);
+  --flat-success-alpha: rgba(16, 185, 129, 0.15);
+  --flat-error-alpha: rgba(239, 68, 68, 0.15);
+  --flat-warning-alpha: rgba(245, 158, 11, 0.15);
+}
+
+/* 🌞 浅色模式特殊适配 */
+.theme-light {
+  --flat-primary-alpha: rgba(37, 99, 235, 0.08);
+  --flat-success-alpha: rgba(16, 185, 129, 0.08);
+  --flat-error-alpha: rgba(239, 68, 68, 0.08);
+  --flat-warning-alpha: rgba(245, 158, 11, 0.08);
+}
+
+/* 🎯 主容器 - 现代扁平化设计 */
+.weave-choice-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--flat-space-xl);
+  padding: 0;
+  background: var(--flat-bg);
+  color: var(--flat-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  border-radius: var(--flat-radius-xl);
+  overflow: hidden;
+  position: relative;
+}
+
+/* 🎯 题目卡片 - 扁平化设计 */
+.weave-choice-question {
+  background: var(--flat-surface);
+  border: 2px solid var(--flat-border);
+  border-radius: var(--flat-radius-xl);
+  padding: var(--flat-space-2xl); /* 🔧 增加题目区域内边距 */
+  box-shadow: var(--flat-shadow-lg);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--flat-transition-normal);
+  margin-bottom: var(--flat-space-xl); /* 🔧 增加题目与选项间距 */
+}
+
+/* 🚫 移除侧边颜色条 - 保持简洁的扁平化设计 */
+
+.weave-choice-question:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--flat-shadow-xl);
+  border-color: var(--flat-border-hover);
+}
+
+/* 🎯 题目标题区域 */
+.weave-choice-question-title {
+  display: flex;
+  align-items: center;
+  gap: var(--flat-space-md);
+  margin-bottom: var(--flat-space-lg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--flat-text-secondary);
+}
+
+/* 🎯 题型标签 - 现代扁平化设计 */
+.weave-choice-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--flat-space-sm);
+  padding: var(--flat-space-sm) var(--flat-space-md);
+  background: var(--flat-primary-alpha);
+  border: 2px solid var(--flat-primary);
+  color: var(--flat-primary);
+  border-radius: var(--flat-radius-full);
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: var(--flat-shadow-sm);
+  transition: all var(--flat-transition-fast);
+}
+
+.weave-choice-label:hover {
+  background: var(--flat-primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--flat-shadow-md);
+}
+
+.weave-choice-label--explanation {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.weave-choice-result {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.weave-choice-result.correct {
+  background: rgba(63, 185, 80, 0.2);
+  color: var(--cursor-success);
+  border: 1px solid var(--cursor-success);
+}
+
+.weave-choice-result.incorrect {
+  background: rgba(248, 81, 73, 0.2);
+  color: var(--cursor-error);
+  border: 1px solid var(--cursor-error);
+}
+
+.weave-choice-question-content {
+  color: var(--cursor-text-primary);
+  line-height: 1.4;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* 🎯 选项网格 - 现代扁平化布局 */
+.weave-choice-options {
+  display: grid;
+  gap: var(--flat-space-lg); /* 🔧 增加选项间距 */
+  margin-bottom: var(--flat-space-xl);
+  padding: var(--flat-space-md); /* 🔧 增加容器内边距 */
+}
+
+/* 🎯 选项卡片 - 扁平化设计 */
+.weave-choice-option {
+  background: var(--flat-surface);
+  border: 2px solid var(--flat-border);
+  border-radius: var(--flat-radius-lg);
+  padding: var(--flat-space-xl); /* 🔧 增加内边距，提供更好的间距 */
+  cursor: pointer;
+  transition: all var(--flat-transition-normal);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--flat-space-lg); /* 🔧 增加元素间距 */
+  box-shadow: var(--flat-shadow-sm);
+  min-height: 60px;
+  overflow: hidden;
+  margin: var(--flat-space-sm) 0; /* 🔧 增加选项间的垂直间距 */
+}
+
+/* 🎯 选项交互状态 - 扁平化动画 */
+.weave-choice-option:hover:not(:disabled) {
+  border-color: var(--flat-border-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--flat-shadow-md);
+  background: var(--flat-surface-hover);
+}
+
+.weave-choice-option:focus {
+  outline: none;
+  border-color: var(--flat-primary);
+  box-shadow: 0 0 0 3px var(--flat-primary-alpha);
+}
+
+/* 🎯 选中状态 - 扁平化高亮 */
+.weave-choice-option--selected {
+  border-color: var(--flat-primary);
+  background: var(--flat-primary-alpha);
+  transform: translateY(-2px);
+  box-shadow: var(--flat-shadow-md);
+}
+
+/* 🎯 正确答案高亮 */
+.weave-choice-option--correct-highlight {
+  border-color: var(--flat-success);
+  background: var(--flat-success-alpha);
+  animation: correctPulse 0.6s ease-out;
+}
+
+/* 🎯 错误答案高亮 */
+.weave-choice-option--incorrect-highlight {
+  border-color: var(--flat-error);
+  background: var(--flat-error-alpha);
+  animation: incorrectShake 0.6s ease-out;
+}
+
+.weave-choice-option--disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  filter: grayscale(0.3);
+}
+
+/* 🎯 选项标签 - 现代圆形指示器 */
+.weave-choice-option-label {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--flat-surface);
+  border: 2px solid var(--flat-border);
+  border-radius: var(--flat-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--flat-text-primary);
+  flex-shrink: 0;
+  transition: all var(--flat-transition-normal);
+  box-shadow: var(--flat-shadow-sm);
+}
+
+/* 🎯 选中状态的标签 */
+.weave-choice-option--selected .weave-choice-option-label {
+  background: var(--flat-primary);
+  border-color: var(--flat-primary);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: var(--flat-shadow-md);
+}
+
+/* 🎯 正确答案标签 */
+.weave-choice-option--correct-highlight .weave-choice-option-label {
+  background: var(--flat-success);
+  border-color: var(--flat-success);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: var(--flat-shadow-md);
+}
+
+/* 🎯 错误答案标签 */
+.weave-choice-option--incorrect-highlight .weave-choice-option-label {
+  background: var(--flat-error);
+  border-color: var(--flat-error);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: var(--flat-shadow-md);
+}
+
+/* 🎯 选项内容区域 */
+.weave-choice-option-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--flat-space-xs);
+  padding: var(--flat-space-sm) 0; /* 🔧 增加内容区域的垂直内边距 */
+}
+
+.option-description {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--flat-text-primary);
+  line-height: 1.6;
+  margin: 0;
+  padding: var(--flat-space-xs) 0; /* 🔧 增加文本的垂直内边距 */
+}
+
+/* 🎯 选项指示器 - 现代圆点设计 */
+.weave-choice-option-indicator {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--flat-border);
+  border-radius: var(--flat-radius-full);
+  flex-shrink: 0;
+  transition: all var(--flat-transition-normal);
+  position: relative;
+  background: var(--flat-surface);
+}
+
+.weave-choice-option--selected .weave-choice-option-indicator {
+  border-color: var(--flat-primary);
+  background: var(--flat-primary);
+  transform: scale(1.2);
+}
+
+.weave-choice-option--selected .weave-choice-option-indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: var(--flat-radius-full);
+  transform: translate(-50%, -50%);
+}
+
+.weave-choice-option--selected .weave-choice-option-indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* 控制按钮 */
+.weave-choice-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.25rem;
+}
+
+.weave-choice-control-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--cursor-border);
+  border-radius: 8px;
+  background: var(--cursor-bg-secondary);
+  color: var(--cursor-text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.weave-choice-control-btn:hover:not(:disabled) {
+  border-color: var(--cursor-border-hover);
+  background: var(--cursor-bg-tertiary);
+  transform: translateY(-1px);
+}
+
+.weave-choice-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.weave-choice-control-btn--submit {
+  background: var(--cursor-accent);
+  border-color: var(--cursor-accent);
+  color: white;
+}
+
+.weave-choice-control-btn--submit:hover:not(:disabled) {
+  background: var(--cursor-accent-hover);
+  border-color: var(--cursor-accent-hover);
+}
+
+.weave-choice-control-btn--reset {
+  border-color: var(--cursor-warning);
+  color: var(--cursor-warning);
+}
+
+/* 解析样式 */
+.weave-choice-explanation {
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 4px solid #3b82f6;
+  border-radius: 16px;
+  padding: 1.5rem;
+  animation: slideIn 0.5s ease-out;
+}
+
+.weave-choice-explanation-title {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.weave-choice-explanation-content {
+  color: var(--cursor-text-primary);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* 空状态 */
+.weave-choice-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  opacity: 0.6;
+}
+
+.weave-choice-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.weave-choice-empty-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--cursor-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.weave-choice-empty-description {
+  color: var(--cursor-text-secondary);
+  font-size: 0.875rem;
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 🎨 扁平化动画增强 */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes correctPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: var(--flat-shadow-sm);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: var(--flat-shadow-lg);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: var(--flat-shadow-md);
+  }
+}
+
+@keyframes incorrectShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* 🎨 选项入场动画 */
+.weave-choice-option:nth-child(1) { animation-delay: 0.1s; }
+.weave-choice-option:nth-child(2) { animation-delay: 0.2s; }
+.weave-choice-option:nth-child(3) { animation-delay: 0.3s; }
+.weave-choice-option:nth-child(4) { animation-delay: 0.4s; }
+.weave-choice-option:nth-child(5) { animation-delay: 0.5s; }
+
+/* 🎨 响应式设计 - 移动优先 */
+@media (max-width: 768px) {
+  .weave-choice-card {
+    gap: var(--flat-space-lg);
+  }
+
+  .weave-choice-question {
+    padding: var(--flat-space-xl); /* 🔧 保持足够的内边距 */
+    margin-bottom: var(--flat-space-lg);
+  }
+
+  .weave-choice-options {
+    padding: var(--flat-space-sm); /* 🔧 减少移动端容器内边距 */
+    gap: var(--flat-space-md);
+  }
+
+  .weave-choice-option {
+    padding: var(--flat-space-lg); /* 🔧 保持足够的选项内边距 */
+    flex-direction: column;
+    gap: var(--flat-space-md);
+    align-items: stretch;
+    margin: var(--flat-space-xs) 0;
+  }
+
+  .weave-choice-option-label {
+    align-self: flex-start;
+  }
+
+  .weave-choice-controls {
+    flex-direction: column;
+    gap: var(--flat-space-sm);
+  }
+
+  .weave-choice-control-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .weave-choice-question {
+    padding: var(--flat-space-lg); /* 🔧 小屏幕保持合适内边距 */
+  }
+
+  .weave-choice-question-content {
+    font-size: 1.25rem;
+  }
+
+  .weave-choice-options {
+    padding: var(--flat-space-xs); /* 🔧 小屏幕减少容器内边距 */
+  }
+
+  .weave-choice-option {
+    padding: var(--flat-space-md); /* 🔧 小屏幕保持合适的选项内边距 */
+    gap: var(--flat-space-sm);
+  }
+}

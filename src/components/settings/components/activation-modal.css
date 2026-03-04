@@ -1,0 +1,57 @@
+/**
+ * Obsidian原生Modal的自定义样式
+ * 用于美化激活模态框
+ */
+
+.weave-activation-modal {
+  --modal-width: 720px;
+  --modal-max-height: 85vh;
+}
+
+.weave-activation-modal .modal {
+  width: var(--modal-width);
+  max-width: 90vw;
+  max-height: var(--modal-max-height);
+  border-radius: 12px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.weave-activation-modal .modal-content {
+  padding: 2.5rem 2rem;
+  overflow-y: auto;
+  max-height: var(--modal-max-height);
+}
+
+.weave-activation-modal .modal-close-button {
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.weave-activation-modal .modal-close-button:hover {
+  background: var(--background-modifier-border);
+  color: var(--text-normal);
+  transform: rotate(90deg);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .weave-activation-modal .modal {
+    width: 100%;
+    max-width: 95vw;
+    border-radius: 8px;
+  }
+  
+  .weave-activation-modal .modal-content {
+    padding: 1.5rem 1rem;
+  }
+}

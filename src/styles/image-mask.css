@@ -1,0 +1,221 @@
+/**
+ * 图片遮罩功能样式
+ * 
+ * 功能：
+ * - 模态窗样式
+ * - 遮罩覆盖层样式
+ * - 动画效果
+ * - 响应式设计
+ * 
+ * @author Weave Team
+ * @date 2025-10-22
+ */
+
+/* ===== Modal 样式 ===== */
+
+.weave-image-mask-editor-modal {
+  --modal-padding: 0;
+}
+
+.weave-image-mask-editor-modal .modal-content {
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.weave-image-mask-editor-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ===== 图片遮罩容器 ===== */
+
+.weave-image-with-masks {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
+.weave-image-with-masks img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===== 遮罩覆盖层 ===== */
+
+.weave-mask-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* 默认不响应点击 */
+  transition: opacity 300ms ease-out;
+}
+
+/* 🆕 交互模式下允许点击穿透到遮罩 */
+.weave-mask-overlay.interactive {
+  pointer-events: auto;
+}
+
+/* 遮罩可见状态 */
+.weave-mask-overlay.visible {
+  opacity: 1;
+}
+
+/* 遮罩隐藏状态 */
+.weave-mask-overlay.hidden {
+  opacity: 0;
+}
+
+/* ===== 遮罩元素样式 ===== */
+
+.weave-mask {
+  /* 🔧 修复：只过渡fill-opacity，避免opacity冲突 */
+  transition: fill-opacity 200ms ease;
+}
+
+/* 纯色遮罩 */
+.weave-mask-solid {
+  /* ✅ fill 和 fill-opacity 由 JavaScript 动态设置 */
+  /* ✅ 移除 !important：SVG 元素的 opacity 属性已有足够优先级 */
+  opacity: 1;
+}
+
+/* 模糊遮罩 */
+.weave-mask-blur {
+  /* ✅ fill 和 fill-opacity 由 JavaScript 动态设置 */
+  /* ✅ 移除 !important：SVG 元素的 opacity 属性已有足够优先级 */
+  opacity: 1;
+}
+
+/* ===== 遮罩揭示动画 ===== */
+
+@keyframes mask-reveal {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.weave-mask-overlay.revealing {
+  animation: mask-reveal 300ms ease-out forwards;
+}
+
+/* ===== 学习模式下的遮罩状态 ===== */
+
+/* 问题状态（遮罩可见） */
+.study-card-question .weave-mask-overlay {
+  opacity: 1;
+}
+
+/* 答案状态（遮罩隐藏） */
+.study-card-answer .weave-mask-overlay {
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+/* ===== 响应式设计 ===== */
+
+/* ✅ 移除 !important：媒体查询本身已有较高优先级 */
+/* 通过更具体的选择器确保移动端样式生效 */
+@media (max-width: 768px) {
+  .modal.weave-image-mask-editor-modal {
+    width: 95vw;
+    height: 90vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal.weave-image-mask-editor-modal {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+  }
+}
+
+/* ===== 工具提示 ===== */
+
+.weave-mask-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 1000;
+  white-space: nowrap;
+}
+
+/* ===== 辅助样式 ===== */
+
+/* 高亮选中的遮罩 */
+.weave-mask.selected {
+  stroke: var(--interactive-accent);
+  stroke-width: 3;
+}
+
+/* 🆕 交互式遮罩样式 */
+.weave-mask-interactive {
+  cursor: pointer;
+  transition: fill-opacity 150ms ease;
+}
+
+/* hover效果由JavaScript控制fill-opacity，这里定义active状态反馈 */
+.weave-mask-interactive:active {
+  filter: brightness(0.9);
+}
+
+/* 🆕 正在hover预览的遮罩 */
+.weave-mask.mask-hovering {
+  /* fill-opacity由JavaScript控制为0，这里可添加额外视觉效果 */
+}
+
+/* 🆕 已揭示的遮罩（透明状态） */
+.weave-mask.mask-revealed {
+  fill-opacity: 0;
+  pointer-events: auto; /* 保持可点击以重新遮盖 */
+}
+
+/* ===== 深色模式优化 ===== */
+
+.theme-dark .weave-mask-solid {
+  /* ✅ 移除 fill 属性，由 JavaScript 动态设置颜色 */
+  /* 深色模式下使用相同的用户选择颜色 */
+}
+
+.theme-dark .weave-mask-blur {
+  /* ✅ 移除 fill 属性，由 JavaScript 动态设置颜色 */
+  /* 深色模式下使用相同的用户选择颜色 */
+}
+
+/* ===== 辅助功能 ===== */
+
+/* 减少动画（用户偏好） */
+/* ✅ 保留 !important：无障碍功能，需要强制覆盖所有动画 */
+/* 参考：.augment/rules/core/04-anti-force-methods.md */
+@media (prefers-reduced-motion: reduce) {
+  .weave-mask-overlay,
+  .weave-mask {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ===== 打印样式 ===== */
+
+@media print {
+  .weave-mask-overlay {
+    display: none;
+  }
+}
+
+
+

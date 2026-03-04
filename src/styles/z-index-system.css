@@ -1,0 +1,53 @@
+/* ===== Z-Index 层级系统 ===== */
+/* 
+ * 统一管理所有 z-index 值，避免层级冲突
+ * 参考：.augment/rules/core/04-anti-force-methods.md
+ */
+
+.weave-app {
+  /* 基础层级 (1-99) */
+  --z-index-base: 1;
+  --z-index-raised: 10;
+  
+  /* 下拉菜单层级 (100-199) */
+  --z-index-dropdown: 100;
+  --z-index-dropdown-menu: 110;
+  
+  /* 固定元素层级 (200-299) */
+  --z-index-sticky: 200;
+  --z-index-fixed: 250;
+  
+  /* 遮罩层级 (300-399) */
+  --z-index-overlay: 300;
+  --z-index-modal-backdrop: 350;
+  
+  /* 模态窗层级 (400-499) */
+  --z-index-modal: 400;
+  --z-index-modal-content: 410;
+  
+  /* 弹出层级 (500-599) */
+  --z-index-popover: 500;
+  --z-index-floating-menu: 550;
+  
+  /* 提示层级 (600-699) */
+  --z-index-tooltip: 600;
+  
+  /* 通知层级 (700-799) */
+  --z-index-notification: 700;
+  --z-index-toast: 750;
+  
+  /* 最高层级 (800-899) */
+  --z-index-top: 800;
+  --z-index-debug: 900;
+}
+
+/* 使用示例：
+.modal-overlay {
+  z-index: var(--z-index-modal-backdrop);
+}
+
+.modal-content {
+  z-index: var(--z-index-modal);
+}
+*/
+

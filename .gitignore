@@ -1,0 +1,176 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+!public/
+public/*
+!public/versions.json
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# Build output
+build/
+main.js
+# 只忽略根目录的构建输出 CSS，保留 src/styles/ 下的源码 CSS
+/styles.css
+
+# Build cache and mappings
+importMappings.json
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Bun
+.bun
+bun.lockb
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test vault (optional - remove if you want to include it)
+test-vault/
+
+# ============================================
+# 🔒 激活码系统安全规则（最高优先级）
+# ============================================
+
+# 私钥文件（任何可能的命名方式）
+*.pem
+*.key
+*private-key*
+*private_key*
+*privatekey*
+*-private.*
+*.private.*
+
+# 旧版本激活码生成脚本（包含私钥，必须忽略）
+scripts/generate-activation-codes.cjs
+
+# 生成的激活码文件（所有可能的格式）
+generated-*.json
+generated-*.txt
+codes-*.txt
+codes-*.json
+activation-codes*.txt
+activation-codes*.json
+*activation-code*.txt
+*activation-code*.json
+*activation-codes*.txt
+*activation-codes*.json
+
+# 中文命名的敏感文件
+激活码*
+*激活码*
+发卡*
+*发卡*
+用户激活码/
+密钥管理*
+*密钥管理*
+
+# 激活码相关文档（包含敏感信息）
+*激活码使用说明*
+*激活码管理*
+*激活码密钥*
+*开源安全指南*
+scripts/generateMatchingCode.js
+scripts/*private*.js
+scripts/*secret*.js
+服务端激活码生成器.js
+
+# 项目外的私钥目录（防止意外添加）
+../tuanki-private/
+../../tuanki-private/
+D:/tuanki-private/
+%USERPROFILE%/tuanki-private/
+
+# 环境变量和配置
+.env.local
+.env.production
+config/private.json
+config/secrets.json
+
+# 调试和测试数据
+debug-logs/
+test-activation-codes/
+*.activation
+*.license
+
+# Augment AI 配置
+# .augment/ 目录包含项目特定的 AI 助手配置，应该被提交到版本控制
+# 这些配置文件帮助团队成员使用一致的 AI 编程助手设置

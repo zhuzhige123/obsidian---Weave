@@ -1,0 +1,371 @@
+/**
+ * CodeMirror 6 编辑器主题样式
+ * 统一的主题系统，支持深色/浅色模式自动切换
+ * 
+ * 修复问题：
+ * 1. 统一CSS变量使用
+ * 2. 改善对比度
+ * 3. 提供完整的语法高亮支持
+ */
+
+/* =================================================================
+   CodeMirror 编辑器基础样式
+   ================================================================= */
+
+.weave-app .cm-editor {
+  /* 基础样式 */
+  font-family: var(--font-text, var(--font-default));
+  font-size: var(--weave-font-size-base, 14px);
+  line-height: var(--weave-line-height-normal, 1.6);
+  background: var(--cm-editor-bg);
+  color: var(--cm-editor-text);
+  border: 1px solid var(--cm-editor-border);
+  border-radius: var(--weave-radius-md, 8px);
+  
+  /* 移除默认样式 */
+  outline: none;
+  
+  /* 确保正确的层级 */
+  position: relative;
+  z-index: 1;
+}
+
+.weave-app .cm-editor.cm-focused {
+  border-color: var(--weave-accent-color);
+  box-shadow: 0 0 0 2px var(--weave-focus-ring, rgba(139, 92, 246, 0.1));
+}
+
+/* 编辑器内容区域 */
+.weave-app .cm-content {
+  /* ✨ UX最佳实践：上下20px提供垂直呼吸空间，左右24px避免文字贴边 */
+  padding: var(--weave-editor-padding-y, 20px) var(--weave-editor-padding-x, 24px);
+  min-height: var(--weave-editor-min-height, 80px);
+  caret-color: var(--cm-editor-cursor);
+  background: transparent;
+}
+
+/* 编辑器滚动区域 */
+.weave-app .cm-scroller {
+  font-family: inherit;
+  background: transparent;
+}
+
+/* 行样式 */
+.weave-app .cm-line {
+  padding: 0 2px;
+  line-height: inherit;
+}
+
+/* 活动行高亮 */
+.weave-app .cm-activeLine {
+  background-color: var(--cm-editor-active-line);
+}
+
+/* 选择区域 */
+/* ✅ 移除 !important：.weave-app 命名空间已有足够优先级覆盖 CodeMirror 默认样式 */
+.weave-app .cm-selectionBackground {
+  background-color: var(--cm-editor-selection);
+}
+
+/* 光标 */
+.weave-app .cm-cursor {
+  border-left-color: var(--cm-editor-cursor);
+  border-left-width: 2px;
+}
+
+/* =================================================================
+   行号和装订线
+   ================================================================= */
+
+.weave-app .cm-gutters {
+  background-color: var(--cm-editor-gutter-bg);
+  color: var(--cm-editor-gutter-text);
+  border: none;
+  border-right: 1px solid var(--cm-editor-border);
+}
+
+.weave-app .cm-gutter {
+  background: transparent;
+}
+
+.weave-app .cm-lineNumbers .cm-gutterElement {
+  color: var(--cm-editor-line-number);
+  font-size: var(--weave-font-size-sm, 12px);
+  min-width: 3ch;
+  text-align: right;
+  padding-right: var(--weave-space-sm, 8px);
+}
+
+.weave-app .cm-activeLineGutter {
+  background-color: var(--cm-editor-active-line);
+}
+
+.weave-app .cm-activeLineGutter .cm-gutterElement {
+  color: var(--cm-editor-line-number-active);
+  font-weight: 500;
+}
+
+/* =================================================================
+   语法高亮
+   ================================================================= */
+
+/* 关键字 */
+.weave-app .cm-keyword {
+  color: var(--cm-syntax-keyword);
+  font-weight: 500;
+}
+
+/* 字符串 */
+.weave-app .cm-string {
+  color: var(--cm-syntax-string);
+}
+
+/* 注释 */
+.weave-app .cm-comment {
+  color: var(--cm-syntax-comment);
+  font-style: italic;
+}
+
+/* 数字 */
+.weave-app .cm-number {
+  color: var(--cm-syntax-number);
+}
+
+/* 操作符 */
+.weave-app .cm-operator {
+  color: var(--cm-syntax-operator);
+}
+
+/* 标点符号 */
+.weave-app .cm-punctuation {
+  color: var(--cm-syntax-punctuation);
+}
+
+/* 标签 */
+.weave-app .cm-tag {
+  color: var(--cm-syntax-tag);
+}
+
+/* 属性 */
+.weave-app .cm-attribute {
+  color: var(--cm-syntax-attribute);
+}
+
+/* 链接 */
+.weave-app .cm-link {
+  color: var(--cm-syntax-link);
+  text-decoration: underline;
+}
+
+/* =================================================================
+   Markdown 特定样式
+   ================================================================= */
+
+/* 标题 */
+.weave-app .cm-header {
+  color: var(--cm-syntax-keyword);
+  font-weight: bold;
+}
+
+.weave-app .cm-header1 { font-size: 1.5em; }
+.weave-app .cm-header2 { font-size: 1.3em; }
+.weave-app .cm-header3 { font-size: 1.1em; }
+
+/* 粗体 */
+.weave-app .cm-strong {
+  font-weight: bold;
+  color: var(--cm-editor-text);
+}
+
+/* 斜体 */
+.weave-app .cm-emphasis {
+  font-style: italic;
+  color: var(--cm-editor-text);
+}
+
+/* 删除线 */
+.weave-app .cm-strikethrough {
+  text-decoration: line-through;
+}
+
+/* 行内代码 */
+.weave-app .cm-inlineCode {
+  background-color: var(--cm-editor-active-line);
+  color: var(--cm-syntax-string);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: var(--font-monospace);
+  font-size: 0.9em;
+}
+
+/* 代码块 */
+.weave-app .cm-codeBlock {
+  background-color: var(--cm-editor-active-line);
+  color: var(--cm-editor-text);
+  font-family: var(--font-monospace);
+  font-size: 0.9em;
+}
+
+/* 引用 */
+.weave-app .cm-quote {
+  color: var(--cm-syntax-comment);
+  font-style: italic;
+  border-left: 3px solid var(--cm-editor-border);
+  padding-left: 12px;
+  margin-left: 8px;
+}
+
+/* 列表 */
+.weave-app .cm-list {
+  color: var(--cm-syntax-operator);
+}
+
+/* =================================================================
+   Obsidian 语法支持
+   ================================================================= */
+
+/* Wiki 链接 */
+.weave-app .cm-wiki-link {
+  color: var(--cm-syntax-link);
+  background-color: var(--weave-accent-bg-subtle, rgba(139, 92, 246, 0.1));
+  padding: 1px 3px;
+  border-radius: 3px;
+  text-decoration: none;
+}
+
+.weave-app .cm-wiki-link:hover {
+  background-color: var(--weave-accent-bg-medium, rgba(139, 92, 246, 0.2));
+}
+
+/* 标签 */
+.weave-app .cm-hashtag {
+  color: var(--cm-syntax-tag);
+  font-weight: 500;
+}
+
+/* Callouts */
+.weave-app .cm-callout {
+  border-left: 4px solid var(--weave-accent-color);
+  background-color: var(--weave-accent-bg-faint, rgba(139, 92, 246, 0.05));
+  padding: var(--weave-space-sm, 8px) var(--weave-space-md, 12px);
+  margin: 4px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.weave-app .cm-callout-note {
+  border-left-color: var(--weave-info);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.weave-app .cm-callout-warning {
+  border-left-color: var(--weave-warning);
+  background-color: rgba(245, 158, 11, 0.05);
+}
+
+.weave-app .cm-callout-error {
+  border-left-color: var(--weave-error);
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.weave-app .cm-callout-success {
+  border-left-color: var(--weave-success);
+  background-color: rgba(16, 185, 129, 0.05);
+}
+
+/* =================================================================
+   搜索和匹配高亮
+   ================================================================= */
+
+.weave-app .cm-searchMatch {
+  background-color: rgba(255, 235, 59, 0.3);
+  border-radius: 2px;
+}
+
+.weave-app .cm-searchMatch-selected {
+  background-color: rgba(255, 193, 7, 0.5);
+}
+
+/* 括号匹配 */
+.weave-app .cm-matchingBracket {
+  background-color: rgba(139, 92, 246, 0.2);
+  border-radius: 2px;
+}
+
+.weave-app .cm-nonmatchingBracket {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-radius: 2px;
+}
+
+/* =================================================================
+   折叠和展开
+   ================================================================= */
+
+.weave-app .cm-foldGutter {
+  width: 16px;
+}
+
+.weave-app .cm-foldGutter .cm-gutterElement {
+  color: var(--cm-editor-line-number);
+  cursor: pointer;
+  font-size: 12px;
+  text-align: center;
+}
+
+.weave-app .cm-foldGutter .cm-gutterElement:hover {
+  color: var(--cm-editor-line-number-active);
+  background-color: var(--cm-editor-active-line);
+}
+
+/* =================================================================
+   响应式设计
+   ================================================================= */
+
+@media (max-width: 768px) {
+  .weave-app .cm-editor {
+    font-size: 16px; /* 移动端使用更大字体 */
+    border-radius: 4px;
+  }
+  
+  .weave-app .cm-content {
+    /* 移动端：保持与桌面端相同的视觉比例，但略小以节省空间 */
+    padding: var(--weave-editor-padding-y, 16px) var(--weave-editor-padding-x, 20px);
+  }
+  
+  .weave-app .cm-lineNumbers .cm-gutterElement {
+    min-width: 2ch;
+    padding-right: 4px;
+  }
+}
+
+/* =================================================================
+   高对比度模式支持
+   ================================================================= */
+
+@media (prefers-contrast: high) {
+  .weave-app .cm-editor {
+    border-width: 2px;
+  }
+  
+  .weave-app .cm-cursor {
+    border-left-width: 3px;
+  }
+  
+  /* ✅ 移除 !important：媒体查询内的选择器已有足够优先级 */
+  .weave-app .cm-selectionBackground {
+    background-color: rgba(139, 92, 246, 0.4);
+  }
+}
+
+/* =================================================================
+   减少动画模式支持
+   ================================================================= */
+
+/* ✅ 保留 !important：无障碍功能，需要强制覆盖所有动画 */
+/* 参考：.augment/rules/core/04-anti-force-methods.md */
+@media (prefers-reduced-motion: reduce) {
+  .weave-app .cm-editor,
+  .weave-app .cm-editor * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

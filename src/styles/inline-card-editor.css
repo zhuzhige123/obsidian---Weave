@@ -1,0 +1,439 @@
+/**
+ * 内嵌卡片编辑器样式
+ * 
+ * 特性:
+ * - 支持内嵌和全屏两种显示模式
+ * - 无遮罩层，避免事件拦截问题
+ * - 完整的主题适配
+ * - 响应式布局
+ */
+
+/* ==================== 基础容器 ==================== */
+
+.inline-card-editor {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-primary);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--background-modifier-border);
+  overflow: hidden;
+  box-shadow: var(--shadow-l);
+  transition: all var(--transition-fast);
+}
+
+/* 全屏模式 - 🔥 已废弃，改用 Obsidian Modal 封装 */
+/* 保留用于向后兼容，但不再使用 position: fixed */
+.inline-card-editor[data-mode="fullscreen"] {
+  /* 移除所有定位相关样式，由父容器（Modal 或页面）控制 */
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 内嵌模式 */
+.inline-card-editor[data-mode="inline"] {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* 🔥 Modal 容器内的编辑器样式 */
+.modal .inline-card-editor,
+.weave-card-editor-modal .inline-card-editor {
+  min-height: 60vh;
+  max-height: 80vh;
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Modal 内容容器样式 */
+.weave-card-editor-modal-content {
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== 头部 ==================== */
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+
+.editor-title {
+  font-size: var(--font-ui-large);
+  font-weight: var(--font-semibold);
+  margin: 0;
+  color: var(--text-normal);
+}
+
+.editor-badge {
+  padding: var(--size-2-1) var(--size-2-2);
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-radius: var(--radius-s);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-medium);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-3);
+}
+
+.header-control {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-2);
+}
+
+.header-control label {
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+.deck-selector {
+  padding: var(--size-2-1) var(--size-2-3);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.deck-selector:hover {
+  background: var(--background-modifier-hover);
+}
+
+.deck-selector:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+}
+
+.close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 触控优化：增加最小尺寸 */
+  min-width: var(--weave-touch-sm, 44px);
+  min-height: var(--weave-touch-sm, 44px);
+  width: max(32px, var(--weave-touch-sm, 44px));
+  height: max(32px, var(--weave-touch-sm, 44px));
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  cursor: pointer;
+  /* 触控优化：更平滑的过渡 */
+  transition: all var(--weave-touch-duration-normal, 0.2s) var(--weave-touch-ease, cubic-bezier(0.4, 0, 0.2, 1));
+  /* 触控优化：防止系统高亮 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.close-button:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+/* 🔥 来源信息横幅已移除 - 元数据现在存储在YAML中 */
+
+/* ==================== 主体区域 ==================== */
+
+.editor-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0; /* 关键：允许flex子项正确收缩 */
+}
+
+.editor-panel {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* 编辑器容器 */
+.embedded-editor-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.editor-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  position: relative;
+  min-height: 0;
+}
+
+.editor-container[data-ready="true"] {
+  /* 编辑器就绪后的样式 */
+}
+
+/* ==================== 加载状态 ==================== */
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--background-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--size-4-4);
+  z-index: 10;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--background-modifier-border);
+  border-top-color: var(--interactive-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: var(--font-ui-medium);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.loading-progress {
+  width: 200px;
+  height: 4px;
+  background: var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  overflow: hidden;
+}
+
+.loading-progress-bar {
+  height: 100%;
+  background: var(--interactive-accent);
+  animation: progress 2s ease-in-out infinite;
+}
+
+@keyframes progress {
+  0% { width: 0%; transform: translateX(0); }
+  50% { width: 70%; transform: translateX(0); }
+  100% { width: 100%; transform: translateX(200px); }
+}
+
+/* ==================== 保存状态反馈 ==================== */
+
+.save-feedback {
+  position: absolute;
+  top: var(--size-4-4);
+  right: var(--size-4-4);
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-2);
+  padding: var(--size-2-2) var(--size-4-3);
+  background: var(--interactive-success);
+  color: white;
+  border-radius: var(--radius-m);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-medium);
+  box-shadow: var(--shadow-s);
+  z-index: 20;
+  animation: slideInRight 0.3s ease-out, fadeOut 0.5s ease-out 2.5s forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* ==================== 错误显示 ==================== */
+
+.error-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--size-4-3);
+  padding: var(--size-4-8);
+  text-align: center;
+}
+
+.error-container h3 {
+  font-size: var(--font-ui-large);
+  font-weight: var(--font-semibold);
+  color: var(--text-error);
+  margin: 0;
+}
+
+.error-container p {
+  font-size: var(--font-ui-medium);
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 400px;
+}
+
+.retry-button {
+  padding: var(--size-2-2) var(--size-4-4);
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: var(--radius-m);
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.retry-button:hover {
+  background: var(--interactive-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-s);
+}
+
+/* ==================== 底部 ==================== */
+
+.editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--size-4-3) var(--size-4-6);
+  background: var(--background-secondary);
+  border-top: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-4);
+}
+
+.footer-hint {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+  font-family: var(--font-monospace);
+}
+
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-3);
+}
+
+/* ==================== 响应式 ==================== */
+
+@media (max-width: 768px) {
+  /* Modal 内的编辑器在移动端自适应 */
+  .modal .inline-card-editor,
+  .weave-card-editor-modal .inline-card-editor {
+    min-height: 50vh;
+    height: 60vh;
+  }
+
+  .editor-header {
+    padding: 0;
+  }
+
+  .editor-footer {
+    flex-direction: column-reverse;
+    gap: var(--size-2-3);
+    align-items: stretch;
+  }
+
+  .footer-left {
+    justify-content: center;
+  }
+
+  .footer-right {
+    justify-content: stretch;
+  }
+
+  .footer-right button {
+    flex: 1;
+  }
+}
+
+/* ==================== 主题适配 ==================== */
+
+/* 暗色主题增强 */
+.theme-dark .inline-card-editor {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* 亮色主题增强 */
+.theme-light .inline-card-editor {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* ==================== 可访问性 ==================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .inline-card-editor,
+  .loading-spinner,
+  .loading-progress-bar,
+  .save-feedback {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .inline-card-editor {
+    border-width: 2px;
+  }
+
+  .editor-header,
+  .editor-footer {
+    border-width: 2px;
+  }
+}
+

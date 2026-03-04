@@ -1,0 +1,495 @@
+/**
+ * 数据管理界面专用样式
+ * 实现现代化的Cursor风格设计语言
+ */
+
+/* ==================== CSS变量定义 ==================== */
+
+:root {
+  /* 数据管理专用色彩变量 */
+  --dm-safe-color: #10B981;      /* 安全操作 - 绿色 */
+  --dm-caution-color: #F59E0B;   /* 谨慎操作 - 橙色 */
+  --dm-danger-color: #EF4444;    /* 危险操作 - 红色 */
+  --dm-info-color: #3B82F6;      /* 信息展示 - 蓝色 */
+  --dm-neutral-color: #6B7280;   /* 中性内容 - 灰色 */
+
+  /* 数据管理专用间距 - 使用统一的间距变量 */
+  --dm-space-xs: var(--weave-space-xs);
+  --dm-space-sm: var(--weave-space-sm);
+  --dm-space-md: var(--weave-space-md);
+  --dm-space-lg: var(--weave-space-lg);
+  --dm-space-xl: var(--weave-space-xl);
+
+  /* 数据管理专用圆角 - 使用统一的圆角变量 */
+  --dm-radius-sm: var(--weave-radius-sm);
+  --dm-radius-md: var(--weave-radius-md);
+  --dm-radius-lg: var(--weave-radius-lg);
+  --dm-radius-xl: var(--weave-radius-xl);
+
+  /* 数据管理专用阴影 */
+  --dm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --dm-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --dm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  /* 数据管理专用过渡 */
+  --dm-transition-fast: 0.15s ease;
+  --dm-transition-normal: 0.2s ease;
+  --dm-transition-slow: 0.3s ease;
+
+  /* 数据管理专用字体 */
+  --dm-font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+/* ==================== 基础组件样式 ==================== */
+
+/* 卡片容器 */
+.dm-card {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--dm-radius-lg);
+  padding: var(--dm-space-lg);
+  box-shadow: var(--dm-shadow-sm);
+  transition: all var(--dm-transition-normal);
+}
+
+.dm-card:hover {
+  border-color: var(--interactive-normal);
+  box-shadow: var(--dm-shadow-md);
+}
+
+.dm-card--elevated {
+  box-shadow: var(--dm-shadow-md);
+}
+
+.dm-card--elevated:hover {
+  box-shadow: var(--dm-shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* 按钮样式 */
+.dm-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dm-space-sm);
+  padding: var(--dm-space-sm) var(--dm-space-md);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--dm-radius-md);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--dm-transition-normal);
+  text-decoration: none;
+}
+
+.dm-button:hover:not(:disabled) {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-normal);
+  transform: translateY(-1px);
+  box-shadow: var(--dm-shadow-sm);
+}
+
+.dm-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.dm-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  /* ✅ 移除 !important：:disabled 伪类已有足够优先级 */
+  transform: none;
+}
+
+/* 按钮变体 */
+.dm-button--primary {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+}
+
+.dm-button--primary:hover:not(:disabled) {
+  background: var(--interactive-accent-hover);
+  border-color: var(--interactive-accent-hover);
+}
+
+.dm-button--safe {
+  border-color: var(--dm-safe-color);
+  color: var(--dm-safe-color);
+}
+
+.dm-button--safe:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--dm-safe-color), transparent 95%);
+  border-color: var(--dm-safe-color);
+}
+
+.dm-button--caution {
+  border-color: var(--dm-caution-color);
+  color: var(--dm-caution-color);
+}
+
+.dm-button--caution:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--dm-caution-color), transparent 95%);
+  border-color: var(--dm-caution-color);
+}
+
+.dm-button--danger {
+  border-color: var(--dm-danger-color);
+  color: var(--dm-danger-color);
+}
+
+.dm-button--danger:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--dm-danger-color), transparent 95%);
+  border-color: var(--dm-danger-color);
+}
+
+/* 输入框样式 */
+.dm-input {
+  width: 100%;
+  padding: var(--dm-space-sm) var(--dm-space-md);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--dm-radius-md);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 0.875rem;
+  transition: all var(--dm-transition-normal);
+}
+
+.dm-input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--interactive-accent), transparent 80%);
+}
+
+.dm-input:hover:not(:focus) {
+  border-color: var(--interactive-normal);
+}
+
+.dm-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* 标签样式 */
+.dm-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--dm-space-xs) var(--dm-space-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--dm-radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dm-tag--safe {
+  background: color-mix(in oklab, var(--dm-safe-color), transparent 90%);
+  color: var(--dm-safe-color);
+}
+
+.dm-tag--caution {
+  background: color-mix(in oklab, var(--dm-caution-color), transparent 90%);
+  color: var(--dm-caution-color);
+}
+
+.dm-tag--danger {
+  background: color-mix(in oklab, var(--dm-danger-color), transparent 90%);
+  color: var(--dm-danger-color);
+}
+
+.dm-tag--info {
+  background: color-mix(in oklab, var(--dm-info-color), transparent 90%);
+  color: var(--dm-info-color);
+}
+
+.dm-tag--neutral {
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+/* ==================== 布局组件 ==================== */
+
+/* 网格布局 */
+.dm-grid {
+  display: grid;
+  gap: var(--dm-space-lg);
+}
+
+.dm-grid--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.dm-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.dm-grid--auto {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+/* 弹性布局 */
+.dm-flex {
+  display: flex;
+  gap: var(--dm-space-md);
+}
+
+.dm-flex--center {
+  align-items: center;
+  justify-content: center;
+}
+
+.dm-flex--between {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dm-flex--column {
+  flex-direction: column;
+}
+
+.dm-flex--wrap {
+  flex-wrap: wrap;
+}
+
+/* 间距工具类 */
+.dm-p-0 { padding: 0; }
+.dm-p-xs { padding: var(--dm-space-xs); }
+.dm-p-sm { padding: var(--dm-space-sm); }
+.dm-p-md { padding: var(--dm-space-md); }
+.dm-p-lg { padding: var(--dm-space-lg); }
+.dm-p-xl { padding: var(--dm-space-xl); }
+
+.dm-m-0 { margin: 0; }
+.dm-m-xs { margin: var(--dm-space-xs); }
+.dm-m-sm { margin: var(--dm-space-sm); }
+.dm-m-md { margin: var(--dm-space-md); }
+.dm-m-lg { margin: var(--dm-space-lg); }
+.dm-m-xl { margin: var(--dm-space-xl); }
+
+/* ==================== 状态指示器 ==================== */
+
+/* 加载指示器 */
+.dm-loading {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--background-modifier-border);
+  border-top: 2px solid var(--interactive-accent);
+  border-radius: 50%;
+  animation: dm-spin 1s linear infinite;
+}
+
+.dm-loading--lg {
+  width: 2rem;
+  height: 2rem;
+  border-width: 3px;
+}
+
+@keyframes dm-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 进度条 */
+.dm-progress {
+  width: 100%;
+  height: 8px;
+  background: var(--background-modifier-border);
+  border-radius: var(--dm-radius-sm);
+  overflow: hidden;
+}
+
+.dm-progress__fill {
+  height: 100%;
+  background: var(--interactive-accent);
+  border-radius: var(--dm-radius-sm);
+  transition: width var(--dm-transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.dm-progress__fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: dm-shimmer 2s infinite;
+}
+
+@keyframes dm-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 状态徽章 */
+.dm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dm-space-xs);
+  padding: var(--dm-space-xs) var(--dm-space-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--dm-radius-sm);
+}
+
+.dm-badge--success {
+  background: color-mix(in oklab, var(--dm-safe-color), transparent 90%);
+  color: var(--dm-safe-color);
+}
+
+.dm-badge--warning {
+  background: color-mix(in oklab, var(--dm-caution-color), transparent 90%);
+  color: var(--dm-caution-color);
+}
+
+.dm-badge--error {
+  background: color-mix(in oklab, var(--dm-danger-color), transparent 90%);
+  color: var(--dm-danger-color);
+}
+
+/* ==================== 响应式设计 ==================== */
+
+@media (max-width: 1024px) {
+  .dm-grid--2,
+  .dm-grid--3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .dm-grid--auto {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --dm-space-lg: 1rem;
+    --dm-space-xl: 1.5rem;
+  }
+  
+  .dm-card {
+    padding: var(--dm-space-md);
+  }
+  
+  .dm-flex {
+    gap: var(--dm-space-sm);
+  }
+  
+  .dm-flex--mobile-column {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .dm-button {
+    padding: var(--dm-space-sm);
+    font-size: 0.8rem;
+  }
+  
+  .dm-input {
+    padding: var(--dm-space-sm);
+    font-size: 0.8rem;
+  }
+}
+
+/* ==================== 深色模式适配 ==================== */
+
+.theme-dark {
+  --dm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --dm-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --dm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+}
+
+/* ==================== 动画效果 ==================== */
+
+/* 淡入动画 */
+.dm-fade-in {
+  animation: dm-fadeIn var(--dm-transition-slow) ease-out;
+}
+
+@keyframes dm-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 滑入动画 */
+.dm-slide-in {
+  animation: dm-slideIn var(--dm-transition-slow) ease-out;
+}
+
+@keyframes dm-slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 缩放动画 */
+.dm-scale-in {
+  animation: dm-scaleIn var(--dm-transition-normal) ease-out;
+}
+
+@keyframes dm-scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==================== 工具类 ==================== */
+
+/* 文本工具类 */
+.dm-text-mono {
+  font-family: var(--dm-font-mono);
+}
+
+.dm-text-center {
+  text-align: center;
+}
+
+.dm-text-right {
+  text-align: right;
+}
+
+.dm-text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 显示工具类 */
+.dm-hidden {
+  display: none;
+}
+
+.dm-invisible {
+  visibility: hidden;
+}
+
+.dm-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

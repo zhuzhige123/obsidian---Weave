@@ -1,0 +1,230 @@
+ 
+.weave-vertical-toolbar {
+  width: 70px;
+  height: 100%;
+  background: var(--background-secondary);
+  border-left: 1px solid var(--background-modifier-border);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+  gap: 1.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.weave-vertical-toolbar .toolbar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.weave-vertical-toolbar .timer-section {
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 1rem;
+  gap: 0.75rem;
+}
+
+.weave-vertical-toolbar .timer-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.25rem;
+  background: var(--background-primary);
+  border-radius: 8px;
+  min-width: 60px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--background-modifier-border);
+  position: relative;
+}
+
+.weave-vertical-toolbar .timer-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-accent);
+  font-family: var(--font-monospace);
+  letter-spacing: 0.3px;
+}
+
+.weave-vertical-toolbar .timer-label {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+
+.weave-vertical-toolbar .card-timer,
+.weave-vertical-toolbar .block-timer {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 5%, var(--background-primary));
+}
+
+.weave-vertical-toolbar .card-timer .timer-text,
+.weave-vertical-toolbar .block-timer .timer-text {
+  color: var(--color-accent);
+}
+
+.weave-vertical-toolbar .avg-timer,
+.weave-vertical-toolbar .total-timer {
+  border-color: var(--text-success);
+  background: color-mix(in srgb, var(--text-success) 5%, var(--background-primary));
+}
+
+.weave-vertical-toolbar .avg-timer .timer-text,
+.weave-vertical-toolbar .total-timer .timer-text {
+  color: var(--text-success);
+}
+
+.weave-vertical-toolbar .actions-section {
+  gap: 0.875rem;
+}
+
+.weave-vertical-toolbar .toolbar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.5rem 0.25rem;
+  border-radius: 0.75rem;
+  color: var(--text-muted);
+  min-height: 50px;
+  width: 50px;
+  position: relative;
+  overflow: hidden;
+}
+
+.weave-vertical-toolbar .toolbar-btn:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--text-accent);
+  color: var(--text-normal);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.weave-vertical-toolbar .toolbar-btn:active {
+  transform: translateY(-1px);
+  transition: transform 0.1s ease;
+}
+
+.weave-vertical-toolbar .toolbar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.weave-vertical-toolbar .toolbar-btn.active {
+  background: color-mix(in srgb, var(--interactive-accent) 15%, transparent);
+  color: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+}
+
+.weave-vertical-toolbar .btn-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.1;
+  letter-spacing: 0.25px;
+  transition: opacity 0.2s ease, max-height 0.2s ease;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.weave-vertical-toolbar .toolbar-btn:hover .btn-label,
+.weave-vertical-toolbar .toolbar-btn:focus-visible .btn-label {
+  opacity: 1;
+  max-height: 20px;
+  margin-top: 0.25rem;
+}
+
+.weave-vertical-toolbar .edit-btn:hover {
+  color: var(--weave-info, #60a5fa);
+}
+
+.weave-vertical-toolbar .delete-btn:hover {
+  color: var(--weave-error, #f87171);
+}
+
+.weave-vertical-toolbar .reminder-btn:hover {
+  color: var(--weave-warning, #fbbf24);
+}
+
+.weave-vertical-toolbar .extract-btn:hover {
+  color: var(--weave-success, #4ade80);
+}
+
+.weave-vertical-toolbar .favorite-btn:hover {
+  color: var(--weave-warning, #fbbf24);
+}
+
+.weave-vertical-toolbar .favorite-btn.favorited {
+  color: var(--weave-warning, #fbbf24);
+}
+
+.weave-vertical-toolbar .priority-btn:hover {
+  background: var(--background-modifier-hover);
+}
+
+.weave-vertical-toolbar .graph-link-btn.active {
+  background: color-mix(in srgb, var(--text-success) 15%, transparent);
+  color: var(--text-success);
+  border-color: var(--text-success);
+}
+
+.weave-vertical-toolbar .priority-indicator {
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: -2px;
+  line-height: 1;
+  color: inherit;
+}
+
+.weave-vertical-toolbar.compact {
+  width: 70px;
+  padding: 1rem 0;
+  gap: 1.5rem;
+}
+
+.weave-vertical-toolbar.compact .toolbar-btn {
+  width: 50px;
+  min-height: 50px;
+  padding: 0.5rem 0.25rem;
+  gap: 0;
+}
+
+.weave-vertical-toolbar.compact .btn-label {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.weave-vertical-toolbar.compact .toolbar-btn:hover .btn-label,
+.weave-vertical-toolbar.compact .toolbar-btn:focus-visible .btn-label {
+  opacity: 1;
+  max-height: 20px;
+  margin-top: 0.25rem;
+}
+
+.weave-vertical-toolbar.compact .timer-display {
+  min-width: 60px;
+  padding: 0.5rem 0.25rem;
+}
+
+.weave-vertical-toolbar.compact .timer-text {
+  font-size: 0.8rem;
+}
+
+.weave-vertical-toolbar.compact .timer-label {
+  font-size: 0.55rem;
+}

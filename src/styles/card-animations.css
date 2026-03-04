@@ -1,0 +1,210 @@
+/**
+ * Weave卡片预览动画系统
+ * 
+ * @version 1.0.0
+ * @description 为卡片预览提供流畅的动画效果
+ */
+
+/* ==================== 答案展开动画 ==================== */
+@keyframes weave-answer-reveal {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+    transform: translateY(0);
+  }
+}
+
+.weave-answer-enter {
+  animation: weave-answer-reveal var(--weave-transition-slow) var(--weave-ease-out);
+}
+
+/* ==================== 选项选择动画 ==================== */
+@keyframes weave-option-select {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.weave-option-selected {
+  animation: weave-option-select var(--weave-transition-fast) var(--weave-ease-in-out);
+}
+
+/* ==================== 正确答案脉冲 ==================== */
+@keyframes weave-correct-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0);
+  }
+}
+
+.weave-correct-feedback {
+  animation: weave-correct-pulse 600ms ease-out 2;
+}
+
+/* ==================== 错误答案摇晃 ==================== */
+@keyframes weave-incorrect-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.weave-incorrect-feedback {
+  animation: weave-incorrect-shake 400ms ease-in-out;
+}
+
+/* ==================== 挖空翻转显示 ==================== */
+@keyframes weave-cloze-flip {
+  from {
+    transform: rotateX(90deg);
+    opacity: 0;
+  }
+  to {
+    transform: rotateX(0);
+    opacity: 1;
+  }
+}
+
+.weave-cloze-reveal {
+  animation: weave-cloze-flip var(--weave-transition-normal) var(--weave-ease-out);
+  transform-origin: center center;
+}
+
+/* ==================== 分隔线滑入 ==================== */
+@keyframes weave-divider-slide {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+.weave-divider-enter {
+  animation: weave-divider-slide var(--weave-transition-normal) var(--weave-ease-out);
+}
+
+/* ==================== 卡片进入动画 ==================== */
+@keyframes weave-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.weave-card-mount {
+  animation: weave-card-enter var(--weave-transition-slow) var(--weave-ease-out);
+}
+
+/* ==================== 淡入效果 ==================== */
+@keyframes weave-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.weave-fade-in {
+  animation: weave-fade-in var(--weave-transition-normal) var(--weave-ease-out);
+}
+
+/* ==================== 滑入效果 ==================== */
+@keyframes weave-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.weave-slide-up {
+  animation: weave-slide-up var(--weave-transition-normal) var(--weave-ease-out);
+}
+
+/* ==================== 减少动画偏好 ==================== */
+@media (prefers-reduced-motion: reduce) {
+  /* 🔧 修复：只影响 Weave 插件内的元素，避免影响 Obsidian 全局 */
+  /* 🔧 移除 !important，使用更高的选择器优先级 */
+  .weave-app *,
+  .weave-app *::before,
+  .weave-app *::after,
+  .weave-view-content *,
+  .weave-view-content *::before,
+  .weave-view-content *::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+  }
+  
+  /* 使用更具体的选择器来提高优先级，而不是 !important */
+  .weave-app .weave-answer-enter,
+  .weave-app .weave-option-selected,
+  .weave-app .weave-correct-feedback,
+  .weave-app .weave-incorrect-feedback,
+  .weave-app .weave-cloze-reveal,
+  .weave-app .weave-divider-enter,
+  .weave-app .weave-card-mount,
+  .weave-app .weave-fade-in,
+  .weave-app .weave-slide-up,
+  .weave-view-content .weave-answer-enter,
+  .weave-view-content .weave-option-selected,
+  .weave-view-content .weave-correct-feedback,
+  .weave-view-content .weave-incorrect-feedback,
+  .weave-view-content .weave-cloze-reveal,
+  .weave-view-content .weave-divider-enter,
+  .weave-view-content .weave-card-mount,
+  .weave-view-content .weave-fade-in,
+  .weave-view-content .weave-slide-up {
+    animation: none;
+  }
+}
+
+/* ==================== 通用工具类 ==================== */
+/* ✅ 保留 !important：工具类需要强制覆盖所有动画 */
+/* 参考：.augment/rules/core/04-anti-force-methods.md */
+.weave-no-animation {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* GPU加速优化 */
+.weave-gpu-accelerated {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+
+
+
+
+
+

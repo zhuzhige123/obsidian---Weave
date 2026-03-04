@@ -1,0 +1,178 @@
+/**
+ * Weave卡片基础样式
+ * 所有题型卡片的共享基础类
+ * 
+ * @version 1.0.0
+ * @description 提供现代美学的卡片容器样式
+ */
+
+/* ==================== 卡片基础容器 ==================== */
+.weave-card-base {
+  /* 容器基础 */
+  background: var(--weave-bg-primary);
+  border-radius: var(--weave-radius-lg);
+  padding: var(--weave-space-xl);
+  
+  /* 微妙边框和阴影 - 现代美学 */
+  border: 1px solid var(--weave-border);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.02);
+  
+  /* 平滑过渡 */
+  transition: all var(--weave-transition-normal) var(--weave-ease-out);
+  
+  /* 布局 */
+  display: flex;
+  flex-direction: column;
+  gap: var(--weave-space-lg);
+  
+  /* 确保在父容器中正确显示 */
+  width: 100%;
+  position: relative;
+}
+
+.weave-card-base:hover {
+  /* 悬停微提升效果 */
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
+}
+
+/* Dark mode优化 */
+.theme-dark .weave-card-base {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.theme-dark .weave-card-base:hover {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+/* ==================== 优雅分隔线 ==================== */
+.weave-elegant-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--weave-space-md);
+  margin: var(--weave-space-lg) 0;
+}
+
+.weave-elegant-divider .divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--weave-border) 20%,
+    var(--weave-border) 80%,
+    transparent 100%
+  );
+}
+
+.weave-elegant-divider .divider-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--weave-text-muted);
+  padding: var(--weave-space-xs) var(--weave-space-md);
+  background: var(--weave-bg-secondary);
+  border-radius: var(--weave-radius-sm);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--weave-space-xs);
+}
+
+/* ==================== 题型标识徽章 ==================== */
+.weave-card-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--weave-space-xs);
+  padding: var(--weave-space-xs) var(--weave-space-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--weave-text-muted);
+  background: var(--weave-bg-secondary);
+  border-radius: var(--weave-radius-sm);
+  line-height: 1;
+}
+
+/* ==================== 响应式设计 ==================== */
+@media (max-width: 768px) {
+  .weave-card-base {
+    padding: var(--weave-space-lg);
+    gap: var(--weave-space-md);
+    border-radius: var(--weave-radius-md);
+  }
+  
+  .weave-elegant-divider {
+    margin: var(--weave-space-md) 0;
+    gap: var(--weave-space-sm);
+  }
+  
+  .weave-elegant-divider .divider-label {
+    font-size: 0.75rem;
+    padding: var(--weave-space-xs) var(--weave-space-sm);
+  }
+  
+  .weave-card-type-badge {
+    font-size: 0.7rem;
+    padding: 2px var(--weave-space-xs);
+  }
+}
+
+/* ==================== 打印样式 ==================== */
+@media print {
+  .weave-card-base {
+    border: 1px solid #ccc;
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+  
+  .weave-card-base:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .weave-elegant-divider .divider-label {
+    background: transparent;
+    border: 1px solid #ccc;
+  }
+}
+
+/* ==================== 减少动画偏好 ==================== */
+@media (prefers-reduced-motion: reduce) {
+  .weave-card-base {
+    transition: none;
+  }
+  
+  .weave-card-base:hover {
+    transform: none;
+  }
+}
+
+/* ==================== 高对比度模式 ==================== */
+@media (prefers-contrast: high) {
+  .weave-card-base {
+    border: 2px solid var(--weave-border);
+  }
+  
+  .weave-elegant-divider .divider-line {
+    height: 2px;
+    background: var(--weave-border);
+  }
+  
+  .weave-elegant-divider .divider-label {
+    border: 2px solid var(--weave-border);
+  }
+}
+
+
+
+
+
+
+

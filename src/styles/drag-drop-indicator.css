@@ -1,0 +1,92 @@
+/**
+ * 拖拽创建卡片指示器样式
+ * 
+ * 功能：
+ * - 显示拖拽反馈
+ * - 跟随鼠标位置
+ * - 动画效果
+ */
+
+.weave-drop-indicator {
+  position: fixed;
+  display: none;
+  pointer-events: none;
+  z-index: 999999;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+
+.drop-indicator-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--size-2-2);
+  padding: var(--size-4-4);
+  background: var(--background-primary);
+  border: 2px dashed var(--interactive-accent);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-l);
+  animation: pulse 1s ease-in-out infinite;
+  /* ⚠️ 移除 backdrop-filter - 会导致渲染问题 */
+  /* backdrop-filter: blur(8px); */
+}
+
+.drop-icon {
+  font-size: 2rem;
+  animation: bounce 0.5s ease-in-out infinite;
+}
+
+.drop-indicator-content p {
+  margin: 0;
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-medium);
+  color: var(--text-accent);
+  white-space: nowrap;
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* 主题适配 */
+.theme-dark .drop-indicator-content {
+  background: rgba(0, 0, 0, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.theme-light .drop-indicator-content {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* 减少动画运动（可访问性） */
+@media (prefers-reduced-motion: reduce) {
+  .drop-indicator-content,
+  .drop-icon {
+    animation: none;
+  }
+}
+
+
+
+
+
+
+

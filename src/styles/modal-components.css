@@ -1,0 +1,526 @@
+/* 
+ * 统一的模态窗组件样式系统
+ * 用于替代各个组件中重复的模态窗样式定义
+ * 遵循Weave设计系统规范
+ */
+
+/* ===== 模态窗基础样式 ===== */
+
+.weave-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--weave-modal-backdrop, rgba(0, 0, 0, 0.6));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--weave-z-modal, 10000);
+  /* ⚠️ 移除 backdrop-filter - 会导致渲染问题引起黑屏/白屏 */
+  /* backdrop-filter: blur(2px); */
+  transition: var(--weave-transition-normal);
+}
+
+.weave-modal-content {
+  background: var(--background-primary);
+  border-radius: var(--weave-radius-lg, 12px);
+  width: min(85vw, var(--weave-modal-max-width, 1000px));
+  max-width: var(--weave-modal-max-width, 1000px);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--weave-shadow-modal, 0 20px 25px -5px rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--background-modifier-border);
+  overflow: hidden;
+  transition: var(--weave-transition-normal);
+}
+
+.weave-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--weave-space-lg, 1.25rem) var(--weave-space-xl, 1.5rem);
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+  background: var(--background-primary);
+}
+
+.weave-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-normal);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.weave-modal-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: var(--weave-space-xs, 0.25rem) 0 0 0;
+  line-height: 1.4;
+}
+
+.weave-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: var(--weave-space-sm, 0.5rem);
+  border-radius: var(--weave-radius-sm, 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--weave-transition-fast);
+  flex-shrink: 0;
+}
+
+.weave-modal-close:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.weave-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--weave-space-xl, 1.5rem);
+  background: var(--background-primary);
+}
+
+.weave-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--weave-space-lg, 1.25rem) var(--weave-space-xl, 1.5rem);
+  border-top: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+  background: var(--background-primary);
+  gap: var(--weave-space-md, 1rem);
+}
+
+.weave-modal-footer-actions {
+  display: flex;
+  gap: var(--weave-space-sm, 0.5rem);
+  align-items: center;
+}
+
+/* ===== 模态窗尺寸变体 ===== */
+
+.weave-modal-content.small {
+  width: min(70vw, 600px);
+  max-width: 600px;
+}
+
+.weave-modal-content.medium {
+  width: min(80vw, 800px);
+  max-width: 800px;
+}
+
+.weave-modal-content.large {
+  width: min(90vw, 1200px);
+  max-width: 1200px;
+}
+
+.weave-modal-content.fullscreen {
+  width: 95vw;
+  height: 95vh;
+  max-width: none;
+  max-height: none;
+}
+
+/* ===== 响应式设计 ===== */
+
+@media (max-width: 1200px) {
+  .weave-modal-content {
+    width: min(90vw, 800px);
+    max-width: 800px;
+  }
+  
+  .weave-modal-content.large {
+    width: min(95vw, 1000px);
+    max-width: 1000px;
+  }
+}
+
+@media (max-width: 768px) {
+  .weave-modal-content {
+    width: min(95vw, 600px);
+    max-width: 600px;
+    margin: var(--weave-space-md, 1rem);
+  }
+  
+  .weave-modal-header {
+    padding: var(--weave-space-md, 1rem);
+  }
+  
+  .weave-modal-body {
+    padding: var(--weave-space-md, 1rem);
+  }
+  
+  .weave-modal-footer {
+    padding: var(--weave-space-md, 1rem);
+    flex-direction: column;
+    gap: var(--weave-space-sm, 0.5rem);
+  }
+  
+  .weave-modal-footer-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .weave-modal-footer-actions > * {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .weave-modal-content {
+    width: 95vw;
+    max-width: none;
+    max-height: 90vh;
+    border-radius: var(--weave-radius-md, 8px);
+    margin: var(--weave-space-sm, 0.5rem);
+  }
+  
+  .weave-modal-header {
+    padding: var(--weave-space-sm, 0.5rem) var(--weave-space-md, 1rem);
+  }
+  
+  .weave-modal-title {
+    font-size: 1.125rem;
+  }
+  
+  .weave-modal-body {
+    padding: var(--weave-space-md, 1rem);
+    /* 确保内容可滚动 */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  .weave-modal-footer {
+    padding: var(--weave-space-sm, 0.5rem) var(--weave-space-md, 1rem);
+    /* 固定在底部 */
+    position: sticky;
+    bottom: 0;
+    background: var(--background-primary);
+    border-top: 1px solid var(--background-modifier-border);
+  }
+  
+  /* 确保所有尺寸变体在移动端都适配 */
+  .weave-modal-content.small,
+  .weave-modal-content.medium,
+  .weave-modal-content.large {
+    width: 95vw;
+    max-width: none;
+  }
+}
+
+/* ===== 极小屏幕适配 (max-width: 320px) ===== */
+@media (max-width: 320px) {
+  .weave-modal-content {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+  }
+  
+  .weave-modal-header {
+    padding: var(--weave-space-xs, 0.25rem) var(--weave-space-sm, 0.5rem);
+  }
+  
+  .weave-modal-title {
+    font-size: 1rem;
+  }
+  
+  .weave-modal-body {
+    padding: var(--weave-space-sm, 0.5rem);
+  }
+  
+  .weave-modal-footer {
+    padding: var(--weave-space-xs, 0.25rem) var(--weave-space-sm, 0.5rem);
+  }
+  
+  .weave-modal-footer-actions {
+    flex-direction: column;
+    gap: var(--weave-space-xs, 0.25rem);
+  }
+  
+  .weave-modal-footer-actions > * {
+    width: 100%;
+  }
+}
+
+/* ===== iOS 安全区域支持 ===== */
+@supports (padding: env(safe-area-inset-bottom)) {
+  @media (max-width: 480px) {
+    .weave-modal-footer {
+      padding-bottom: calc(var(--weave-space-sm, 0.5rem) + env(safe-area-inset-bottom));
+    }
+    
+    .weave-modal-content {
+      /* 考虑顶部安全区域 */
+      margin-top: env(safe-area-inset-top);
+    }
+  }
+  
+  @media (max-width: 320px) {
+    .weave-modal-footer {
+      padding-bottom: calc(var(--weave-space-xs, 0.25rem) + env(safe-area-inset-bottom));
+    }
+    
+    .weave-modal-header {
+      padding-top: calc(var(--weave-space-xs, 0.25rem) + env(safe-area-inset-top));
+    }
+  }
+}
+
+/* ===== 深色主题适配 ===== */
+
+:global(body.theme-dark) .weave-modal-overlay {
+  background: var(--weave-modal-backdrop-dark, rgba(0, 0, 0, 0.8));
+}
+
+:global(body.theme-dark) .weave-modal-content {
+  box-shadow: var(--weave-shadow-modal-dark, 0 20px 25px -5px rgba(0, 0, 0, 0.3));
+}
+
+/* ===== 动画效果 ===== */
+
+.weave-modal-overlay.entering {
+  animation: weave-modal-fade-in 0.2s ease-out;
+}
+
+.weave-modal-overlay.exiting {
+  animation: weave-modal-fade-out 0.15s ease-in;
+}
+
+.weave-modal-content.entering {
+  animation: weave-modal-scale-in 0.2s ease-out;
+}
+
+.weave-modal-content.exiting {
+  animation: weave-modal-scale-out 0.15s ease-in;
+}
+
+@keyframes weave-modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes weave-modal-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes weave-modal-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes weave-modal-scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+}
+
+/* ===== 可访问性支持 ===== */
+
+.weave-modal-overlay[aria-hidden="true"] {
+  display: none;
+}
+
+.weave-modal-content:focus {
+  outline: 2px solid var(--text-accent);
+  outline-offset: -2px;
+}
+
+/* ===== 工具类 ===== */
+
+.weave-modal-scrollable {
+  overflow-y: auto;
+  max-height: 70vh;
+}
+
+.weave-modal-no-padding {
+  padding: 0;
+}
+
+.weave-modal-centered-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* ===== 牌组选择模态框样式 ===== */
+
+.deck-suggestion-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.deck-suggestion-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deck-suggestion-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.deck-suggestion-name {
+  font-weight: 500;
+  color: var(--text-normal);
+  flex: 1;
+}
+
+.deck-suggestion-footer {
+  display: flex;
+  gap: 12px;
+  padding-left: 24px;
+}
+
+.deck-suggestion-path {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-monospace);
+}
+
+.deck-suggestion-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.deck-suggestion-stats {
+  display: flex;
+  gap: 12px;
+  padding-left: 24px;
+  font-size: 11px;
+}
+
+.deck-stat-total {
+  color: var(--text-muted);
+}
+
+.deck-stat-new {
+  color: var(--text-accent);
+  font-weight: 500;
+}
+
+.deck-stat-review {
+  color: var(--interactive-accent);
+  font-weight: 500;
+}
+
+
+/* ===== 笔记类型配置模态窗样式 ===== */
+
+.weave-note-type-config-modal {
+  /* 确保模态窗正确显示 */
+}
+
+/* ✅ 移除 !important：使用更具体的选择器提高优先级 */
+.weave-app .weave-note-type-config-modal .modal-content,
+.weave-app .weave-note-type-config-content {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 确保 Svelte 组件内容正确显示 */
+.weave-app .weave-note-type-config-content .ntc-container {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-primary);
+}
+
+/* 错误提示样式 */
+.note-type-config-error {
+  padding: 20px;
+  color: var(--text-error);
+  text-align: center;
+  font-size: 14px;
+}
+
+/* ===== 统一牌组编辑模态窗标签输入样式 ===== */
+/* 用于 IR牌组、记忆牌组、考试牌组 编辑模态窗的标签输入组件 */
+
+.weave-tag-input-container {
+  margin-top: 8px;
+}
+
+.weave-tag-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  min-height: 24px;
+}
+
+.weave-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.weave-tag-remove {
+  cursor: pointer;
+  font-weight: bold;
+  margin-left: 2px;
+  opacity: 0.8;
+}
+
+.weave-tag-remove:hover {
+  opacity: 1;
+}
+
+.weave-tag-input-container input[type="text"] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 14px;
+}
+
+.weave-tag-input-container input[type="text"]:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}

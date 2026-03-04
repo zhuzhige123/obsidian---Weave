@@ -1,0 +1,795 @@
+/**
+ * 插件设置类型定义
+ * 
+ * 为plugin.settings提供完整的类型定义
+ * 解决Settings访问时的类型不安全问题
+ * 
+ * @module types/plugin-settings
+ */
+
+// ============================================================================
+// AI配置类型
+// ============================================================================
+
+/**
+ * 卡片拆分配置
+ */
+export interface CardSplittingConfig {
+  /**
+   * 是否启用卡片拆分功能
+   */
+  enabled?: boolean;
+  
+  /**
+   * 默认拆分指令
+   */
+  defaultInstruction?: string;
+  
+  /**
+   * 目标卡片数量
+   */
+  targetCount?: number;
+  
+  /**
+   * 最小卡片数量
+   */
+  minCount?: number;
+  
+  /**
+   * 最大卡片数量
+   */
+  maxCount?: number;
+}
+
+/**
+ * AI格式化配置
+ */
+export interface FormattingConfig {
+  /**
+   * 是否启用自动格式化
+   */
+  enabled?: boolean;
+  
+  /**
+   * 默认格式化规则
+   */
+  defaultRules?: string[];
+  
+  /**
+   * 自定义格式化动作
+   */
+  customActions?: CustomFormatAction[];
+}
+
+/**
+ * 测试题生成配置
+ */
+export interface TestGenerationConfig {
+  /**
+   * 是否启用测试题生成
+   */
+  enabled?: boolean;
+  
+  /**
+   * 默认题目类型
+   */
+  defaultType?: 'choice' | 'fillblank' | 'judge';
+  
+  /**
+   * 默认难度等级
+   */
+  defaultDifficulty?: 'easy' | 'medium' | 'hard';
+  
+  /**
+   * 默认生成数量
+   */
+  defaultCount?: number;
+}
+
+/**
+ * AI配置总接口
+ */
+export interface AIConfig {
+  /**
+   * API密钥配置（多服务商）
+   * 支持的提供商：openai, gemini, anthropic, deepseek, zhipu, siliconflow, xai
+   */
+  apiKeys?: Partial<Record<'openai' | 'gemini' | 'anthropic' | 'deepseek' | 'zhipu' | 'siliconflow' | 'xai', {
+    apiKey: string;
+    model: string;
+    verified: boolean;
+    lastVerified?: string;
+    baseUrl?: string;
+  }>>;
+  
+  /**
+   * 默认AI服务提供商
+   */
+  defaultProvider?: string;
+  
+  /**
+   * 🆕 上次使用的AI服务提供商（用于持久化用户选择）
+   */
+  lastUsedProvider?: string;
+  
+  /**
+   * 🆕 上次使用的AI模型（用于持久化用户选择）
+   */
+  lastUsedModel?: string;
+  
+  /**
+   * API密钥（向后兼容）
+   */
+  apiKey?: string;
+  
+  /**
+   * API端点
+   */
+  endpoint?: string;
+  
+  /**
+   * 模型名称
+   */
+  model?: string;
+  
+  /**
+   * 卡片拆分配置
+   */
+  cardSplitting?: CardSplittingConfig;
+  
+  /**
+   * 格式化配置
+   */
+  formatting?: FormattingConfig;
+  
+  /**
+   * 测试题生成配置
+   */
+  testGeneration?: TestGenerationConfig;
+  
+  /**
+   * 自定义格式化功能
+   */
+  customFormatActions?: any[];
+  
+  /**
+   * 自定义测试题生成功能
+   */
+  customTestGenActions?: any[];
+  
+  /**
+   * 自定义AI拆分功能
+   */
+  customSplitActions?: any[];
+  
+  /**
+   * 官方功能配置覆盖
+   */
+  officialActionOverrides?: Record<string, { provider?: string; model?: string }>;
+  
+  /**
+   * 官方格式化功能状态
+   */
+  officialFormatActions?: Record<string, { enabled: boolean }>;
+  
+  /**
+   * 温度参数（0-1）
+   */
+  temperature?: number;
+  
+  /**
+   * 最大生成长度
+   */
+  maxTokens?: number;
+}
+
+// ============================================================================
+// 学习设置类型
+// ============================================================================
+
+/**
+ * FSRS算法配置
+ */
+export interface FSRSConfig {
+  /**
+   * 算法参数
+   */
+  parameters?: number[];
+  
+  /**
+   * 请求保留率
+   */
+  requestRetention?: number;
+  
+  /**
+   * 最大间隔天数
+   */
+  maximumInterval?: number;
+  
+  /**
+   * 是否启用个性化优化
+   */
+  enableOptimization?: boolean;
+}
+
+/**
+ * 兄弟卡片分散配置（渐进式挖空子卡片调度优化）
+ * 
+ * 基于认知科学研究和Anki最佳实践：
+ * - 避免前摄干扰和倒摄干扰
+ * - 为记忆巩固提供足够时间
+ * - 提升渐进式挖空学习效果
+ */
+export interface SiblingDispersionConfig {
+  /**
+   * 是否启用兄弟分散
+   * 默认: true（强烈推荐开启）
+   */
+  enabled?: boolean;
+  
+  /**
+   * 最小间隔天数
+   * 默认: 5天（基于Anki社区标准）
+   * 范围: 3-10天
+   */
+  minSpacing?: number;
+  
+  /**
+   * 基于间隔的动态分散比例
+   * 默认: 0.05（5%）
+   * 范围: 0.03-0.10
+   * 
+   * 实际分散间隔 = max(minSpacing, scheduledDays * spacingPercentage)
+   */
+  spacingPercentage?: number;
+  
+  /**
+   * 队列生成时过滤（P0）
+   * 默认: true
+   * 避免同一会话中出现兄弟卡片
+   */
+  filterInQueue?: boolean;
+  
+  /**
+   * 复习后自动调整（P2）
+   * 默认: true
+   * 复习后自动调整冲突的兄弟卡片due日期
+   */
+  autoAdjustAfterReview?: boolean;
+  
+  /**
+   * 遵守FSRS的fuzz范围（P3）
+   * 默认: true
+   * 仅在fuzz范围内调整，不破坏最优间隔
+   */
+  respectFuzzRange?: boolean;
+}
+
+/**
+ * 学习配置
+ */
+export interface StudyConfig {
+  /**
+   * 每日新卡数量
+   */
+  newCardsPerDay?: number;
+  
+  /**
+   * 每日复习卡数量
+   */
+  reviewsPerDay?: number;
+  
+  /**
+   * FSRS配置
+   */
+  fsrs?: FSRSConfig;
+  
+  /**
+   * 🆕 兄弟卡片分散配置（渐进式挖空优化）
+   */
+  siblingDispersion?: SiblingDispersionConfig;
+  
+  /**
+   * 是否显示答案按钮
+   */
+  showAnswerButtons?: boolean;
+  
+  /**
+   * 是否启用键盘快捷键
+   */
+  enableKeyboardShortcuts?: boolean;
+}
+
+// ============================================================================
+// 界面设置类型
+// ============================================================================
+
+/**
+ * 主题配置
+ */
+export interface ThemeConfig {
+  /**
+   * 主题名称
+   */
+  name?: 'light' | 'dark' | 'auto';
+  
+  /**
+   * 主色调
+   */
+  primaryColor?: string;
+  
+  /**
+   * 字体大小
+   */
+  fontSize?: number;
+}
+
+/**
+ * 牌组卡片设计样式
+ */
+export type DeckCardStyle = 'default' | 'chinese-elegant';
+
+/**
+ * 界面配置
+ */
+export interface UIConfig {
+  /**
+   * 主题配置
+   */
+  theme?: ThemeConfig;
+  
+  /**
+   * 是否显示侧边栏
+   */
+  showSidebar?: boolean;
+  
+  /**
+   * 是否启用动画
+   */
+  enableAnimations?: boolean;
+  
+  /**
+   * 默认视图
+   */
+  defaultView?: 'cards' | 'decks' | 'stats';
+  
+  /**
+   * 🆕 牌组卡片设计样式
+   */
+  deckCardStyle?: DeckCardStyle;
+}
+
+// ============================================================================
+// 增量阅读设置类型
+// ============================================================================
+
+/**
+ * 增量阅读聚焦界面设置（侧边功能栏状态持久化）
+ */
+export interface IRFocusInterfaceSettings {
+  /**
+   * 是否显示左侧章节导航
+   * @default true
+   */
+  showChapterNav?: boolean;
+  
+  /**
+   * 是否显示右侧工具栏
+   * @default true
+   */
+  showToolbar?: boolean;
+  
+  /**
+   * 是否折叠统计卡片
+   * @default false
+   */
+  statsCollapsed?: boolean;
+  
+  /**
+   * 是否显示自评预测时间
+   * @default true
+   */
+  showRatingTime?: boolean;
+  
+  /**
+   * 是否始终显示自评栏
+   * @default false
+   */
+  alwaysShowRating?: boolean;
+  
+  /**
+   * 默认编辑模式
+   * @default true
+   */
+  defaultEditMode?: boolean;
+  
+  /**
+   * 是否显示优先级贴纸
+   * @default true
+   */
+  showPrioritySticker?: boolean;
+  
+  /**
+   * @deprecated v5.5: 已弃用，不再使用
+   */
+  showIntervalModifier?: boolean;
+  
+  /**
+   * @deprecated v5.5: 已弃用，不再使用
+   */
+  showCognitiveSticker?: boolean;
+  
+  /**
+   * v3.1: 是否折叠内容块导航栏
+   * @default false
+   */
+  navCollapsed?: boolean;
+  
+  /**
+   * v3.2: 工具栏按钮顺序
+   * @default undefined (使用默认顺序)
+   */
+  toolbarButtonOrder?: string[];
+  
+  /**
+   * v5.5: 是否折叠产出信息栏
+   * @default true
+   */
+  outputStatsCollapsed?: boolean;
+}
+
+/**
+ * 增量阅读聚焦界面默认设置
+ */
+export const DEFAULT_IR_FOCUS_SETTINGS: IRFocusInterfaceSettings = {
+  showChapterNav: true,
+  showToolbar: true,
+  statsCollapsed: false,
+  showRatingTime: true,
+  alwaysShowRating: false,
+  defaultEditMode: true,
+  showPrioritySticker: true,
+  navCollapsed: false,
+  outputStatsCollapsed: true
+};
+
+/**
+ * 增量阅读全局设置
+ */
+export interface IncrementalReadingSettings {
+  /**
+   * 默认间隔因子
+   * 范围: 1.0-3.0, 默认: 1.5
+   */
+  defaultIntervalFactor?: number;
+  
+  /**
+   * 每日新块上限
+   * 范围: 0-50, 默认: 20
+   */
+  dailyNewLimit?: number;
+  
+  /**
+   * 每日复习上限
+   * 范围: 0-200, 默认: 50
+   */
+  dailyReviewLimit?: number;
+  
+  /**
+   * 默认拆分标题级别
+   * 范围: 1-6, 默认: 2 (##)
+   */
+  defaultSplitLevel?: number;
+  
+  /**
+   * 是否启用交错学习模式
+   * 默认: true
+   */
+  interleaveMode?: boolean;
+  
+  /**
+   * 交错学习最大连续同主题块数
+   * 范围: 1-10, 默认: 3
+   */
+  maxConsecutiveSameTopic?: number;
+  
+  /**
+   * 进入复习状态的最小间隔（天）
+   * 范围: 3-14, 默认: 7
+   */
+  reviewThreshold?: number;
+  
+  /**
+   * 最大间隔天数
+   * 范围: 30-365, 默认: 365
+   */
+  maxInterval?: number;
+  
+  /**
+   * 导入材料目标文件夹路径
+   * 导入的文件将复制到此文件夹，原文件保持不变
+   * @default 'weave/incremental-reading'
+   */
+  importFolder?: string;
+  
+  /**
+   * 聚焦界面设置（侧边功能栏状态持久化）
+   */
+  focusInterface?: IRFocusInterfaceSettings;
+  
+  // ============================================
+  // v3.0 调度系统新增设置
+  // ============================================
+  
+  /**
+   * 调度策略
+   * - 'processing': 加工流（同日可多次回访）
+   * - 'reading-list': 阅读清单（每天最多1次）
+   * @default 'processing'
+   */
+  scheduleStrategy?: 'processing' | 'reading-list';
+  
+  /**
+   * 每日时间预算（分钟）
+   * 范围: 10-120, 默认: 40
+   */
+  dailyTimeBudgetMinutes?: number;
+  
+  /**
+   * 同一内容块每日最大出现次数
+   * 范围: 1-5, 默认: 2
+   */
+  maxAppearancesPerDay?: number;
+  
+  /**
+   * 是否启用标签组先验（自动调整间隔因子）
+   * @default true
+   */
+  enableTagGroupPrior?: boolean;
+  
+  /**
+   * 防沉底强度（aging机制）
+   * @default 'low'
+   */
+  agingStrength?: 'low' | 'medium' | 'high';
+  
+  /**
+   * 过载自动后推策略
+   * @default 'gentle'
+   */
+  autoPostponeStrategy?: 'off' | 'gentle' | 'aggressive';
+  
+  /**
+   * 优先级EWMA半衰期（天）
+   * 范围: 3-30, 默认: 7
+   */
+  priorityHalfLifeDays?: number;
+  
+  /**
+   * 标签组自动跟随模式
+   * 当文档标签变化导致匹配到不同标签组时的行为
+   * - 'off': 不检测，导入时确定后不再变化
+   * - 'ask': 检测到漂移时弹出通知提醒用户选择
+   * - 'auto': 静默自动切换标签组
+   * @default 'ask'
+   */
+  tagGroupFollowMode?: 'off' | 'ask' | 'auto';
+  
+  /**
+   * 待读天数（统一用于统计和提前阅读范围）
+   * 用于统计N天内到期的内容块，显示为"待读"，同时限制提前阅读范围
+   * 范围: 1-14, 默认: 3
+   */
+  learnAheadDays?: number;
+  
+  // ============================================
+  // v3.1 标注信号配置
+  // ============================================
+  
+  /**
+   * 标注信号配置
+   * 控制 Callout 标注如何影响内容块优先级
+   */
+  calloutSignal?: CalloutSignalSettings;
+}
+
+/**
+ * Callout 类型权重配置
+ */
+export interface CalloutTypeWeight {
+  /** Callout 类型 ID (如 'question', 'quote' 等) */
+  type: string;
+  /** 是否启用此类型作为信号源 */
+  enabled: boolean;
+  /** 权重值 (0.5 ~ 3.0) */
+  weight: number;
+}
+
+/**
+ * 标注信号设置
+ */
+export interface CalloutSignalSettings {
+  /**
+   * 是否启用标注信号功能
+   * @default true
+   */
+  enabled?: boolean;
+  
+  /**
+   * 各 Callout 类型的权重配置
+   */
+  typeWeights?: CalloutTypeWeight[];
+  
+  /**
+   * 对优先级的最大增益
+   * 范围: 1.0 ~ 2.0, 默认: 2.0
+   */
+  maxBoost?: number;
+  
+  /**
+   * 饱和参数（控制边际收益递减速度）
+   * 范围: 3 ~ 6, 默认: 4
+   * 越小越快饱和
+   */
+  saturationParam?: number;
+  
+  /**
+   * 最小内容阈值（字符数）
+   * Callout 内容少于此值不计入统计
+   * 范围: 0 ~ 50, 默认: 0（不启用）
+   */
+  minContentLength?: number;
+}
+
+/**
+ * 增量阅读默认设置（使用统一的 PATHS 配置）
+ */
+export const DEFAULT_IR_SETTINGS: IncrementalReadingSettings = {
+  defaultIntervalFactor: 1.5,
+  dailyNewLimit: 20,
+  dailyReviewLimit: 50,
+  defaultSplitLevel: 2,
+  interleaveMode: true,
+  maxConsecutiveSameTopic: 3,
+  reviewThreshold: 7,
+  maxInterval: 365,
+  importFolder: '',
+  // v3.0 新增
+  scheduleStrategy: 'processing',
+  dailyTimeBudgetMinutes: 40,
+  maxAppearancesPerDay: 2,
+  enableTagGroupPrior: true,
+  agingStrength: 'low',
+  autoPostponeStrategy: 'gentle',
+  priorityHalfLifeDays: 7,
+  learnAheadDays: 3,
+  tagGroupFollowMode: 'ask'
+};
+
+// ============================================================================
+// 插件设置主接口
+// ============================================================================
+
+/**
+ * Weave插件完整设置
+ */
+export interface WeaveSettings {
+  /**
+   * AI功能配置
+   */
+  aiConfig?: AIConfig;
+  
+  /**
+   * 学习配置
+   */
+  studyConfig?: StudyConfig;
+  
+  /**
+   * 界面配置
+   */
+  uiConfig?: UIConfig;
+  
+  /**
+   * 🆕 牌组标签组配置
+   * 用于看板视图按标签组分组
+   */
+  deckTagGroups?: import('../types/deck-kanban-types').DeckTagGroup[];
+  
+  /**
+   * 默认牌组
+   */
+  defaultDeck?: string;
+  
+  /**
+   * 数据存储路径
+   */
+  dataPath?: string;
+  
+  /**
+   * 是否启用调试模式
+   */
+  enableDebugMode?: boolean;
+  
+  /**
+   * 是否显示高级功能预览
+   * 开启后，未激活的高级功能将以锁定状态显示
+   */
+  showPremiumFeaturesPreview?: boolean;
+  
+  /**
+   * 🆕 是否显示性能优化设置
+   */
+  showPerformanceSettings?: boolean;
+
+  /**
+   * 是否启用第三方插件系统
+   * 关闭时不加载插件、不显示插件标签页
+   * @default false
+   */
+  enableThirdPartyPlugins?: boolean;
+
+  /**
+   * 是否启用预览
+   */
+  enablePreview?: boolean;
+  
+  /**
+   * 是否自动保存
+   */
+  autoSave?: boolean;
+  
+  /**
+   * 自动保存间隔（毫秒）
+   */
+  autoSaveInterval?: number;
+  
+  /**
+   * 简化解析配置
+   */
+  simplifiedParsing?: {
+    templates?: any[];
+    enabled?: boolean;
+  };
+  
+  /**
+   * 批量解析配置
+   */
+  batchParsing?: {
+    enabled?: boolean;
+    scope?: string[];
+  };
+  
+  /**
+   * AnkiConnect配置
+   */
+  ankiConnect?: {
+    enabled?: boolean;
+    host?: string;
+    port?: number;
+  };
+  
+  /**
+   * 增量阅读全局设置
+   */
+  incrementalReading?: IncrementalReadingSettings;
+
+  weaveParentFolder?: string;
+
+  /**
+   * 是否跳过指南牌组自动创建
+   * 用户手动删除教程牌组后设为 true，防止重启后自动恢复
+   * 用户可通过菜单"恢复官方教程牌组"重置此设置
+   * @default false
+   */
+  skipGuideDeck?: boolean;
+}
+
+/**
+ * 自定义格式化动作
+ */
+export interface CustomFormatAction {
+  id: string;
+  name: string;
+  instruction: string;
+  enabled: boolean;
+}

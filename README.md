@@ -156,7 +156,7 @@ npm run dev
 
 ## 更多文档
 
-- 安装与测试：`INSTALLATION.md`
+- 安装与测试：请参考本 README 中的安装说明与 Releases 页面
 - 发布流程：`docs/RELEASE_GUIDE.md`
 - 图片遮罩：`docs/IMAGE_MASK_GUIDE.md`
 

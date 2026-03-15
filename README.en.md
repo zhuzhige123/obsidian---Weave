@@ -151,6 +151,6 @@ Note: development mode uses the Vite watch build flow.
 
 ## More Documentation
 
-- Installation and testing: `INSTALLATION.md`
+- Installation and testing: see the installation section in this README and the Releases page
 - Release guide: `docs/RELEASE_GUIDE.md`
 - Image masking: `docs/IMAGE_MASK_GUIDE.md`

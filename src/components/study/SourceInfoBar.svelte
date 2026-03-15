@@ -3,6 +3,7 @@
   import type { WeavePlugin } from "../../main";
   import { getCardMetadataService } from "../../services/CardMetadataService";
   import { logger } from "../../utils/logger";
+  import { tr } from '../../utils/i18n';
 
   interface Props {
     card: Card;
@@ -12,6 +13,8 @@
   }
 
   let { card, plugin, studyQueue, onOpenSource }: Props = $props();
+
+  let t = $derived($tr);
 
   const metadataService = getCardMetadataService();
 
@@ -155,7 +158,7 @@
     title={metadataService.getCardSource(card) || ''}
   >
     <div class="stat-header">
-      <span class="stat-title">来源文档</span>
+      <span class="stat-title">{t('study.sourceInfo.sourceDoc')}</span>
     </div>
     <div class="stat-content">
       <span class="stat-value source-doc-name">{sourceDocName || '--'}</span>
@@ -168,11 +171,11 @@
   <!-- 同源卡片 -->
   <div class="stat-card sibling-card">
     <div class="stat-header">
-      <span class="stat-title">同源卡片</span>
-      <span class="stat-status">本次学习</span>
+      <span class="stat-title">{t('study.sourceInfo.siblingCards')}</span>
+      <span class="stat-status">{t('study.sourceInfo.thisSession')}</span>
     </div>
     <div class="stat-content">
-      <span class="stat-value">{siblingCount}<span class="stat-unit">张</span></span>
+      <span class="stat-value">{siblingCount}<span class="stat-unit">{t('study.sourceInfo.unitCards')}</span></span>
     </div>
   </div>
 </div>

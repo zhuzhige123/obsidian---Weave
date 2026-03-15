@@ -126,7 +126,7 @@ export class FSRS6ServiceManager {
   /**
    * 热更新参数
    */
-  async updateParameters(newParams: Partial<FSRS6Parameters>): Promise<void> {
+  updateParameters(newParams: Partial<FSRS6Parameters>): void {
     const startTime = performance.now();
     
     try {

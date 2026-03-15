@@ -1,12 +1,14 @@
 <script lang="ts">
-  interface Props { closable?: boolean; onClose?: () => void; }
-  let { closable = false, onClose }: Props = $props();
+  import type { Snippet } from 'svelte';
+
+  interface Props { closable?: boolean; onClose?: () => void; children?: Snippet; }
+  let { closable = false, onClose, children }: Props = $props();
 </script>
 
 <span class="cursor-tag">
-  <slot />
+  {@render children?.()}
   {#if closable}
-    <button onclick={onClose}>×</button>
+    <button type="button" onclick={onClose}>×</button>
   {/if}
 </span>
 

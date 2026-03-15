@@ -5,11 +5,14 @@
 <script lang="ts">
   import { logger } from '../../utils/logger';
   import { vaultStorage } from '../../utils/vault-local-storage';
-  // 🆕 v2.2: 导入牌组信息获取和设置工具
+  // v2.2: 导入牌组信息获取和设置工具
   import { getCardDeckIds, setCardProperty } from '../../utils/yaml-utils';
   import { generateUUID } from '../../utils/helpers';
+  import { detectCardQuestionType } from '../../utils/card-type-utils';
+  import { UnifiedCardType } from '../../types/unified-card-types';
 
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
+  import { tr } from '../../utils/i18n';
   import type { Card, CardState, CardType, Deck } from "../../data/types";
   import type { WeaveDataStorage } from "../../data/storage";
   import EnhancedIcon from "../ui/EnhancedIcon.svelte";
@@ -47,7 +50,7 @@
   }
 
   // 🆕 卡片属性显示类型
-  type CardAttributeType = 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified';
+  type CardAttributeType = 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified' | 'accuracy' | 'question_type' | 'ir_state' | 'ir_priority';
 
   interface Props {
     cards: Card[]; // 必需：由父组件提供卡片数组
@@ -60,7 +63,7 @@
     onCardDelete?: (cardId: string) => void; // 新增：卡片删除回调
     onCardView?: (cardId: string) => void; // 🆕 卡片查看回调（显示详情模态窗）
     onStartStudy?: (cards: Card[]) => void;
-    groupBy?: 'status' | 'type' | 'priority' | 'deck' | 'createTime';
+    groupBy?: 'status' | 'type' | 'priority' | 'deck' | 'createTime' | 'tag';
     showStats?: boolean;
     layoutMode?: 'compact' | 'comfortable' | 'spacious';
     attributeType?: CardAttributeType; // 🆕 卡片属性显示类型
@@ -83,6 +86,8 @@
     attributeType = 'uuid' // 🆕 默认显示唯一标识符
   }: Props = $props();
 
+  let t = $derived($tr);
+
   // 渐进式加载配置
   const INITIAL_CARDS_PER_COLUMN = 20;
   const LOAD_MORE_BATCH_SIZE = 20;
@@ -104,10 +109,36 @@
   let hoveredCardId = $state<string | null>(null);
   let dragOverColumn = $state<string | null>(null);
   let dragOverIndex = $state<number>(-1);
+
+  // 渲染状态检测
+  const RENDERING_OVERLAY_THRESHOLD = 30;
+  let isRendering = $state(false);
   
   // 列管理状态
   let columnConfig = $state<Record<string, ColumnVisibilityConfig>>({});
   let showColumnMenu = $state(false);
+
+  // 顶部滚动条同步
+  let topScrollbarRef = $state<HTMLElement | null>(null);
+  let topScrollbarContentRef = $state<HTMLElement | null>(null);
+  let kanbanBoardRef = $state<HTMLElement | null>(null);
+  let boardResizeObserver: ResizeObserver | null = null;
+
+  function syncScroll(source: 'top' | 'board') {
+    if (!topScrollbarRef || !kanbanBoardRef) return;
+    if (source === 'top') {
+      kanbanBoardRef.scrollLeft = topScrollbarRef.scrollLeft;
+    } else {
+      topScrollbarRef.scrollLeft = kanbanBoardRef.scrollLeft;
+    }
+  }
+
+  function updateTopScrollbarWidth() {
+    if (kanbanBoardRef && topScrollbarContentRef) {
+      const scrollWidth = kanbanBoardRef.scrollWidth;
+      topScrollbarContentRef.style.width = `${scrollWidth}px`;
+    }
+  }
   
   // 菜单导航状态
   type MenuView = 'main' | 'groupby' | 'sort' | 'sort-add';
@@ -119,26 +150,27 @@
   let dragTarget = $state<string | null>(null);
 
   // 分组方式标签映射
-  const groupByLabels: Record<string, string> = {
-    status: '学习状态',
-    type: '题型',
-    priority: '优先级',
-    deck: '牌组',
-    createTime: '创建时间'
-  };
+  const groupByLabels = $derived<Record<string, string>>({
+    status: t('study.kanban.groupBy.status'),
+    type: t('study.kanban.groupBy.type'),
+    priority: t('study.kanban.groupBy.priority'),
+    deck: t('study.kanban.groupBy.deck'),
+    createTime: t('study.kanban.groupBy.createTime'),
+    tag: t('study.kanban.groupBy.tag')
+  });
 
   // 当前分组方式标签
   const currentGroupByLabel = $derived(groupByLabels[groupBy] || groupBy);
   
   // 排序选项定义
-  const sortOptions = {
-    created: { key: 'created', label: '创建时间', icon: 'calendar' },
-    due: { key: 'due', label: '到期时间', icon: 'clock' },
-    modified: { key: 'modified', label: '修改时间', icon: 'history' },
-    priority: { key: 'priority', label: '优先级', icon: 'flag' },
-    difficulty: { key: 'difficulty', label: '难度', icon: 'chart-bar' },
-    title: { key: 'title', label: '标题', icon: 'heading' }
-  };
+  const sortOptions = $derived({
+    created: { key: 'created', label: t('study.kanban.sort.created'), icon: 'calendar' },
+    due: { key: 'due', label: t('study.kanban.sort.due'), icon: 'clock' },
+    modified: { key: 'modified', label: t('study.kanban.sort.modified'), icon: 'history' },
+    priority: { key: 'priority', label: t('study.kanban.sort.priority'), icon: 'flag' },
+    difficulty: { key: 'difficulty', label: t('study.kanban.sort.difficulty'), icon: 'chart-bar' },
+    title: { key: 'title', label: t('study.kanban.sort.title'), icon: 'heading' }
+  });
   
   // 使用 $derived 同步外部数据
   let cards = $derived(externalCards);
@@ -149,65 +181,91 @@
     return cardStateManager.groupCards(externalCards, groupBy);
   });
 
+  // 渲染进度计算（依赖 cards/groupedCards，必须在其后声明）
+  const totalVisibleCards = $derived.by(() => {
+    let total = 0;
+    for (const key of Object.keys(groupedCards)) {
+      total += Math.min(
+        visibleCardsPerGroup[key] || INITIAL_CARDS_PER_COLUMN,
+        (groupedCards[key] || []).length
+      );
+    }
+    return total;
+  });
+  const renderingProgress = $derived(
+    cards.length > 0 ? Math.round((totalVisibleCards / cards.length) * 100) : 0
+  );
+
   // 分组配置
-  const groupConfigs = {
+  const groupConfigs = $derived({
     status: {
-      title: '按学习状态分组',
+      title: t('study.kanban.groupTitle.byStatus'),
       icon: 'layers',
       groups: [
-        { key: '0', label: '新卡片', color: '#6b7280', icon: 'plus-circle' },
-        { key: '1', label: '学习中', color: '#3b82f6', icon: 'book-open' },
-        { key: '2', label: '复习', color: '#10b981', icon: 'refresh-cw' },
-        { key: '3', label: '重新学习', color: '#f59e0b', icon: 'rotate-ccw' }
+        { key: '0', label: t('study.kanban.status.new'), color: '#6b7280', icon: 'plus-circle' },
+        { key: '1', label: t('study.kanban.status.learning'), color: '#3b82f6', icon: 'book-open' },
+        { key: '2', label: t('study.kanban.status.review'), color: '#10b981', icon: 'refresh-cw' },
+        { key: '3', label: t('study.kanban.status.relearning'), color: '#f59e0b', icon: 'rotate-ccw' }
       ]
     },
     type: {
-      title: '按题型分组',
+      title: t('study.kanban.groupTitle.byType'),
       icon: 'grid',
       groups: [
-        { key: 'basic', label: '基础问答', color: 'var(--interactive-accent)', icon: 'file-text' },
-        { key: 'cloze', label: '挖空填词', color: '#ec4899', icon: 'edit' },
-        { key: 'multiple', label: '多选题', color: '#06b6d4', icon: 'check-circle' },
-        { key: 'code', label: '代码题', color: '#84cc16', icon: 'code' }
+        { key: 'basic-qa', label: t('study.kanban.type.qa'), color: 'var(--interactive-accent)', icon: 'file-text' },
+        { key: 'single-choice', label: t('study.kanban.type.choice'), color: '#06b6d4', icon: 'check-circle' },
+        { key: 'cloze-deletion', label: t('study.kanban.type.cloze'), color: '#ec4899', icon: 'edit' }
       ]
     },
     priority: {
-      title: '按优先级分组',
+      title: t('study.kanban.groupTitle.byPriority'),
       icon: 'flag',
       groups: [
-        { key: '4', label: '高优先级', color: '#ef4444', icon: 'alert-triangle' },
-        { key: '3', label: '中优先级', color: '#f59e0b', icon: 'flag' },
-        { key: '2', label: '低优先级', color: '#10b981', icon: 'minus-circle' },
-        { key: '1', label: '无优先级', color: '#6b7280', icon: 'circle' }
+        { key: '4', label: t('study.kanban.priorityLevel.high'), color: '#ef4444', icon: 'alert-triangle' },
+        { key: '3', label: t('study.kanban.priorityLevel.medium'), color: '#f59e0b', icon: 'flag' },
+        { key: '2', label: t('study.kanban.priorityLevel.low'), color: '#10b981', icon: 'minus-circle' },
+        { key: '1', label: t('study.kanban.priorityLevel.none'), color: '#6b7280', icon: 'circle' }
       ]
     },
     deck: {
-      title: '按牌组分组',
+      title: t('study.kanban.groupTitle.byDeck'),
       icon: 'folder',
-      groups: [] // 动态生成
+      groups: [] as { key: string; label: string; color: string; icon: string }[]
     },
     createTime: {
-      title: '按创建时间分组',
+      title: t('study.kanban.groupTitle.byCreateTime'),
       icon: 'calendar',
       groups: [
-        { key: 'today', label: '今天', color: '#3b82f6', icon: 'calendar' },
-        { key: 'yesterday', label: '昨天', color: '#10b981', icon: 'calendar' },
-        { key: 'last7days', label: '过去7天', color: '#f59e0b', icon: 'calendar' },
-        { key: 'last30days', label: '过去30天', color: '#ec4899', icon: 'calendar' },
-        { key: 'earlier', label: '更早', color: '#6b7280', icon: 'calendar' }
+        { key: 'today', label: t('study.kanban.time.today'), color: '#3b82f6', icon: 'calendar' },
+        { key: 'yesterday', label: t('study.kanban.time.yesterday'), color: '#10b981', icon: 'calendar' },
+        { key: 'last7days', label: t('study.kanban.time.last7days'), color: '#f59e0b', icon: 'calendar' },
+        { key: 'last30days', label: t('study.kanban.time.last30days'), color: '#ec4899', icon: 'calendar' },
+        { key: 'earlier', label: t('study.kanban.time.earlier'), color: '#6b7280', icon: 'calendar' }
       ]
+    },
+    tag: {
+      title: t('study.kanban.groupTitle.byTag'),
+      icon: 'tag',
+      groups: [] as { key: string; label: string; color: string; icon: string }[]
     }
-  };
+  });
 
-  // 当前分组配置（动态生成牌组分组）
+  // 当前分组配置（动态生成牌组/标签分组）
   const currentConfig = $derived.by(() => {
     if (groupBy === 'deck' && cardStateManager) {
-      // 动态生成牌组分组
       const deckGroups = cardStateManager.getDeckGroups(cards);
       return {
-        title: '按牌组分组',
+        title: t('study.kanban.groupTitle.byDeck'),
         icon: 'folder',
         groups: deckGroups
+      };
+    }
+    if (groupBy === 'tag' && cardStateManager) {
+      const tagGroups = cardStateManager.getTagGroups(cards);
+      return {
+        title: t('study.kanban.groupTitle.byTag'),
+        icon: 'tag',
+        groups: tagGroups
       };
     }
     return groupConfigs[groupBy];
@@ -395,10 +453,13 @@
       };
     }
     
-    // 如果是牌组分组，需要动态获取
-    const groups = groupByType === 'deck' && cardStateManager 
-      ? cardStateManager.getDeckGroups(cards)
-      : config.groups;
+    // 如果是牌组或标签分组，需要动态获取
+    let groups = config.groups;
+    if (groupByType === 'deck' && cardStateManager) {
+      groups = cardStateManager.getDeckGroups(cards);
+    } else if (groupByType === 'tag' && cardStateManager) {
+      groups = cardStateManager.getTagGroups(cards);
+    }
     
     return {
       hidden: [],
@@ -863,19 +924,19 @@
       case 'status':
         return { 
           allowed: false, 
-          reason: '学习状态由FSRS6算法自动管理，无法手动修改。\n请通过学习功能来更新卡片状态。' 
+          reason: t('study.kanban.drag.statusRestriction') 
         };
         
       case 'type':
         return { 
           allowed: false, 
-          reason: '卡片类型无法通过拖拽修改' 
+          reason: t('study.kanban.drag.typeRestriction') 
         };
       
       case 'createTime':
         return { 
           allowed: false, 
-          reason: '创建时间无法修改' 
+          reason: t('study.kanban.drag.timeRestriction') 
         };
       
       case 'priority':
@@ -971,7 +1032,7 @@
         case 'deck':
           //  禁止将卡片拖到"无牌组"列（每张卡片必须属于一个牌组）
           if (targetGroupKey === '_none') {
-            showDragRestrictionNotice('卡片必须属于一个牌组，无法移动到"无牌组"');
+            showDragRestrictionNotice(t('study.kanban.drag.noDeckRestriction'));
             return;
           }
           // 🆕 v2.2: 同时更新 deckId 和 content YAML 中的 we_decks
@@ -1006,8 +1067,12 @@
     switch (groupBy) {
       case 'status':
         return card.fsrs ? String(card.fsrs.state) : '0';
-      case 'type':
-        return card.type ?? 'basic';
+      case 'type': {
+        const detected = detectCardQuestionType(card);
+        if (detected === UnifiedCardType.MULTIPLE_CHOICE) return UnifiedCardType.SINGLE_CHOICE;
+        if (detected === UnifiedCardType.FILL_IN_BLANK || detected === UnifiedCardType.SEQUENCE || detected === UnifiedCardType.EXTENSIBLE) return UnifiedCardType.BASIC_QA;
+        return detected;
+      }
       case 'priority':
         return String(card.priority || 1);
       case 'deck':
@@ -1016,6 +1081,10 @@
         return primaryDeckId || card.deckId || '_none';
       case 'createTime':
         return getTimeGroupKey(card.created);
+      case 'tag': {
+        const cardTags = card.tags || [];
+        return cardTags.length > 0 ? cardTags[0] : '_noTag';
+      }
       default:
         return '';
     }
@@ -1126,7 +1195,7 @@
   }
 
   // 组件挂载时初始化
-  onMount(async () => {
+  onMount(() => {
     // 初始化状态管理器
     cardStateManager = new CardStateManager(dataStorage);
     
@@ -1150,7 +1219,34 @@
     
     // 初始化可见卡片数量
     initializeVisibleCards();
-    
+
+    // 顶部滚动条：监听看板内容宽度变化
+    return () => {
+      if (boardResizeObserver) {
+        boardResizeObserver.disconnect();
+        boardResizeObserver = null;
+      }
+    };
+  });
+
+  // 看板board ref变化时设置ResizeObserver
+  $effect(() => {
+    if (kanbanBoardRef) {
+      boardResizeObserver?.disconnect();
+      boardResizeObserver = new ResizeObserver(() => {
+        updateTopScrollbarWidth();
+      });
+      boardResizeObserver.observe(kanbanBoardRef);
+      // 初始同步
+      updateTopScrollbarWidth();
+    }
+  });
+
+  // 分组变化时更新滚动条宽度
+  $effect(() => {
+    if (groupedCards) {
+      setTimeout(updateTopScrollbarWidth, 50);
+    }
   });
   
   // 监听decks变化，更新CardStateManager中的牌组列表
@@ -1159,15 +1255,48 @@
       cardStateManager.setDecks(decks);
     }
   });
+
+  // 渲染状态检测：卡片数据变化时显示遮罩
+  $effect(() => {
+    const totalCards = cards.length;
+    if (totalCards >= RENDERING_OVERLAY_THRESHOLD) {
+      isRendering = true;
+      tick().then(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            isRendering = false;
+          });
+        });
+      });
+    } else {
+      isRendering = false;
+    }
+  });
 </script>
 
 <div class="weave-kanban-view">
+  <!-- 渲染进度遮罩 -->
+  {#if isRendering}
+    <div class="weave-rendering-overlay"></div>
+    <div class="weave-rendering-progress-container">
+      {#if renderingProgress < 100}
+        <div class="weave-rendering-progress-bar" style="width: {renderingProgress}%"></div>
+      {:else}
+        <div class="weave-rendering-progress-bar weave-rendering-progress-bar--indeterminate"></div>
+      {/if}
+    </div>
+    <div class="weave-rendering-info">
+      <div class="weave-spinner-small"></div>
+      <span>{totalVisibleCards} / {cards.length} {t('study.kanban.cards.cardsUnit')}</span>
+    </div>
+  {/if}
+
   <!-- 隐藏的列管理按钮（通过父组件触发） -->
   <button
     class="weave-hidden-column-btn"
     class:active={showColumnMenu}
     onclick={() => showColumnMenu = !showColumnMenu}
-    title="列设置"
+    title={t('study.kanban.menu.viewOptions')}
     style="display: none;"
   >
     <EnhancedIcon name="sliders" size="16" />
@@ -1186,7 +1315,7 @@
       <div 
         class="weave-column-menu" 
         role="dialog"
-        aria-label="列设置"
+        aria-label={t('study.kanban.menu.viewOptions')}
         tabindex="-1"
       >
         <!-- 主菜单视图 -->
@@ -1195,7 +1324,7 @@
           <div class="notion-menu-header">
             <div class="notion-menu-title">
               <EnhancedIcon name="sliders" size="14" />
-              <span>视图选项</span>
+              <span>{t('study.kanban.menu.viewOptions')}</span>
             </div>
             <button class="notion-close-btn" onclick={closeMenu}>
               <EnhancedIcon name="x" size="14" />
@@ -1215,7 +1344,7 @@
               }
             }}
           >
-            <span class="notion-menu-label">分组方式</span>
+            <span class="notion-menu-label">{t('study.kanban.menu.groupByLabel')}</span>
             <div class="notion-menu-value">
               <span>{currentGroupByLabel}</span>
               <EnhancedIcon name="chevron-right" size="12" />
@@ -1235,9 +1364,9 @@
               }
             }}
           >
-            <span class="notion-menu-label">排序</span>
+            <span class="notion-menu-label">{t('study.kanban.menu.sortLabel')}</span>
             <div class="notion-menu-value">
-              <span>{getCurrentColumnConfig().sortRules.length > 0 ? `${getCurrentColumnConfig().sortRules.length} 条规则` : '无'}</span>
+              <span>{getCurrentColumnConfig().sortRules.length > 0 ? t('study.kanban.menu.sortRulesCount', { n: getCurrentColumnConfig().sortRules.length }) : t('study.kanban.menu.noSort')}</span>
               <EnhancedIcon name="chevron-right" size="12" />
             </div>
           </div>
@@ -1247,12 +1376,12 @@
 
           <!-- 配置选项 -->
           <div class="notion-menu-row">
-            <span class="notion-menu-label">隐藏空白分组</span>
+            <span class="notion-menu-label">{t('study.kanban.menu.hideEmptyGroups')}</span>
             <div 
               class="notion-toggle-mini {getCurrentColumnConfig().hideEmptyGroups ? 'active' : ''}"
               onclick={handleToggleHideEmpty}
               role="switch"
-              aria-label="切换隐藏空白分组"
+              aria-label={t('study.kanban.menu.toggleHideEmpty')}
               aria-checked={getCurrentColumnConfig().hideEmptyGroups}
               tabindex="0"
               onkeydown={(e) => {
@@ -1267,12 +1396,12 @@
           </div>
 
           <div class="notion-menu-row">
-            <span class="notion-menu-label">填充列背景颜色</span>
+            <span class="notion-menu-label">{t('study.kanban.menu.fillColumnBg')}</span>
             <div 
               class="notion-toggle-mini {getCurrentColumnConfig().useColoredBackground ? 'active' : ''}"
               onclick={handleToggleColoredBackground}
               role="switch"
-              aria-label="切换填充列背景颜色"
+              aria-label={t('study.kanban.menu.toggleFillColumnBg')}
               aria-checked={getCurrentColumnConfig().useColoredBackground}
               tabindex="0"
               onkeydown={(e) => {
@@ -1291,7 +1420,7 @@
 
           <!-- 群组标题 -->
           <div class="notion-section-header">
-            <span class="notion-section-title">群组</span>
+            <span class="notion-section-title">{t('study.kanban.menu.groups')}</span>
             <div class="notion-action-group">
               <span 
                 class="notion-section-action" 
@@ -1304,7 +1433,7 @@
                     handleReset();
                   }
                 }}
-              >重置</span>
+              >{t('study.kanban.menu.reset')}</span>
               <span class="notion-separator">·</span>
               <span 
                 class="notion-section-action" 
@@ -1317,8 +1446,8 @@
                     handleToggleAllVisibility();
                   }
                 }}
-                title={isAllHidden ? '显示所有列' : '隐藏所有列'}
-              >{isAllHidden ? '全部显示' : '全部隐藏'}</span>
+                title={isAllHidden ? t('study.kanban.menu.showAllColumns') : t('study.kanban.menu.hideAllColumns')}
+              >{isAllHidden ? t('study.kanban.menu.showAll') : t('study.kanban.menu.hideAll')}</span>
             </div>
           </div>
 
@@ -1357,7 +1486,7 @@
             e.preventDefault();
             handleToggleVisibility(group.key);
           }}
-                    title={isHidden ? '显示列' : '隐藏列'}
+                    title={isHidden ? t('study.kanban.menu.showColumn') : t('study.kanban.menu.hideColumn')}
                   >
                     <EnhancedIcon name={isHidden ? 'eye-off' : 'eye'} size="12" />
                   </button>
@@ -1372,7 +1501,7 @@
           <div class="notion-menu-header">
             <button class="notion-back-btn" onclick={navigateBack}>
               <EnhancedIcon name="arrow-left" size="14" />
-              <span>分组方式</span>
+              <span>{t('study.kanban.menu.groupByLabel')}</span>
             </button>
             <button class="notion-close-btn" onclick={closeMenu}>
               <EnhancedIcon name="x" size="14" />
@@ -1395,7 +1524,7 @@
             >
               <div class="notion-option-content">
                 <EnhancedIcon name="layers" size="14" />
-                <span>学习状态</span>
+                <span>{t('study.kanban.groupBy.status')}</span>
               </div>
               {#if groupBy === 'status'}
                 <EnhancedIcon name="check" size="14" />
@@ -1417,7 +1546,7 @@
             >
               <div class="notion-option-content">
                 <EnhancedIcon name="grid" size="14" />
-                <span>题型</span>
+                <span>{t('study.kanban.groupBy.type')}</span>
               </div>
               {#if groupBy === 'type'}
                 <EnhancedIcon name="check" size="14" />
@@ -1439,7 +1568,7 @@
             >
               <div class="notion-option-content">
                 <EnhancedIcon name="flag" size="14" />
-                <span>优先级</span>
+                <span>{t('study.kanban.groupBy.priority')}</span>
               </div>
               {#if groupBy === 'priority'}
                 <EnhancedIcon name="check" size="14" />
@@ -1461,7 +1590,7 @@
             >
               <div class="notion-option-content">
                 <EnhancedIcon name="folder" size="14" />
-                <span>牌组</span>
+                <span>{t('study.kanban.groupBy.deck')}</span>
               </div>
               {#if groupBy === 'deck'}
                 <EnhancedIcon name="check" size="14" />
@@ -1483,9 +1612,31 @@
             >
               <div class="notion-option-content">
                 <EnhancedIcon name="calendar" size="14" />
-                <span>创建时间</span>
+                <span>{t('study.kanban.groupBy.createTime')}</span>
               </div>
               {#if groupBy === 'createTime'}
+                <EnhancedIcon name="check" size="14" />
+              {/if}
+            </div>
+
+            <div 
+              class="notion-menu-row notion-menu-row--option"
+              class:notion-menu-row--selected={groupBy === 'tag'}
+              role="button"
+              tabindex="0"
+              onclick={() => handleGroupByChange('tag')}
+              onkeydown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleGroupByChange('tag');
+                }
+              }}
+            >
+              <div class="notion-option-content">
+                <EnhancedIcon name="tag" size="14" />
+                <span>{t('study.kanban.groupBy.tag')}</span>
+              </div>
+              {#if groupBy === 'tag'}
                 <EnhancedIcon name="check" size="14" />
               {/if}
             </div>
@@ -1497,7 +1648,7 @@
           <div class="notion-menu-header">
             <button class="notion-back-btn" onclick={navigateBack}>
               <EnhancedIcon name="arrow-left" size="14" />
-              <span>排序</span>
+              <span>{t('study.kanban.menu.sortLabel')}</span>
             </button>
             <button class="notion-close-btn" onclick={closeMenu}>
               <EnhancedIcon name="x" size="14" />
@@ -1533,7 +1684,7 @@
             e.preventDefault();
             handleToggleSortDirection(index);
           }}
-                      title={rule.direction === 'asc' ? '升序' : '降序'}
+                      title={rule.direction === 'asc' ? t('study.kanban.sort.asc') : t('study.kanban.sort.desc')}
                     >
                       <EnhancedIcon name={rule.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size="12" />
                     </button>
@@ -1543,7 +1694,7 @@
             e.preventDefault();
             handleRemoveSortRule(index);
           }}
-                      title="删除排序规则"
+                      title={t('study.kanban.menu.deleteSortRule')}
                     >
                       <EnhancedIcon name="x" size="12" />
                     </button>
@@ -1569,7 +1720,7 @@
             >
               <div class="notion-option-content">
                 <EnhancedIcon name="plus" size="14" />
-                <span>添加排序规则</span>
+                <span>{t('study.kanban.menu.addSortRule')}</span>
               </div>
               <EnhancedIcon name="chevron-right" size="12" />
             </div>
@@ -1592,7 +1743,7 @@
               >
                 <div class="notion-option-content">
                   <EnhancedIcon name="refresh-cw" size="14" />
-                  <span>清除所有排序</span>
+                  <span>{t('study.kanban.menu.clearAllSorts')}</span>
                 </div>
               </div>
             {/if}
@@ -1604,7 +1755,7 @@
           <div class="notion-menu-header">
             <button class="notion-back-btn" onclick={navigateBack}>
               <EnhancedIcon name="arrow-left" size="14" />
-              <span>选择属性</span>
+              <span>{t('study.kanban.menu.selectProperty')}</span>
             </button>
             <button class="notion-close-btn" onclick={closeMenu}>
               <EnhancedIcon name="x" size="14" />
@@ -1637,7 +1788,7 @@
             e.preventDefault();
             handleAddSortRule(option.key as SortConfig['property'], 'asc');
           }}
-                      title="升序"
+                      title={t('study.kanban.sort.asc')}
                     >
                       <EnhancedIcon name="chevron-up" size="10" />
                     </button>
@@ -1647,7 +1798,7 @@
             e.preventDefault();
             handleAddSortRule(option.key as SortConfig['property'], 'desc');
           }}
-                      title="降序"
+                      title={t('study.kanban.sort.desc')}
                     >
                       <EnhancedIcon name="chevron-down" size="10" />
                     </button>
@@ -1661,8 +1812,24 @@
     </div>
   {/if}
 
+  <!-- 顶部横向滚动条 -->
+  <div
+    class="weave-kanban-top-scrollbar"
+    bind:this={topScrollbarRef}
+    onscroll={() => syncScroll('top')}
+  >
+    <div class="weave-kanban-scrollbar-content" bind:this={topScrollbarContentRef}></div>
+  </div>
+
   <!-- 看板列 -->
-  <div class="weave-kanban-board" class:layout-compact={layoutMode === 'compact'} class:layout-comfortable={layoutMode === 'comfortable'} class:layout-spacious={layoutMode === 'spacious'}>
+  <div
+    class="weave-kanban-board"
+    class:layout-compact={layoutMode === 'compact'}
+    class:layout-comfortable={layoutMode === 'comfortable'}
+    class:layout-spacious={layoutMode === 'spacious'}
+    bind:this={kanbanBoardRef}
+    onscroll={() => syncScroll('board')}
+  >
     {#if cardStateManager}
       {#each renderedGroups as group (group.key)}
         {@const stats = getGroupStats(group.key)}
@@ -1671,7 +1838,7 @@
         <div
           class="weave-kanban-column"
           role="region"
-          aria-label={`${group.label}分组`}
+          aria-label={t('study.kanban.cards.ariaGroup', { label: group.label })}
           ondrop={() => handleDrop(group.key)}
           ondragover={(e) => e.preventDefault()}
         >
@@ -1691,7 +1858,7 @@
               <button
                 class="weave-column-action weave-select-all"
                 onclick={() => selectGroup(group.key)}
-                title="全选此分组"
+                title={t('study.kanban.cards.selectAll')}
               >
                 <EnhancedIcon name="check-square" size="14" />
               </button>
@@ -1707,10 +1874,10 @@
                 </div>
                 <div class="weave-stats-text">
                   {#if stats.due > 0}
-                    <span class="weave-due-badge">{stats.due} 到期</span>
+                    <span class="weave-due-badge">{stats.due} {t('study.kanban.cards.due')}</span>
                   {/if}
                   {#if stats.selected > 0}
-                    <span class="weave-selected-badge">{stats.selected} 已选</span>
+                    <span class="weave-selected-badge">{stats.selected} {t('study.kanban.cards.selected')}</span>
                   {/if}
                 </div>
               </div>
@@ -1782,7 +1949,7 @@
                   onclick={() => loadMoreCards(group.key)}
                 >
                   <EnhancedIcon name="chevron-down" size={16} />
-                  加载更多 ({(groupedCards[group.key] || []).length - (visibleCardsPerGroup[group.key] || INITIAL_CARDS_PER_COLUMN)} 张剩余)
+                  {t('study.kanban.cards.loadMore', { n: (groupedCards[group.key] || []).length - (visibleCardsPerGroup[group.key] || INITIAL_CARDS_PER_COLUMN) })}
                 </button>
               </div>
             {/if}
@@ -1798,14 +1965,28 @@
 </div>
 
 <style>
+  @import '../views/styles/grid-common.css';
+
   .weave-kanban-view {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
     background: var(--background-primary);
   }
 
-  /* 工具栏样式已移除，功能迁移到父组件 */
+  /* 顶部横向滚动条 */
+  .weave-kanban-top-scrollbar {
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 12px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+  }
+
+  .weave-kanban-scrollbar-content {
+    height: 1px;
+  }
 
   .weave-kanban-board {
     flex: 1;
@@ -2152,7 +2333,7 @@
     flex-direction: column;
     overflow: hidden;
     animation: slideIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family: var(--font-interface, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
     pointer-events: auto;
   }
 

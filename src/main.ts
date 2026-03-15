@@ -5,6 +5,7 @@ import { QuestionBankView, VIEW_TYPE_QUESTION_BANK } from "./views/QuestionBankV
 import { IRFocusView, VIEW_TYPE_IR_FOCUS } from "./views/IRFocusView"; // 📖 增量阅读聚焦视图
 import { IRCalendarView, VIEW_TYPE_IR_CALENDAR } from "./views/IRCalendarView"; // 📅 增量阅读日历视图
 import { EpubView, VIEW_TYPE_EPUB } from "./views/EpubView";
+import { EpubSidebarView, VIEW_TYPE_EPUB_SIDEBAR } from "./views/EpubSidebarView";
 import { WeaveDataStorage } from "./data/storage";
 import { FSRS } from "./algorithms/fsrs";
 import { AnkiSettingsTab } from "./components/settings/SettingsTab";
@@ -17,9 +18,11 @@ import type { CreateCardOptions } from "./types/modal-types";
 import type { LicenseInfo } from "./types/license";
 import { focusManager } from "./utils/focus-manager"; // 导入焦点管理器以启用全局监控
 import { destroyCardQualityInboxService } from "./services/card-quality/CardQualityInboxService";
+import { resetDataManagementService } from "./services/data-management/DataManagementService";
 import { DEFAULT_LICENSE_INFO } from "./types/license";
 
 import { DEFAULT_SIMPLIFIED_PARSING_SETTINGS } from './types/newCardParsingTypes';
+import { DEFAULT_AI_CONFIG } from './components/settings/constants/settings-constants';
 
 // 🆕 平板端支持
 import { detectDevice, applyDeviceClasses } from './utils/tablet-detection';
@@ -35,8 +38,8 @@ import { vaultStorage } from './utils/vault-local-storage';
 import { initI18n } from './utils/i18n';
 import { LEGACY_DOT_TUANKI, getMachineWeaveRoot, getReadableWeaveRoot, getV2PathsFromApp, normalizeWeaveParentFolder, resolveIRImportFolder } from './config/paths';
 import { DirectoryUtils } from './utils/directory-utils';
+import { getPreferredEpubLeaf } from './utils/epub-leaf-utils';
 import { ReadingCategory } from './types/incremental-reading-types';
-import { weaveEventBus } from './events/WeaveEventBus';
 import { MaskDataParser } from './services/image-mask/MaskDataParser';
 
 // AI
@@ -86,6 +89,7 @@ import { getWeaveOperationsSubmenu } from './services/menu/WeaveContextMenuBuild
 import { IRDeckSelectorModal } from './modals/IRDeckSelectorModal';
 import { createDefaultChunkFileData, generateChunkId, generateSourceId } from './types/ir-types';
 import { IRPdfBookmarkTaskService } from './services/incremental-reading/IRPdfBookmarkTaskService';
+import { UnifiedDataMigrationService } from './services/data-migration/UnifiedDataMigrationService';
 
 import { SelectedTextAICardPanelManager } from './services/editor/SelectedTextAICardPanelManager';
 import { EditorAIToolbarManager } from './services/editor/EditorAIToolbarManager';
@@ -225,7 +229,7 @@ export interface WeaveSettings {
     cardManagementViewPreferences?: {
         currentView: 'table' | 'grid' | 'kanban';
         gridLayout: 'fixed' | 'masonry';
-        gridCardAttribute: 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified';
+        gridCardAttribute: 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified' | 'accuracy' | 'question_type' | 'ir_state' | 'ir_priority';
         kanbanLayoutMode: 'compact' | 'comfortable' | 'spacious';
         tableViewMode: 'basic' | 'review' | 'questionBank' | 'irContent';
         enableCardLocationJump: boolean;
@@ -338,9 +342,6 @@ export interface WeaveSettings {
     // 🆕 显示性能优化设置标签页
     showPerformanceSettings?: boolean;
     
-    // 🆕 是否启用第三方插件系统
-    enableThirdPartyPlugins?: boolean;
-    
     // 🆕 显示高级功能预览（开启后，未激活的高级功能将以锁定状态显示）
     showPremiumFeaturesPreview?: boolean;
     
@@ -377,7 +378,7 @@ export interface WeaveSettings {
     // AI配置
     aiConfig?: {
         // API密钥配置（加密存储）
-        apiKeys: {
+        apiKeys?: {
             openai?: {
                 apiKey: string;
                 model: string;
@@ -398,25 +399,8 @@ export interface WeaveSettings {
             };
         };
         
-        // 🔧 提供商配置（与 apiKeys 分离管理）
-        providers?: Record<string, any>; // AI提供商具体配置
-        
-        // 模型默认配置
-        modelDefaults?: Record<string, any>;
-        
-        // 使用统计
-        usage?: {
-            totalGenerations: number;
-            totalCards: number;
-            successfulImports: number;
-            totalCost: number;
-            monthlyCost: number;
-            lastReset?: string;
-        };
-        
-        
         // 默认AI服务
-        defaultProvider: 'openai' | 'gemini' | 'anthropic' | 'deepseek' | 'zhipu' | 'siliconflow';
+        defaultProvider?: 'openai' | 'gemini' | 'anthropic' | 'deepseek' | 'zhipu' | 'siliconflow' | 'xai';
         
         // 🆕 上次使用的AI服务提供商（用于持久化用户选择）
         lastUsedProvider?: string;
@@ -425,7 +409,7 @@ export interface WeaveSettings {
         lastUsedModel?: string;
         
         // AI格式化开关
-        formatting: {
+        formatting?: {
             enabled: boolean;
         };
         
@@ -442,7 +426,7 @@ export interface WeaveSettings {
         };
         
         // 全局AI参数
-        globalParams: {
+        globalParams?: {
             temperature: number;
             maxTokens: number;
             requestTimeout: number;
@@ -460,7 +444,7 @@ export interface WeaveSettings {
         };
         
         // 提示词模板
-        promptTemplates: {
+        promptTemplates?: {
             official: Array<{
                 id: string;
                 name: string;
@@ -476,79 +460,7 @@ export interface WeaveSettings {
             custom: import('./types/ai-types').PromptTemplate[];
         };
         
-        // 图片生成基础配置
-        imageGeneration: {
-            defaultSyntax: 'wiki' | 'markdown';
-            attachmentDir: string;
-            autoCreateSubfolders: boolean;
-            includeTimestamp: boolean;
-            includeCaption: boolean;
-        };
-        
-        // 历史记录设置
-        history: {
-            enabled: boolean;
-            retentionDays: number;
-            showCostStats: boolean;
-            autoCleanFailures: boolean;
-        };
-        
-        // 统计数据
-        statistics?: {
-            totalGenerations: number;
-            totalCards: number;
-            successfulImports: number;
-            totalCost: number;
-            monthlyCost: number;
-            lastReset?: string;
-        };
-        
-        // 安全设置
-        security: {
-            encryptApiKeys: boolean;
-            enableContentFilter: boolean;
-            anonymousStats: boolean;
-        };
-        
-        // 快捷键配置
-        shortcuts?: {
-            [provider: string]: {
-                key: string;
-                modifiers: string[];
-            };
-        };
-        
-        // AI生成默认配置
-        generationDefaults?: {
-            templateId: string;
-            promptTemplate: string;
-            templates: {
-                qa: string;
-                choice: string;
-                cloze: string;
-            };
-            cardCount: number;
-            difficulty: 'easy' | 'medium' | 'hard' | 'mixed';
-            typeDistribution: {
-                qa: number;
-                cloze: number;
-                choice: number;
-            };
-            provider: 'openai' | 'gemini' | 'anthropic' | 'deepseek' | 'zhipu';
-            model: string;
-            temperature: number;
-            maxTokens: number;
-            imageGeneration: {
-                enabled: boolean;
-                strategy: 'none' | 'ai-generate' | 'search';
-                imagesPerCard: number;
-                placement: 'question' | 'answer' | 'both';
-            };
-            autoTags: string[];
-            enableHints: boolean;
-        };
-        
-        // 🆕 自定义AI功能列表
+        // 自定义AI功能列表
         customFormatActions?: import('./types/ai-types').CustomFormatAction[];
         customTestGenActions?: import('./types/ai-types').AIAction[];
         customSplitActions?: import('./types/ai-types').AIAction[];
@@ -562,6 +474,21 @@ export interface WeaveSettings {
         
         /** @deprecated 已弃用。仅为向后兼容保留 */
         officialActionOverrides?: Record<string, { provider?: string; model?: string }>;
+        
+        // 持久化的AI制卡生成配置
+        savedGenerationConfig?: {
+            cardCount?: number;
+            difficulty?: 'easy' | 'medium' | 'hard' | 'mixed';
+            typeDistribution?: {
+                qa: number;
+                cloze: number;
+                choice: number;
+            };
+            autoTags?: string[];
+            enableHints?: boolean;
+            temperature?: number;
+            maxTokens?: number;
+        };
     };
     
     // 负荷控制管理配置
@@ -597,6 +524,11 @@ export interface WeaveSettings {
     
     // 🆕 置顶牌组列表（用于热门牌组识别）
     pinnedDecks?: string[];
+
+    // 超时自动暂停计时（秒）
+    timerAutoPauseSeconds?: number;
+    // 提示功能每次学习会话最大使用次数
+    hintMaxUses?: number;
 }
 
 const DEFAULT_SETTINGS: WeaveSettings = {
@@ -734,6 +666,9 @@ language: 'zh-CN',         // 🌍 默认语言为简体中文
     // 🆕 教程按钮默认显示
     showTutorialButton: true,
 
+    // 提示功能每次学习会话最大使用次数
+    hintMaxUses: 5,
+
     license: {
         activationCode: "",
         isActivated: false,
@@ -846,72 +781,8 @@ language: 'zh-CN',         // 🌍 默认语言为简体中文
         tutorialStep: 0
     },
     
-    // 🆕 AI配置默认设置
-    aiConfig: {
-        apiKeys: {},
-        providers: {},
-        defaultProvider: 'zhipu',  // 🔧 修复：与settings-constants保持一致
-        lastUsedProvider: undefined,  // 🆕 上次使用的AI服务提供商
-        lastUsedModel: undefined,     // 🆕 上次使用的AI模型
-        modelDefaults: {},
-        usage: {
-            totalGenerations: 0,
-            totalCards: 0,
-            successfulImports: 0,
-            totalCost: 0,
-            monthlyCost: 0
-        },
-        security: {
-            encryptApiKeys: false,
-            enableContentFilter: true,
-            anonymousStats: true
-        },
-        
-        // AI格式化开关
-        formatting: {
-            enabled: true
-        },
-        
-        // 全局AI参数
-        globalParams: {
-            temperature: 0.1,
-            maxTokens: 2000,
-            requestTimeout: 30000,
-            concurrentLimit: 3
-        },
-        
-        // 提示词模板
-        promptTemplates: {
-            official: [],
-            custom: []
-        },
-        
-        // 图片生成基础配置
-        imageGeneration: {
-            defaultSyntax: 'wiki',
-            attachmentDir: 'Weave Assets',
-            autoCreateSubfolders: true,
-            includeTimestamp: true,
-            includeCaption: false
-        },
-        
-        // 历史记录设置
-        history: {
-            enabled: true,
-            retentionDays: 30,
-            showCostStats: true,
-            autoCleanFailures: false
-        },
-        
-        customFormatActions: [],  // 🎯 格式化功能列表
-        customTestGenActions: [],  // 🆕 测试题生成功能列表
-        customSplitActions: [],    // 🆕 AI拆分功能列表
-        officialFormatActions: {
-            choice: { enabled: true },
-            mathFormula: { enabled: true },
-            memoryAid: { enabled: true }
-        }
-    },
+    // AI配置默认设置（单一事实源：settings-constants.ts 的 DEFAULT_AI_CONFIG）
+    aiConfig: { ...DEFAULT_AI_CONFIG },
 
     // 🆕 牌组标签组配置（用于看板视图按标签组分组）
     deckTagGroups: [],
@@ -1047,8 +918,6 @@ export class WeavePlugin extends Plugin {
   public referenceMigrationService?: import('./services/reference-deck').ReferenceMigrationService;
   public cardFileService?: import('./services/reference-deck').CardFileService;
 
-  // 插件系统
-  public WeavePluginSystem?: import('./services/plugin-system/WeavePluginSystem').WeavePluginSystem;
 
 
 
@@ -1515,6 +1384,37 @@ export class WeavePlugin extends Plugin {
 	 * 2. 预设模板中的分隔符
 	 * 3. 映射配置中的分隔符
 	 */
+	private async runUnifiedDataMigration(): Promise<void> {
+		const migrationService = new UnifiedDataMigrationService(this.app, this.settings);
+		const plan = await migrationService.planDataMigration({ reason: 'startup-auto' });
+		if (!plan.requiresMigration) return;
+
+		const report = await migrationService.executeDataMigration(plan);
+		await this.saveSettings();
+
+		if (report.movedFiles > 0 || report.conflicts > 0) {
+			logger.info(`[Migration] Unified migration completed: moved=${report.movedFiles}, conflicts=${report.conflicts}, target=${report.plan.targetRoot}`);
+			new Notice(
+				`Weave: 数据目录已迁移到 ${report.plan.targetRoot}（迁移 ${report.movedFiles} 个文件${report.conflicts > 0 ? `，冲突 ${report.conflicts}` : ''}）`,
+				6000,
+			);
+		}
+	}
+
+	private initializeBlockLinkCleanupService(): void {
+		try {
+			this.blockLinkCleanupService = BlockLinkCleanupService.getInstance();
+			this.blockLinkCleanupService.initialize({
+				dataStorage: this.dataStorage,
+				vault: this.app.vault,
+				app: this.app
+			});
+			logger.info('块链接清理服务已初始化');
+		} catch (error) {
+			logger.error('块链接清理系统初始化失败:', error);
+		}
+	}
+
 	private async migrateDelimiterConfig(): Promise<void> {
 		try {
 			const OLD_DELIMITER = '%%<->%%';
@@ -1611,7 +1511,7 @@ export class WeavePlugin extends Plugin {
 		const result = { ...target };
 
 		for (const key in source) {
-			if (source.hasOwnProperty(key)) {
+			if (Object.hasOwn(source, key)) {
 				if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
 					// 递归合并嵌套对象
 					result[key] = this.deepMerge(target[key] || {}, source[key]);
@@ -1770,7 +1670,7 @@ export class WeavePlugin extends Plugin {
 		const text = document.createTextNode(`许可证失效: ${message} `);
 		const button = document.createElement('button');
 		button.textContent = '前往设置';
-		button.style.marginLeft = '8px';
+		button.classList.add('weave-ml-sm');
 		button.onclick = () => {
 			// 使用安全的设置打开方法
 			safeOpenSettings(this.app, 'weave');
@@ -1926,7 +1826,7 @@ export class WeavePlugin extends Plugin {
 			logger.info('🚀 [Layout Ready] 文件系统已就绪，开始初始化数据存储...');
 
 			// v3.0.0: 五阶段迁移（tuanki→weave、.tuanki→weave、_data上移、IR归位、隐藏标记重命名）
-			await this.migrateLegacyToWeaveDataFolder();
+			await this.runUnifiedDataMigration();
 
 			// v2.0.0: Schema V2 数据结构规范化迁移（已整合旧版迁移）
 			await this.migrateToSchemaV2();
@@ -1946,6 +1846,9 @@ export class WeavePlugin extends Plugin {
 			this.dataStorage = new WeaveDataStorage(this as any);
 			await this.dataStorage.initialize();
 			logger.info('✅ 数据存储初始化完成');
+
+			// 尽早初始化统一清理服务，避免删卡早于 deferred 初始化时漏掉源文档清理
+			this.initializeBlockLinkCleanupService();
 			
 			// 标记 dataStorage 已就绪（通知等待中的视图）
 			const { markServiceReady } = await import('./utils/service-ready-event');
@@ -2218,17 +2121,7 @@ export class WeavePlugin extends Plugin {
 		await this.initBatchParsingWatcher();
 		
 		// 10. 🧹 初始化块链接清理系统
-		try {
-			this.blockLinkCleanupService = BlockLinkCleanupService.getInstance();
-			this.blockLinkCleanupService.initialize({
-				dataStorage: this.dataStorage,
-				vault: this.app.vault,
-				app: this.app
-			});
-			logger.info('块链接清理服务已初始化');
-		} catch (error) {
-			logger.error('块链接清理系统初始化失败:', error);
-		}
+		this.initializeBlockLinkCleanupService();
 
 		// 11. 🚀 获取数据路径
 		const v2Paths = getV2PathsFromApp(this.app);
@@ -2305,46 +2198,6 @@ export class WeavePlugin extends Plugin {
 			logger.error('自动备份调度器初始化失败:', error);
 		}
 
-		// 🔧 注册开发工具（仅开发模式）
-		if (this.settings.enableDebugMode) {
-			try {
-				const { registerProgressiveCleanupTool } = await import('./utils/dev/progressive-cleanup-tool');
-				registerProgressiveCleanupTool(this);
-				logger.debug('✅ V1.5清理开发工具已注册');
-				
-				const { registerProgressiveDebugTool } = await import('./utils/dev/progressive-debug-tool');
-				registerProgressiveDebugTool(this);
-				logger.debug('✅ 渐进式挖空调试工具已注册');
-			} catch (error) {
-				logger.error('开发工具注册失败:', error);
-			}
-		}
-
-		// 15. 🔌 初始化插件系统（加载第三方插件）
-		if (this.settings.enableThirdPartyPlugins) {
-			try {
-				const { WeavePluginSystem } = await import('./services/plugin-system/WeavePluginSystem');
-				const { PRODUCT_INFO } = await import('./components/settings/constants/settings-constants');
-				const paths = getV2PathsFromApp(this.app);
-				const pluginsDir = `${paths.root}/plugins`;
-				const stateFile = `${paths.root}/plugins/.plugin-registry.json`;
-				const version = PRODUCT_INFO.VERSION.replace(/^v/, '');
-
-				this.WeavePluginSystem = new WeavePluginSystem(
-					{ app: this.app, dataStorage: this.dataStorage, settings: this.settings },
-					version,
-					pluginsDir,
-					stateFile
-				);
-				await this.WeavePluginSystem.initialize();
-				const stats = this.WeavePluginSystem.getStats();
-				logger.info(`[Services] ✅ 插件系统初始化完成: ${stats.enabled} 启用, ${stats.disabled} 禁用, ${stats.error} 错误`);
-			} catch (error) {
-				logger.error('[Services] 插件系统初始化失败:', error);
-			}
-		} else {
-			logger.info('[Services] 第三方插件系统已关闭，跳过初始化');
-		}
 
 		// 16. 🆕 启动外部同步文件变更监听（检测 Remotely Save 等第三方云同步）
 		try {
@@ -3179,6 +3032,7 @@ export class WeavePlugin extends Plugin {
 			this.registerView(VIEW_TYPE_IR_FOCUS, (leaf) => new IRFocusView(leaf, this)); // 📖 增量阅读聚焦视图
 			this.registerView(VIEW_TYPE_IR_CALENDAR, (leaf) => new IRCalendarView(leaf, this)); // 📅 增量阅读日历视图
 			this.registerView(VIEW_TYPE_EPUB, (leaf) => new EpubView(leaf, this));
+			this.registerView(VIEW_TYPE_EPUB_SIDEBAR, (leaf) => new EpubSidebarView(leaf, this));
 			this.registerExtensions(['epub'], VIEW_TYPE_EPUB);
 
 			// EPUB link post-processor
@@ -3375,6 +3229,15 @@ export class WeavePlugin extends Plugin {
 				} else {
 					new Notice('请先打开一个 EPUB 文件');
 				}
+			}
+		});
+
+		this.addCommand({
+			id: 'ir-import-epub',
+			name: 'IR: 导入 EPUB 增量阅读',
+			icon: 'book-plus',
+			callback: () => {
+				document.dispatchEvent(new CustomEvent('ir-import-epub'));
 			}
 		});
 
@@ -3950,76 +3813,11 @@ export class WeavePlugin extends Plugin {
 			id: "format-selection-as-cloze",
 			name: i18n.t('commands.formatAsCloze.name'),
 			icon: "highlighter",
+			editorCallback: async (editor: Editor) => {
+				await this.formatSelectionAsCloze(editor);
+			},
 			callback: async () => {
-				try {
-					logger.debug('📝 [格式化挖空] 命令触发');
-					
-					let selectedText = '';
-					let editor: Editor | null = null;
-					
-					// 🆕 步骤1：优先检查插件编辑器
-					const contextManager = EditorContextManager.getInstance();
-					if (contextManager.hasActivePluginEditor()) {
-						editor = contextManager.getCompatibleEditor();
-						if (editor) {
-							selectedText = editor.getSelection();
-							logger.debug('📝 [格式化挖空] 使用插件编辑器:', selectedText ? '成功' : '失败');
-						}
-					}
-					
-					// 步骤2：降级到原生编辑器
-					if (!editor) {
-						const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-						if (activeView?.editor) {
-							editor = activeView.editor;
-							selectedText = editor.getSelection();
-							logger.debug('📝 [格式化挖空] 使用原生编辑器:', selectedText ? '成功' : '失败');
-						}
-					}
-					
-					// 步骤3：Window Selection 降级方案
-					if (!selectedText || selectedText.trim() === '') {
-						const windowSelection = window.getSelection();
-						if (windowSelection && windowSelection.toString().trim()) {
-							selectedText = windowSelection.toString().trim();
-							logger.debug('📝 [格式化挖空] Window Selection API 获取: 成功');
-						}
-					}
-					
-					// 步骤4：检查是否有选中文本
-					if (!selectedText || selectedText.trim() === '') {
-						logger.debug('⚠️ [格式化挖空] 未选中文本');
-						new Notice(i18n.t('commands.formatAsCloze.noSelection'), 3000);
-						return;
-					}
-					
-					// 步骤5：确保有编辑器实例才能替换文本
-					if (!editor) {
-						logger.warn('⚠️ [格式化挖空] 无法找到编辑器实例');
-						new Notice('请确保编辑器已获得焦点', 3000);
-						return;
-					}
-					
-					// 步骤6：智能检测当前文档中的挖空序号，自动递增
-					const content = editor.getValue();
-					const matches = content.matchAll(/\{\{c(\d+)::/g);
-					const numbers = Array.from(matches).map(m => parseInt(m[1]));
-					const maxNumber = numbers.length > 0 ? Math.max(...numbers) : 0;
-					const nextNumber = maxNumber + 1;
-					
-					logger.debug(`📝 [格式化挖空] 当前最大序号: c${maxNumber}, 下一个: c${nextNumber}`);
-					
-					// 步骤7：将选中文本包裹为有序挖空格式 {{c1::text}}
-					const formatted = `{{c${nextNumber}::${selectedText}}}`;
-					editor.replaceSelection(formatted);
-					
-					logger.debug('✅ [格式化挖空] 格式化成功');
-					new Notice(i18n.t('commands.formatAsCloze.success') + ` (c${nextNumber})`, 2500);
-					
-				} catch (error) {
-					logger.error('❌ [格式化挖空] 执行失败:', error);
-					new Notice(i18n.t('commands.formatAsCloze.error'), 3000);
-				}
+				await this.formatSelectionAsCloze();
 			}
 		});
 
@@ -4185,23 +3983,14 @@ export class WeavePlugin extends Plugin {
 		} catch {}
 
 		// 5. 清理核心服务
+		try { resetDataManagementService(); } catch {}
 		try { destroyCardQualityInboxService(); } catch {}
 		try { this.uiManager?.destroyAll(); } catch {}
 		try { this.externalSyncWatcher?.stop(); } catch {}
 		try { this.dataSyncService?.destroy(); } catch {}
-		try { weaveEventBus?.destroy(); } catch {}
 		this.cleanupAnkiConnect();
 		this.cleanupAutoBackup();
 
-		// 6. 清理插件系统
-		if (this.WeavePluginSystem) {
-			try {
-				void this.WeavePluginSystem.destroy();
-				this.WeavePluginSystem = undefined;
-			} catch (err) {
-				logger.error('[Plugin] 插件系统清理失败:', err);
-			}
-		}
 
 		// 7. 清理批量解析与索引服务
 		try { this.batchParsingWatcher?.destroy(); this.batchParsingWatcher = undefined; } catch {}
@@ -4383,6 +4172,14 @@ export class WeavePlugin extends Plugin {
 			} else {
 				// 仅文档: [[文档名]]
 				yamlMetadata.we_source = `[[${docName}]]`;
+			}
+		}
+		if (!yamlMetadata.we_source && typeof bodyContent === 'string' && bodyContent.trim()) {
+			const firstPdfOrEpubLink =
+				bodyContent.match(/(!?\[\[[^\]]+?\.pdf[^\]]*?#page=[^\]]*?(?:rect|selection)=[^\]]*?\]\])/i)?.[1]
+				|| bodyContent.match(/(\[\[(?:(?!\]\]).)+\.epub(?:(?!\]\]).)*#weave-cfi=(?:(?!\]\]).)*\]\])/i)?.[1];
+			if (firstPdfOrEpubLink) {
+				yamlMetadata.we_source = firstPdfOrEpubLink;
 			}
 		}
 		if (deckName) {
@@ -4891,7 +4688,7 @@ export class WeavePlugin extends Plugin {
 	
 	async openEpubReader(filePath: string): Promise<void> {
 		try {
-			const leaf = this.app.workspace.getLeaf('tab');
+			const leaf = getPreferredEpubLeaf(this.app, filePath);
 			if (!leaf) {
 				logger.error('[WeavePlugin] openEpubReader: cannot create leaf');
 				return;
@@ -6934,6 +6731,74 @@ export class WeavePlugin extends Plugin {
 	/**
 	 * 🆕 初始化平板端适配支持
 	 */
+	private async formatSelectionAsCloze(preferredEditor?: Editor): Promise<void> {
+		try {
+			logger.debug('📝 [格式化挖空] 命令触发');
+
+			let selectedText = '';
+			let editor: Editor | null = preferredEditor ?? null;
+
+			// 1. 优先使用快捷键直接传入的编辑器实例
+			if (editor) {
+				selectedText = editor.getSelection();
+				logger.debug('📝 [格式化挖空] 使用命令传入编辑器:', selectedText ? '成功' : '失败');
+			}
+
+			// 2. 再尝试插件编辑器
+			if ((!selectedText || selectedText.trim() === '') && !editor) {
+				const contextManager = EditorContextManager.getInstance();
+				if (contextManager.hasActivePluginEditor()) {
+					editor = contextManager.getCompatibleEditor();
+					if (editor) {
+						selectedText = editor.getSelection();
+						logger.debug('📝 [格式化挖空] 使用插件编辑器:', selectedText ? '成功' : '失败');
+					}
+				}
+			}
+
+			// 3. 降级到原生编辑器
+			if ((!selectedText || selectedText.trim() === '') && !editor) {
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView?.editor) {
+					editor = activeView.editor;
+					selectedText = editor.getSelection();
+					logger.debug('📝 [格式化挖空] 使用原生编辑器:', selectedText ? '成功' : '失败');
+				}
+			}
+
+			const normalizedSelection = selectedText.trim();
+
+			if (!normalizedSelection) {
+				logger.debug('⚠️ [格式化挖空] 未检测到可写编辑器选区');
+				new Notice(i18n.t('commands.formatAsCloze.noSelection'), 3000);
+				return;
+			}
+
+			if (!editor) {
+				logger.warn('⚠️ [格式化挖空] 未找到可写入的编辑器实例');
+				new Notice('请先在编辑器内选中文本后再使用快捷键', 3000);
+				return;
+			}
+
+			const content = editor.getValue();
+			const matches = content.matchAll(/\{\{c(\d+)::/g);
+			const numbers = Array.from(matches).map(m => parseInt(m[1], 10));
+			const maxNumber = numbers.length > 0 ? Math.max(...numbers) : 0;
+			const nextNumber = maxNumber + 1;
+
+			logger.debug(`📝 [格式化挖空] 当前最大序号: c${maxNumber}, 下一个: c${nextNumber}`);
+
+			const formatted = `{{c${nextNumber}::${normalizedSelection}}}`;
+			editor.replaceSelection(formatted);
+
+			logger.debug('✅ [格式化挖空] 格式化成功');
+			new Notice(i18n.t('commands.formatAsCloze.success') + ` (c${nextNumber})`, 2500);
+		} catch (error) {
+			logger.error('❌ [格式化挖空] 执行失败:', error);
+			new Notice(i18n.t('commands.formatAsCloze.error'), 3000);
+		}
+	}
+
 	private initializeTabletSupport(): void {
 		try {
 			// 检测当前设备类型

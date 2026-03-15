@@ -282,10 +282,7 @@ export class LoadBalanceManager {
   /**
    * 估算推荐对负荷的影响
    */
-  private async estimateRecommendationImpact(date: Date): Promise<number> {
-    // 基于历史数据估算
-    // TODO: 实现基于历史推荐接受率的估算
-    
+  private estimateRecommendationImpact(date: Date): number {
     // 简化版：假设每天接受5张推荐卡片
     const baseEstimate = 5;
     

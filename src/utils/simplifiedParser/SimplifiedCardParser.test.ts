@@ -63,11 +63,11 @@ describe('SimplifiedCardParser', () => {
       const card = await parser.parseSingleCard(content, config as SingleCardParseConfig);
       
       expect(card).not.toBeNull();
-      expect(card?.type).toBe('qa');
+      expect(card?.type).toBe(CardType.Basic);
       expect(card?.front).toContain('什么是间隔重复');
       expect(card?.back).toContain('最佳时机复习');
-      expect(card?.tags).toContain('#学习方法');
-      expect(card?.tags).toContain('#weave');
+      expect(card?.tags).toContain('学习方法');
+      expect(card?.tags).toContain('weave');
     });
 
     test('应该解析无背面的卡片', async () => {
@@ -78,10 +78,10 @@ FSRS是一种现代化的间隔重复算法。
       const card = await parser.parseSingleCard(content, config as SingleCardParseConfig);
       
       expect(card).not.toBeNull();
-      expect(card?.type).toBe('qa');
+      expect(card?.type).toBe(CardType.Basic);
       expect(card?.front).toContain('FSRS算法');
       expect(card?.back).toBe('');
-      expect(card?.tags).toContain('#算法');
+      expect(card?.tags).toContain('算法');
     });
 
     test('应该检测挖空题', async () => {
@@ -99,17 +99,17 @@ FSRS是一种现代化的间隔重复算法。
 
     test('应该检测选择题', async () => {
       const content = `## Java中哪个不是基本数据类型？ #编程 #weave
-- [ ] int
-- [ ] boolean  
-- [x] String
-- [ ] double
+A) int
+B) boolean  
+C) String
+D) double
 ---div---
 String是引用类型，不是基本数据类型。`;
 
       const card = await parser.parseSingleCard(content, config as SingleCardParseConfig);
       
       expect(card).not.toBeNull();
-      expect(card?.type).toBe('mcq');
+      expect(card?.type).toBe(CardType.Multiple);
       expect(card?.front).toContain('基本数据类型');
       expect(card?.back).toContain('引用类型');
     });
@@ -117,29 +117,27 @@ String是引用类型，不是基本数据类型。`;
 
   describe('批量解析', () => {
     test('应该解析批量卡片', async () => {
-      const content = `---start---
-
+      const content = `<->
 ## 问题1：什么是Obsidian？
 ---div---
 Obsidian是一款基于Markdown的知识管理工具。
 #工具 #weave
 
----卡片---
+<->
 
 ## 选择题：哪个是Markdown语法？ #语法 #weave
-- [x] **粗体**
-- [ ] <b>粗体</b>
-- [ ] [粗体]
+A) **粗体**
+B) <b>粗体</b>
+C) [粗体]
 ---div---
 Markdown使用**文本**或__文本__表示粗体。
 
----卡片---
+<->
 
 间隔重复的核心是在==遗忘临界点==进行复习。
 这样可以最大化==学习效率==。
 #学习方法 #weave
-
----end---`;
+<->`;
 
       const batchConfig = {
         ...config,
@@ -154,15 +152,15 @@ Markdown使用**文本**或__文本__表示粗体。
       expect(result.cards).toHaveLength(3);
       
       // 检查第一张卡片
-      expect(result.cards[0].type).toBe('qa');
+      expect(result.cards[0].type).toBe(CardType.Basic);
       expect(result.cards[0].front).toContain('Obsidian');
       
       // 检查第二张卡片
-      expect(result.cards[1].type).toBe('mcq');
+      expect(result.cards[1].type).toBe(CardType.Multiple);
       expect(result.cards[1].front).toContain('Markdown语法');
       
       // 检查第三张卡片
-      expect(result.cards[2].type).toBe('cloze');
+      expect(result.cards[2].type).toBe(CardType.Cloze);
       expect(result.cards[2].front).toContain('遗忘临界点');
     });
   });
@@ -248,24 +246,22 @@ Markdown使用**文本**或__文本__表示粗体。
 
   describe('统计信息', () => {
     test('应该生成正确的统计信息', async () => {
-      const content = `---start---
-
+      const content = `<->
 ## 问答题 #weave
 答案内容
 ---div---
 背面内容
 
----卡片---
+<->
 
 ==挖空题==内容 #weave
 
----卡片---
+<->
 
 ## 选择题 #weave
-- [x] 正确答案
-- [ ] 错误答案
-
----end---`;
+A) 正确答案
+B) 错误答案
+<->`;
 
       const result = await parser.parseContent(content, {
         ...config,

@@ -1,13 +1,16 @@
 <script lang="ts">
-  interface Props { text: string; }
-  let { text }: Props = $props();
+  import type { Snippet } from 'svelte';
+
+  interface Props { text: string; children?: Snippet; }
+  let { text, children }: Props = $props();
   let showTooltip = $state(false);
 </script>
 
 <div class="cursor-tooltip" 
+     role="presentation"
      onmouseenter={() => showTooltip = true} 
      onmouseleave={() => showTooltip = false}>
-  <slot />
+  {@render children?.()}
   {#if showTooltip}
     <div class="tooltip-content">{text}</div>
   {/if}

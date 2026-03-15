@@ -148,6 +148,26 @@ export function showDangerConfirm(
   });
 }
 
+export interface ChoiceOption<T extends string> {
+  /** 选项值 */
+  value: T;
+  /** 按钮文本 */
+  text: string;
+  /** 选项说明 */
+  description?: string;
+  /** 按钮样式类 */
+  className?: string;
+}
+
+export interface ChoiceDialogOptions<T extends string> {
+  /** 对话框标题，默认 "请选择" */
+  title?: string;
+  /** 选项列表 */
+  choices: ChoiceOption<T>[];
+  /** 取消按钮文本，默认 "取消" */
+  cancelText?: string;
+}
+
 /**
  * 输入对话框配置选项
  */
@@ -160,6 +180,78 @@ export interface InputOptions {
   confirmText?: string;
   /** 取消按钮文本，默认 "取消" */
   cancelText?: string;
+}
+
+/**
+ * 显示 Obsidian 风格的多选对话框
+ */
+export function showObsidianChoice<T extends string>(
+  app: App,
+  message: string,
+  options: ChoiceDialogOptions<T>
+): Promise<T | null> {
+  const {
+    title = '请选择',
+    choices,
+    cancelText = '取消'
+  } = options;
+
+  return new Promise((resolve) => {
+    const modal = new Modal(app);
+    modal.titleEl.setText(title);
+
+    if (message) {
+      const messageEl = modal.contentEl.createDiv({ cls: 'obsidian-confirm-message' });
+      message.split('\n').forEach(line => {
+        if (line.trim()) {
+          messageEl.createEl('p', { text: line });
+        }
+      });
+    }
+
+    const choiceContainer = modal.contentEl.createDiv({ cls: 'obsidian-choice-buttons' });
+    choiceContainer.style.display = 'flex';
+    choiceContainer.style.flexDirection = 'column';
+    choiceContainer.style.gap = '12px';
+    choiceContainer.style.marginTop = '16px';
+
+    let result: T | null = null;
+
+    for (const choice of choices) {
+      const optionEl = choiceContainer.createDiv({ cls: 'obsidian-choice-option' });
+      optionEl.style.display = 'flex';
+      optionEl.style.flexDirection = 'column';
+      optionEl.style.gap = '4px';
+
+      const button = optionEl.createEl('button', {
+        text: choice.text,
+        cls: choice.className || 'mod-cta'
+      });
+      button.style.textAlign = 'left';
+
+      if (choice.description) {
+        const desc = optionEl.createDiv({ text: choice.description });
+        desc.addClass('setting-item-description');
+      }
+
+      button.onclick = () => {
+        result = choice.value;
+        modal.close();
+      };
+    }
+
+    const buttonContainer = modal.contentEl.createDiv({ cls: 'obsidian-confirm-buttons' });
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'flex-end';
+    buttonContainer.style.gap = '10px';
+    buttonContainer.style.marginTop = '16px';
+
+    const cancelButton = buttonContainer.createEl('button', { text: cancelText });
+    cancelButton.onclick = () => modal.close();
+
+    modal.onClose = () => resolve(result);
+    modal.open();
+  });
 }
 
 /**

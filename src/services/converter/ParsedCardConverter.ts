@@ -42,16 +42,16 @@ export class ParsedCardConverter {
       // 2. 构建 content（Content-Only 架构核心）
       // 🆕 v2.2: 在 content 中写入 we_decks YAML 元数据
       const bodyContent = this.buildContent(parsedCard);
-      const content = this.buildContentWithMetadata(bodyContent, options);
 
       // 3. 转换卡片类型
       const cardType = this.convertCardType(parsedCard.type);
 
       // 4. 合并标签
       const tags = [
-        ...parsedCard.tags,
+        ...(parsedCard.tags || []),
         ...(options.additionalTags || [])
       ];
+      const content = this.buildContentWithMetadata(bodyContent, parsedCard, options, tags);
 
       // 5. 初始化 FSRS 数据
       const fsrsCard = this.fsrs.createCard();
@@ -98,7 +98,12 @@ export class ParsedCardConverter {
         },
         
         // 其他属性
-        priority: options.priority ?? 0
+        priority: options.priority ?? 0,
+        isBatchScanned: parsedCard.metadata?.isBatchScanned ?? false,
+        lastScannedContent: parsedCard.metadata?.lastScannedContent,
+        lastScannedAt: parsedCard.metadata?.lastScannedAt,
+        isNewCard: parsedCard.metadata?.isNewCard,
+        fileMtime: parsedCard.metadata?.fileMtime
       };
 
       // 8. 保留源文件信息（如果启用）
@@ -171,7 +176,12 @@ export class ParsedCardConverter {
    * 🆕 v2.2: 构建带有 YAML 元数据的 content
    * 在 content 中注入 we_decks 等元数据
    */
-  private buildContentWithMetadata(bodyContent: string, options: ConversionOptions): string {
+  private buildContentWithMetadata(
+    bodyContent: string,
+    parsedCard: ParsedCard,
+    options: ConversionOptions,
+    tags: string[] = []
+  ): string {
     // 如果没有牌组名称，直接返回原内容
     if (!options.deckName) {
       return bodyContent;
@@ -181,6 +191,25 @@ export class ParsedCardConverter {
     const yamlMetadata: Record<string, any> = {
       we_decks: [options.deckName]
     };
+    if (tags.length > 0) {
+      yamlMetadata.tags = Array.from(new Set(tags));
+    }
+
+    if (options.preserveSourceInfo !== false) {
+      const sourceFile = parsedCard.sourceFile || parsedCard.metadata?.sourceFile;
+      const sourceBlock = parsedCard.sourceBlock || parsedCard.metadata?.sourceBlock;
+
+      if (sourceFile) {
+        const normalizedSourceFile = sourceFile.replace(/\\/g, '/');
+        yamlMetadata.we_source = sourceBlock
+          ? `![[${normalizedSourceFile}#^${sourceBlock.replace(/^\^/, '')}]]`
+          : `[[${normalizedSourceFile}]]`;
+      }
+
+      if (!yamlMetadata.we_source && sourceBlock) {
+        yamlMetadata.we_block = `^${sourceBlock.replace(/^\^/, '')}`;
+      }
+    }
     
     // 使用工具函数生成带 frontmatter 的 content
     return createContentWithMetadata(yamlMetadata, bodyContent);

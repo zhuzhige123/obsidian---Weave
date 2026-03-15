@@ -390,13 +390,11 @@ export class BlockLinkManager {
   /**
    * 检查唯一标识符是否已存在（避免重复创建）
    */
-  async checkUniqueIdentifierExists(_uniqueIdentifier: string): Promise<boolean> {
+  checkUniqueIdentifierExists(_uniqueIdentifier: string): boolean {
     try {
-      // 这里可以实现检查逻辑，比如搜索所有卡片的notes字段
-      // 暂时返回false，表示不存在
       return false;
     } catch (error) {
-      logger.error('❌ [BlockLinkManager] 检查唯一标识符失败:', error);
+      logger.error('[BlockLinkManager] 检查唯一标识符失败:', error);
       return false;
     }
   }

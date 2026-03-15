@@ -14,6 +14,7 @@ import { FrontmatterManager } from '../../batch-parsing/FrontmatterManager';
 
 export class BatchParseSingleCleanupStrategy implements ICleanupStrategy {
   readonly type = CardCreationType.BATCH_PARSE_SINGLE;
+  private readonly DELETION_TAG = 'we_已删除';
   private app: App;
   
   constructor(app: App) {
@@ -44,14 +45,21 @@ export class BatchParseSingleCleanupStrategy implements ICleanupStrategy {
         return result;
       }
       
-      //  步骤1: 清理YAML frontmatter中的weave-uuid字段
+      //  步骤1: 清理YAML frontmatter中的weave-uuid字段，并写入删除排除标签
       const frontmatterManager = new FrontmatterManager(this.app);
       
       const uuid = await frontmatterManager.getUUID(file);
+      const frontmatter = await frontmatterManager.parseFrontmatter(file);
       
       if (uuid) {
         await frontmatterManager.removeField(file, 'weave-uuid');
         result.cleanedItems.push(`weave-uuid: ${uuid}`);
+      }
+
+      const nextTags = this.mergeDeletionTag(frontmatter.tags);
+      if (nextTags) {
+        await frontmatterManager.updateFrontmatter(file, { tags: nextTags });
+        result.cleanedItems.push(`tags: ${this.DELETION_TAG}`);
       }
       
       //  步骤2: 清理文档内容中的块链接（如果存在）
@@ -151,5 +159,20 @@ export class BatchParseSingleCleanupStrategy implements ICleanupStrategy {
    */
   private escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private mergeDeletionTag(existingTags: unknown): string[] | null {
+    const normalizedTags = Array.isArray(existingTags)
+      ? existingTags.filter((tag): tag is string => typeof tag === 'string').map(tag => tag.trim()).filter(Boolean)
+      : typeof existingTags === 'string'
+        ? existingTags.split(',').map(tag => tag.trim()).filter(Boolean)
+        : [];
+
+    const hasDeletionTag = normalizedTags.some(tag => tag.replace(/^#/, '').toLowerCase() === this.DELETION_TAG.toLowerCase());
+    if (hasDeletionTag) {
+      return null;
+    }
+
+    return [...normalizedTags, this.DELETION_TAG];
   }
 }

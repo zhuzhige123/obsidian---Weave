@@ -150,10 +150,10 @@
   /* ==================== 导航容器 ==================== */
   .question-navigator {
     width: 150px;
-    height: 100%; /* 🔧 填满父容器 */
+    height: 100%;
     background: transparent;
     border-radius: 0;
-    padding: 16px 12px 0 1rem; /* 🔧 移除底部padding */
+    padding: 16px 12px 0 1rem;
     display: flex;
     flex-direction: column;
     gap: 16px;

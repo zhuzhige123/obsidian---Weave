@@ -700,6 +700,10 @@ export interface IRChunkFileData {
   /** v5.5: 多牌组支持 - 已验证的牌组ID列表 */
   deckIds?: string[];
   
+  // === 用户数据 ===
+  /** 收藏 */
+  favorite?: boolean;
+  
   // === 调度引擎状态（保留在 JSON） ===
   /** 用户优先级滑条值 (0-10) */
   priorityUi?: number;

@@ -574,10 +574,6 @@
     border-bottom: 1px solid var(--background-modifier-border);
   }
 
-  .explanation-icon {
-    font-size: 1.125rem;
-  }
-
   .explanation-title {
     flex: 1;
     font-size: 0.875rem;

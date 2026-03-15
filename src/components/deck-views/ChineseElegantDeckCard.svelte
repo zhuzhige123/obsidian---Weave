@@ -18,6 +18,7 @@
     stats: DeckStats;
     colorVariant?: 1 | 2 | 3 | 4;
     compact?: boolean;
+    deckMode?: 'memory' | 'question-bank' | 'incremental-reading';
     onStudy: () => void;
     onMenu: (event: MouseEvent) => void;
   }
@@ -27,11 +28,23 @@
     stats,
     colorVariant = 1,
     compact = false,
+    deckMode = 'memory',
     onStudy,
     onMenu
   }: Props = $props();
   
   let t = $derived($tr);
+
+  const statLabels = $derived.by(() => {
+    switch (deckMode) {
+      case 'incremental-reading':
+        return { first: t('decks.card.irUnread'), second: t('decks.card.irPending'), third: t('decks.card.irQuestions') };
+      case 'question-bank':
+        return { first: t('decks.questionBank.total'), second: t('decks.questionBank.completed'), third: t('decks.questionBank.errors') };
+      default:
+        return { first: t('decks.card.newFull'), second: t('decks.card.learningFull'), third: t('decks.card.reviewFull') };
+    }
+  });
 
   // 根据牌组ID生成稳定的颜色变体
   const stableColorVariant = $derived(() => {
@@ -153,15 +166,15 @@
     <!-- 底部统计信息栏 - 左下角 -->
     <div class="stats-bar">
       <div class="stat-item">
-        <span class="stat-label">{t('decks.card.newFull')}</span>
+        <span class="stat-label">{statLabels.first}</span>
         <span class="stat-value">{stats.newCards}</span>
       </div>
       <div class="stat-item">
-        <span class="stat-label">{t('decks.card.learningFull')}</span>
+        <span class="stat-label">{statLabels.second}</span>
         <span class="stat-value">{stats.learningCards}</span>
       </div>
       <div class="stat-item">
-        <span class="stat-label">{t('decks.card.reviewFull')}</span>
+        <span class="stat-label">{statLabels.third}</span>
         <span class="stat-value">{stats.reviewCards}</span>
       </div>
     </div>
@@ -299,6 +312,7 @@
     text-align: left;
     /* 限制最多2行 */
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;

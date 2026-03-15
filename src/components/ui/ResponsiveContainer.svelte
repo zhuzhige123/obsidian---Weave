@@ -115,28 +115,32 @@
 </div>
 
 <style>
-  .responsive-container {
+  .weave-responsive-container {
     width: 100%;
     height: 100%;
+    min-height: 0;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   /* 基础响应式样式 */
-  .responsive-container.responsive-mobile {
+  .weave-responsive-container.responsive-mobile {
     --layout-mode: mobile;
     --sidebar-width: 0;
     --content-padding: 0.5rem;
     --font-size-scale: 0.9;
   }
 
-  .responsive-container.responsive-tablet {
+  .weave-responsive-container.responsive-tablet {
     --layout-mode: tablet;
     --sidebar-width: 200px;
     --content-padding: 1rem;
     --font-size-scale: 1;
   }
 
-  .responsive-container.responsive-desktop {
+  .weave-responsive-container.responsive-desktop {
     --layout-mode: desktop;
     --sidebar-width: 250px;
     --content-padding: 1.5rem;
@@ -144,43 +148,41 @@
   }
 
   /* 宽度特定的样式 */
-  .responsive-container.responsive-width-300 {
+  .weave-responsive-container.responsive-width-300 {
     --columns: 1;
     --grid-gap: 0.5rem;
   }
 
-  .responsive-container.responsive-width-400 {
+  .weave-responsive-container.responsive-width-400 {
     --columns: 1;
     --grid-gap: 0.75rem;
   }
 
-  .responsive-container.responsive-width-500 {
+  .weave-responsive-container.responsive-width-500 {
     --columns: 2;
     --grid-gap: 1rem;
   }
 
-  .responsive-container.responsive-width-600 {
+  .weave-responsive-container.responsive-width-600 {
     --columns: 2;
     --grid-gap: 1rem;
   }
 
-  .responsive-container.responsive-width-700 {
+  .weave-responsive-container.responsive-width-700 {
     --columns: 3;
     --grid-gap: 1.25rem;
   }
 
-  .responsive-container.responsive-width-800 {
+  .weave-responsive-container.responsive-width-800 {
     --columns: 3;
     --grid-gap: 1.5rem;
   }
 
   /* 为子组件提供 CSS 变量 */
-  .responsive-container {
+  .weave-responsive-container {
     --responsive-padding: var(--content-padding, 1rem);
     --responsive-gap: var(--grid-gap, 1rem);
     --responsive-columns: var(--columns, 1);
     --responsive-font-scale: var(--font-size-scale, 1);
   }
-
-
 </style>

@@ -3,7 +3,7 @@
  * 适用于：记忆学习(weave-study-view)、增量阅读(weave-ir-focus-view)、刷题学习(weave-question-bank-view)
  *
  * 统一处理：
- * 1. 隐藏 Obsidian 原生 view-header
+ * 1. 隐藏 Obsidian 原生 view-header（仅桌面端，移动端保留用于 addAction 按钮）
  * 2. 覆盖 Obsidian 默认 view-content padding
  * 3. 通过 --weave-study-view-spacing CSS 变量控制间距
  *    compact: 12px | default: 20px | comfortable: 32px
@@ -13,10 +13,11 @@
   --weave-study-view-spacing: 12px;
 }
 
-/* ==================== 隐藏 Obsidian view-header ==================== */
-.workspace-leaf-content[data-type="weave-study-view"] .view-header,
-.workspace-leaf-content[data-type="weave-ir-focus-view"] .view-header,
-.workspace-leaf-content[data-type="weave-question-bank-view"] .view-header {
+/* ==================== 隐藏 Obsidian view-header（仅桌面端） ==================== */
+/* 移动端保留 view-header，因为功能按钮通过 addAction() 添加到原生顶部栏 */
+body:not(.is-mobile) .workspace-leaf-content[data-type="weave-study-view"] .view-header,
+body:not(.is-mobile) .workspace-leaf-content[data-type="weave-ir-focus-view"] .view-header,
+body:not(.is-mobile) .workspace-leaf-content[data-type="weave-question-bank-view"] .view-header {
   display: none;
 }
 

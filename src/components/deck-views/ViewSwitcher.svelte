@@ -9,6 +9,8 @@
    * @version 1.1.0
    * 🔧 v1.1.0 - 移除移动端特殊样式，与 CategoryFilter 完全统一
    */
+  import { tr } from '../../utils/i18n';
+
   export type ViewType = 'table' | 'grid' | 'kanban';
 
   interface Props {
@@ -18,27 +20,30 @@
 
   let { currentView, onViewChange }: Props = $props();
 
-  // 视图配置（顺序：表格、网格、看板）
-  const views: Array<{ id: ViewType; name: string; colorStart: string; colorEnd: string }> = [
+  let t = $derived($tr);
+
+  const viewDefs: Array<{ id: ViewType; nameKey: string; colorStart: string; colorEnd: string }> = [
     {
       id: 'table',
-      name: '表格视图',
+      nameKey: 'decks.viewSwitcher.table',
       colorStart: '#ef4444',
       colorEnd: '#dc2626'
     },
     {
       id: 'grid',
-      name: '网格视图',
+      nameKey: 'decks.viewSwitcher.grid',
       colorStart: '#3b82f6',
       colorEnd: '#2563eb'
     },
     {
       id: 'kanban',
-      name: '看板视图',
+      nameKey: 'decks.viewSwitcher.kanban',
       colorStart: '#10b981',
       colorEnd: '#059669'
     }
   ];
+
+  const views = $derived(viewDefs.map(v => ({ ...v, name: t(v.nameKey) })));
 
   function getGradientStyle(view: typeof views[0]): string {
     return `background: linear-gradient(135deg, ${view.colorStart}, ${view.colorEnd})`;

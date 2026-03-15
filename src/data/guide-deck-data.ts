@@ -174,7 +174,7 @@ D) 选项4
 **常用路径**：
 - 牌组：\`weave/memory/decks.json\`
 - 卡片：\`weave/memory/cards/\`
-- 设置：\`.obsidian/plugins/weave/config/settings.json\``,
+- 配置：\`.obsidian/plugins/weave/user-profile.json\``,
     tags: ['数据', '存储']
   },
   

@@ -21,7 +21,7 @@ export class TemplateService {
    * @param templateData 模板数据
    * @returns 创建的模板
    */
-  async createTemplate(templateData: FieldTemplate): Promise<FieldTemplate> {
+  createTemplate(templateData: FieldTemplate): Promise<FieldTemplate> {
     return this.dataStorage.createTemplate(templateData);
   }
 
@@ -31,7 +31,7 @@ export class TemplateService {
    * @param updates 更新数据
    * @returns 更新后的模板
    */
-  async updateTemplate(templateId: string, updates: Partial<FieldTemplate>): Promise<FieldTemplate> {
+  updateTemplate(templateId: string, updates: Partial<FieldTemplate>): Promise<FieldTemplate> {
     return this.dataStorage.updateTemplate(templateId, updates);
   }
 
@@ -39,7 +39,7 @@ export class TemplateService {
    * 删除模板
    * @param templateId 模板ID
    */
-  async deleteTemplate(templateId: string): Promise<void> {
+  deleteTemplate(templateId: string): Promise<void> {
     return this.dataStorage.deleteTemplate(templateId);
   }
 
@@ -48,7 +48,7 @@ export class TemplateService {
    * @param templateId 模板ID
    * @returns 模板数据，如果不存在则返回null
    */
-  async getTemplate(templateId: string): Promise<FieldTemplate | null> {
+  getTemplate(templateId: string): Promise<FieldTemplate | null> {
     return this.dataStorage.getTemplate(templateId);
   }
 
@@ -56,7 +56,7 @@ export class TemplateService {
    * 获取所有模板
    * @returns 模板列表
    */
-  async getTemplates(): Promise<FieldTemplate[]> {
+  getTemplates(): Promise<FieldTemplate[]> {
     return this.dataStorage.getTemplates();
   }
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import type { ContentSegment } from '../../utils/semantic-content-extractor';
+  import { tr } from '../../utils/i18n';
 
   // Props
   interface Props {
@@ -21,6 +22,7 @@
 
   // 响应式计算
   const placeholder = '▮▮▮';
+  let t = $derived($tr);
   const canReveal = $derived(!revealed && !!onReveal);
   const displayContent = $derived(revealed ? segment.content : placeholder);
 
@@ -80,9 +82,9 @@
 
   function getAriaLabel(): string {
     if (revealed) {
-      return `已显示内容: ${segment.content}`;
+      return t('study.cloze.revealedContent', { content: segment.content });
     } else {
-      return `隐藏内容，点击显示答案`;
+      return t('study.cloze.hiddenContent');
     }
   }
 </script>
@@ -92,7 +94,7 @@
     type="button"
     class={getSegmentClass()}
     aria-label={getAriaLabel()}
-    title="点击显示答案"
+    title={t('study.cloze.clickToReveal')}
     onclick={handleClick}
     onkeydown={handleKeydown}
     onmouseenter={handleMouseEnter}

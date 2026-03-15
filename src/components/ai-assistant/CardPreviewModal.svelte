@@ -579,12 +579,19 @@ ${originalContent}
 
 {#if isOpen}
   <!-- 模态窗遮罩 -->
-  <div class="card-preview-overlay" onclick={onClose} role="presentation">
+  <div class="card-preview-overlay" role="presentation">
+    <button
+      type="button"
+      class="card-preview-backdrop"
+      aria-label={t('modals.cardPreview.close')}
+      onclick={onClose}
+    ></button>
     <!-- 模态窗容器 -->
     <div 
       class="card-preview-modal" 
-      onclick={(e) => { e.stopPropagation(); }}
       role="dialog"
+      aria-modal="true"
+      aria-labelledby="card-preview-title"
       tabindex="-1"
     >
       <!-- 预览头部 -->
@@ -595,7 +602,7 @@ ${originalContent}
         </button>
 
         <div class="preview-title">
-          <h3>{t('modals.cardPreview.title')}</h3>
+          <h3 id="card-preview-title">{t('modals.cardPreview.title')}</h3>
           <div class="card-counter">
             <span class="current-num">{currentIndex + 1}</span>
             <span class="separator">/</span>
@@ -858,6 +865,15 @@ ${originalContent}
     z-index: var(--weave-z-modal-backdrop, 1040);
     padding: 16px;
     animation: fadeIn 0.2s ease-out;
+  }
+
+  .card-preview-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: default;
   }
 
   @keyframes fadeIn {
@@ -1338,37 +1354,6 @@ ${originalContent}
     color: var(--text-muted);
     font-weight: 500;
     white-space: nowrap;
-  }
-
-  .deck-selector select {
-    padding: 6px 12px;
-    border-radius: 6px;
-    background: var(--background-primary);
-    color: var(--text-normal);
-    border: 1px solid var(--background-modifier-border);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    min-width: 150px;
-    max-width: 250px;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
-
-  .deck-selector select:hover:not(:disabled) {
-    border-color: var(--text-accent);
-  }
-
-  .deck-selector select:focus {
-    outline: none;
-    border-color: var(--text-accent);
-    box-shadow: 0 0 0 2px var(--color-accent-bg);
-  }
-
-  .deck-selector select:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
   }
 
   :global(.deck-selector .obsidian-dropdown-trigger.target-deck-select) {

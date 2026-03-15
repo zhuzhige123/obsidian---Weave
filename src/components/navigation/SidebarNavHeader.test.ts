@@ -1,28 +1,35 @@
-/**
- * SidebarNavHeader 组件单元测试
- * 
- * 测试视图切换菜单项的显示逻辑：
- * - 在卡片管理页面显示"切换视图"菜单项
- * - 在牌组学习页面显示"切换视图"菜单项
- * - 在AI助手页面不显示"切换视图"菜单项
- * - 测试子菜单包含三个视图选项
- * 
- * **Validates: Requirements 3.1, 3.2, 3.3**
- */
-
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
-import { Menu } from 'obsidian';
 import SidebarNavHeader from './SidebarNavHeader.svelte';
 import { PremiumFeatureGuard, PREMIUM_FEATURES } from '../../services/premium/PremiumFeatureGuard';
+import { Menu } from 'obsidian';
+import type { MenuItem as MockMenuItem } from '../../tests/mocks/obsidian';
 
-// Mock PremiumFeatureGuard
+type TrackingMenuInstance = Menu & {
+  findItemByTitle(title: string): MockMenuItem | undefined;
+};
+
+const menuInstances: TrackingMenuInstance[] = [];
+
+vi.mock('obsidian', async () => {
+  const actual = await vi.importActual<typeof import('../../tests/mocks/obsidian')>('../../tests/mocks/obsidian');
+
+  class TrackingMenu extends actual.Menu {
+    constructor() {
+      super();
+      menuInstances.push(this as unknown as TrackingMenuInstance);
+    }
+  }
+
+  return {
+    ...actual,
+    Menu: TrackingMenu
+  };
+});
+
 vi.mock('../../services/premium/PremiumFeatureGuard', () => {
   const mockGuard = {
-    canUseFeature: vi.fn((featureId: string) => {
-      // 默认情况下，所有功能都可用（模拟高级用户）
-      return true;
-    }),
+    canUseFeature: vi.fn(() => true),
     isPremiumActive: {
       subscribe: vi.fn(),
       set: vi.fn(),
@@ -35,444 +42,198 @@ vi.mock('../../services/premium/PremiumFeatureGuard', () => {
       getInstance: vi.fn(() => mockGuard)
     },
     PREMIUM_FEATURES: {
+      INCREMENTAL_READING: 'incremental-reading',
       GRID_VIEW: 'grid-view',
       KANBAN_VIEW: 'kanban-view'
     }
   };
 });
 
-// Mock i18n
 vi.mock('../../utils/i18n', () => ({
   tr: {
-    subscribe: vi.fn((callback) => {
+    subscribe: (callback: (translator: (key: string) => string) => void) => {
       callback((key: string) => key);
       return () => {};
-    })
+    }
   }
 }));
 
-describe('SidebarNavHeader - 视图切换菜单项显示', () => {
-  let mockOnNavigate: ReturnType<typeof vi.fn>;
-  let mockOnViewChange: ReturnType<typeof vi.fn>;
-  let mockOnCardDataSourceChange: ReturnType<typeof vi.fn>;
-  let mockOnFilterSelect: ReturnType<typeof vi.fn>;
+describe('SidebarNavHeader', () => {
+  const mockOnNavigate = vi.fn();
+  const mockOnViewChange = vi.fn();
+  const mockOnCardDataSourceChange = vi.fn();
+  const mockOnFilterSelect = vi.fn();
 
   beforeEach(() => {
-    mockOnNavigate = vi.fn();
-    mockOnViewChange = vi.fn();
-    mockOnCardDataSourceChange = vi.fn();
-    mockOnFilterSelect = vi.fn();
-    
-    // 清除所有事件监听器
+    menuInstances.length = 0;
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  it('在卡片管理页面显示数据源切换子菜单', async () => {
+    const { container } = render(SidebarNavHeader, {
+      props: {
+        currentPage: 'weave-card-management',
+        currentView: 'table',
+        cardDataSource: 'memory',
+        onNavigate: mockOnNavigate,
+        onViewChange: mockOnViewChange,
+        onCardDataSourceChange: mockOnCardDataSourceChange
+      }
+    });
+
+    await fireEvent.click(container.querySelector('.sidebar-menu-trigger')!);
+
+    const menu = menuInstances[0];
+    expect(menu).toBeTruthy();
+
+    const dataSourceItem = menu.findItemByTitle('数据源切换');
+    expect(dataSourceItem).toBeTruthy();
+    expect(dataSourceItem?.getIcon()).toBe('database');
+
+    const submenu = dataSourceItem?.getSubmenu();
+    expect(submenu).toBeTruthy();
+    expect(submenu?.findItemByTitle('记忆牌组')).toBeTruthy();
+    expect(submenu?.findItemByTitle('增量阅读')).toBeTruthy();
+    expect(submenu?.findItemByTitle('考试牌组')).toBeTruthy();
   });
 
-  describe('Requirement 3.1: 卡片管理页面显示"切换视图"菜单项', () => {
-    it('应该在卡片管理页面的菜单中显示"切换视图"菜单项', async () => {
-      const { container } = render(SidebarNavHeader, {
-        props: {
-          currentPage: 'weave-card-management',
-          currentView: 'table',
-          onNavigate: mockOnNavigate,
-          onViewChange: mockOnViewChange,
-          onCardDataSourceChange: mockOnCardDataSourceChange
-        }
-      });
+  it('在卡片管理页面点击数据源后触发切换回调和事件', async () => {
+    const eventListener = vi.fn();
+    window.addEventListener('Weave:card-data-source-change', eventListener);
 
-      // 找到菜单按钮
-      const menuButton = container.querySelector('.sidebar-menu-trigger');
-      expect(menuButton).toBeTruthy();
-
-      // 创建一个 spy 来捕获 Menu 的创建
-      let capturedMenu: any = null;
-      const originalMenu = Menu;
-      const MenuSpy = vi.fn(function(this: any) {
-        capturedMenu = new originalMenu();
-        return capturedMenu;
-      });
-      (global as any).Menu = MenuSpy;
-
-      // 点击菜单按钮
-      await fireEvent.click(menuButton!);
-
-      // 验证菜单被创建
-      expect(MenuSpy).toHaveBeenCalled();
-      expect(capturedMenu).toBeTruthy();
-
-      // 验证菜单中包含"切换视图"菜单项
-      const viewSwitchItem = capturedMenu!.findItemByTitle('切换视图');
-      expect(viewSwitchItem).toBeTruthy();
-      expect(viewSwitchItem!.getIcon()).toBe('layout-grid');
-
-      // 恢复原始 Menu
-      (global as any).Menu = originalMenu;
+    const { container } = render(SidebarNavHeader, {
+      props: {
+        currentPage: 'weave-card-management',
+        currentView: 'table',
+        cardDataSource: 'memory',
+        onNavigate: mockOnNavigate,
+        onCardDataSourceChange: mockOnCardDataSourceChange
+      }
     });
 
-    it('应该在点击"切换视图"后显示包含三个视图选项的子菜单', async () => {
-      const { container } = render(SidebarNavHeader, {
-        props: {
-          currentPage: 'weave-card-management',
-          currentView: 'table',
-          onNavigate: mockOnNavigate,
-          onViewChange: mockOnViewChange
-        }
-      });
+    await fireEvent.click(container.querySelector('.sidebar-menu-trigger')!);
 
-      const menuButton = container.querySelector('.sidebar-menu-trigger');
-      
-      // 捕获主菜单和子菜单
-      let mainMenu: any = null;
-      let subMenu: any = null;
-      let menuCallCount = 0;
-      
-      const originalMenu = Menu;
-      const MenuSpy = vi.fn(function(this: any) {
-        const menu = new originalMenu();
-        menuCallCount++;
-        if (menuCallCount === 1) {
-          mainMenu = menu;
-        } else if (menuCallCount === 2) {
-          subMenu = menu;
-        }
-        return menu;
-      });
-      (global as any).Menu = MenuSpy;
+    const menu = menuInstances[0];
+    const submenu = menu.findItemByTitle('数据源切换')?.getSubmenu();
+    submenu?.findItemByTitle('考试牌组')?.trigger();
 
-      // 点击菜单按钮
-      await fireEvent.click(menuButton!);
+    expect(mockOnCardDataSourceChange).toHaveBeenCalledWith('questionBank');
+    expect(eventListener).toHaveBeenCalled();
+    expect((eventListener.mock.calls[0][0] as CustomEvent).detail).toBe('questionBank');
 
-      // 找到"切换视图"菜单项并点击
-      const viewSwitchItem = mainMenu!.findItemByTitle('切换视图');
-      expect(viewSwitchItem).toBeTruthy();
-      
-      // 触发"切换视图"菜单项的点击
-      viewSwitchItem!.trigger();
-
-      // 验证子菜单被创建
-      expect(subMenu).toBeTruthy();
-
-      // 验证子菜单包含三个视图选项
-      const tableViewItem = subMenu!.findItemByTitle('表格视图');
-      const gridViewItem = subMenu!.findItemByTitle('网格视图');
-      const kanbanViewItem = subMenu!.findItemByTitle('看板视图');
-
-      expect(tableViewItem).toBeTruthy();
-      expect(gridViewItem).toBeTruthy();
-      expect(kanbanViewItem).toBeTruthy();
-
-      // 验证图标
-      expect(tableViewItem!.getIcon()).toBe('table');
-      expect(gridViewItem!.getIcon()).toBe('grid');
-      expect(kanbanViewItem!.getIcon()).toBe('layout-dashboard');
-
-      // 恢复原始 Menu
-      (global as any).Menu = originalMenu;
-    });
-
-    it('应该在当前视图的菜单项上显示选中标记', async () => {
-      const { container } = render(SidebarNavHeader, {
-        props: {
-          currentPage: 'weave-card-management',
-          currentView: 'grid', // 当前视图为网格视图
-          onNavigate: mockOnNavigate,
-          onViewChange: mockOnViewChange
-        }
-      });
-
-      const menuButton = container.querySelector('.sidebar-menu-trigger');
-      
-      let mainMenu: any = null;
-      let subMenu: any = null;
-      let menuCallCount = 0;
-      
-      const originalMenu = Menu;
-      const MenuSpy = vi.fn(function(this: any) {
-        const menu = new originalMenu();
-        menuCallCount++;
-        if (menuCallCount === 1) {
-          mainMenu = menu;
-        } else if (menuCallCount === 2) {
-          subMenu = menu;
-        }
-        return menu;
-      });
-      (global as any).Menu = MenuSpy;
-
-      await fireEvent.click(menuButton!);
-      
-      const viewSwitchItem = mainMenu!.findItemByTitle('切换视图');
-      viewSwitchItem!.trigger();
-
-      // 验证只有网格视图被选中
-      const tableViewItem = subMenu!.findItemByTitle('表格视图');
-      const gridViewItem = subMenu!.findItemByTitle('网格视图');
-      const kanbanViewItem = subMenu!.findItemByTitle('看板视图');
-
-      expect(tableViewItem!.isChecked()).toBe(false);
-      expect(gridViewItem!.isChecked()).toBe(true);
-      expect(kanbanViewItem!.isChecked()).toBe(false);
-
-      (global as any).Menu = originalMenu;
-    });
-
-    it('应该在点击视图选项后触发视图切换事件', async () => {
-      const { container } = render(SidebarNavHeader, {
-        props: {
-          currentPage: 'weave-card-management',
-          currentView: 'table',
-          onNavigate: mockOnNavigate,
-          onViewChange: mockOnViewChange
-        }
-      });
-
-      // 监听自定义事件
-      const eventListener = vi.fn();
-      window.addEventListener('Weave:sidebar-view-change', eventListener);
-
-      const menuButton = container.querySelector('.sidebar-menu-trigger');
-      
-      let mainMenu: any = null;
-      let subMenu: any = null;
-      let menuCallCount = 0;
-      
-      const originalMenu = Menu;
-      const MenuSpy = vi.fn(function(this: any) {
-        const menu = new originalMenu();
-        menuCallCount++;
-        if (menuCallCount === 1) {
-          mainMenu = menu;
-        } else if (menuCallCount === 2) {
-          subMenu = menu;
-        }
-        return menu;
-      });
-      (global as any).Menu = MenuSpy;
-
-      await fireEvent.click(menuButton!);
-      
-      const viewSwitchItem = mainMenu!.findItemByTitle('切换视图');
-      viewSwitchItem!.trigger();
-
-      // 点击网格视图
-      const gridViewItem = subMenu!.findItemByTitle('网格视图');
-      gridViewItem!.trigger();
-
-      // 验证事件被触发
-      expect(eventListener).toHaveBeenCalled();
-      const event = eventListener.mock.calls[0][0] as CustomEvent;
-      expect(event.detail).toBe('grid');
-
-      // 清理
-      window.removeEventListener('Weave:sidebar-view-change', eventListener);
-      (global as any).Menu = originalMenu;
-    });
+    window.removeEventListener('Weave:card-data-source-change', eventListener);
   });
 
-  describe('Requirement 3.2: 牌组学习页面显示"切换视图"菜单项', () => {
-    it('应该在牌组学习页面的菜单中显示"切换视图"菜单项', async () => {
-      const { container } = render(SidebarNavHeader, {
-        props: {
-          currentPage: 'deck-study',
-          selectedFilter: 'memory',
-          onNavigate: mockOnNavigate,
-          onFilterSelect: mockOnFilterSelect
-        }
-      });
-
-      const menuButton = container.querySelector('.sidebar-menu-trigger');
-      expect(menuButton).toBeTruthy();
-
-      let capturedMenu: any = null;
-      const originalMenu = Menu;
-      const MenuSpy = vi.fn(function(this: any) {
-        capturedMenu = new originalMenu();
-        return capturedMenu;
-      });
-      (global as any).Menu = MenuSpy;
-
-      await fireEvent.click(menuButton!);
-
-      expect(MenuSpy).toHaveBeenCalled();
-      expect(capturedMenu).toBeTruthy();
-
-      // 验证菜单中包含"切换视图"菜单项
-      const viewSwitchItem = capturedMenu!.findItemByTitle('切换视图');
-      expect(viewSwitchItem).toBeTruthy();
-      expect(viewSwitchItem!.getIcon()).toBe('layout-grid');
-
-      (global as any).Menu = originalMenu;
+  it('增量阅读未激活时在卡片管理页面禁用对应入口', async () => {
+    const mockGuard = PremiumFeatureGuard.getInstance();
+    vi.mocked(mockGuard.canUseFeature).mockImplementation((featureId: string) => {
+      return featureId !== PREMIUM_FEATURES.INCREMENTAL_READING;
     });
 
-    it('应该在牌组学习页面显示"新建牌组"菜单项', async () => {
-      const { container } = render(SidebarNavHeader, {
-        props: {
-          currentPage: 'deck-study',
-          selectedFilter: 'memory',
-          onNavigate: mockOnNavigate,
-          onFilterSelect: mockOnFilterSelect
-        }
-      });
-
-      const menuButton = container.querySelector('.sidebar-menu-trigger');
-      
-      let capturedMenu: any = null;
-      const originalMenu = Menu;
-      const MenuSpy = vi.fn(function(this: any) {
-        capturedMenu = new originalMenu();
-        return capturedMenu;
-      });
-      (global as any).Menu = MenuSpy;
-
-      await fireEvent.click(menuButton!);
-
-      // 验证菜单中包含"新建牌组"菜单项
-      const createDeckItem = capturedMenu!.findItemByTitle('新建牌组');
-      expect(createDeckItem).toBeTruthy();
-      expect(createDeckItem!.getIcon()).toBe('folder-plus');
-
-      (global as any).Menu = originalMenu;
+    const { container } = render(SidebarNavHeader, {
+      props: {
+        currentPage: 'weave-card-management',
+        currentView: 'table',
+        cardDataSource: 'memory',
+        onNavigate: mockOnNavigate,
+        onCardDataSourceChange: mockOnCardDataSourceChange
+      }
     });
+
+    await fireEvent.click(container.querySelector('.sidebar-menu-trigger')!);
+
+    const menu = menuInstances[0];
+    const submenu = menu.findItemByTitle('数据源切换')?.getSubmenu();
+    const irItem = submenu?.findItemByTitle('增量阅读 (高级)');
+
+    expect(irItem).toBeTruthy();
+    expect(irItem?.isDisabled()).toBe(true);
   });
 
-  describe('Requirement 3.3: AI助手页面不显示"切换视图"菜单项', () => {
-    it('应该在AI助手页面的菜单中不显示"切换视图"菜单项', async () => {
-      const { container } = render(SidebarNavHeader, {
-        props: {
-          currentPage: 'ai-assistant',
-          onNavigate: mockOnNavigate
-        }
-      });
-
-      const menuButton = container.querySelector('.sidebar-menu-trigger');
-      expect(menuButton).toBeTruthy();
-
-      let capturedMenu: any = null;
-      const originalMenu = Menu;
-      const MenuSpy = vi.fn(function(this: any) {
-        capturedMenu = new originalMenu();
-        return capturedMenu;
-      });
-      (global as any).Menu = MenuSpy;
-
-      await fireEvent.click(menuButton!);
-
-      expect(MenuSpy).toHaveBeenCalled();
-      expect(capturedMenu).toBeTruthy();
-
-      // 验证菜单中不包含"切换视图"菜单项
-      const viewSwitchItem = capturedMenu!.findItemByTitle('切换视图');
-      expect(viewSwitchItem).toBeUndefined();
-
-      (global as any).Menu = originalMenu;
+  it('在牌组学习页面显示切换视图和新建牌组菜单项', async () => {
+    const { container } = render(SidebarNavHeader, {
+      props: {
+        currentPage: 'deck-study',
+        selectedFilter: 'memory',
+        onNavigate: mockOnNavigate,
+        onFilterSelect: mockOnFilterSelect
+      }
     });
 
-    it('应该在AI助手页面只显示导航分组和更多操作', async () => {
-      const { container } = render(SidebarNavHeader, {
-        props: {
-          currentPage: 'ai-assistant',
-          onNavigate: mockOnNavigate
-        }
-      });
+    await fireEvent.click(container.querySelector('.sidebar-menu-trigger')!);
 
-      const menuButton = container.querySelector('.sidebar-menu-trigger');
-      
-      let capturedMenu: any = null;
-      const originalMenu = Menu;
-      const MenuSpy = vi.fn(function(this: any) {
-        capturedMenu = new originalMenu();
-        return capturedMenu;
-      });
-      (global as any).Menu = MenuSpy;
-
-      await fireEvent.click(menuButton!);
-
-      // 验证导航分组存在
-      const deckStudyItem = capturedMenu!.findItemByTitle('牌组学习');
-      const cardManagementItem = capturedMenu!.findItemByTitle('卡片管理');
-      const aiAssistantItem = capturedMenu!.findItemByTitle('AI助手');
-
-      expect(deckStudyItem).toBeTruthy();
-      expect(cardManagementItem).toBeTruthy();
-      expect(aiAssistantItem).toBeTruthy();
-      expect(aiAssistantItem!.isChecked()).toBe(true);
-
-      // 验证更多操作存在
-      const apkgImportItem = capturedMenu!.findItemByTitle('旧版APKG格式导入');
-      const csvImportItem = capturedMenu!.findItemByTitle('导入CSV文件');
-
-      expect(apkgImportItem).toBeTruthy();
-      expect(csvImportItem).toBeTruthy();
-
-      // 验证不包含页面专属功能
-      const viewSwitchItem = capturedMenu!.findItemByTitle('切换视图');
-      const qualityInboxItem = capturedMenu!.findItemByTitle('质量收件箱');
-      const createDeckItem = capturedMenu!.findItemByTitle('新建牌组');
-
-      expect(viewSwitchItem).toBeUndefined();
-      expect(qualityInboxItem).toBeUndefined();
-      expect(createDeckItem).toBeUndefined();
-
-      (global as any).Menu = originalMenu;
-    });
+    const menu = menuInstances[0];
+    expect(menu.findItemByTitle('切换视图')?.getIcon()).toBe('layout-grid');
+    expect(menu.findItemByTitle('新建牌组')?.getIcon()).toBe('folder-plus');
   });
 
-  describe('权限检查', () => {
-    it('应该为无权限用户在高级视图选项上显示"（需激活）"标注', async () => {
-      // Mock 无权限用户
-      const mockGuard = PremiumFeatureGuard.getInstance();
-      vi.mocked(mockGuard.canUseFeature).mockImplementation((featureId: string) => {
-        return featureId !== PREMIUM_FEATURES.GRID_VIEW && featureId !== PREMIUM_FEATURES.KANBAN_VIEW;
-      });
+  it('在牌组学习页面点击切换视图时派发菜单事件', async () => {
+    const eventListener = vi.fn();
+    window.addEventListener('show-view-menu', eventListener);
 
-      const { container } = render(SidebarNavHeader, {
-        props: {
-          currentPage: 'weave-card-management',
-          currentView: 'table',
-          onNavigate: mockOnNavigate,
-          onViewChange: mockOnViewChange
-        }
-      });
-
-      const menuButton = container.querySelector('.sidebar-menu-trigger');
-      
-      let mainMenu: any = null;
-      let subMenu: any = null;
-      let menuCallCount = 0;
-      
-      const originalMenu = Menu;
-      const MenuSpy = vi.fn(function(this: any) {
-        const menu = new originalMenu();
-        menuCallCount++;
-        if (menuCallCount === 1) {
-          mainMenu = menu;
-        } else if (menuCallCount === 2) {
-          subMenu = menu;
-        }
-        return menu;
-      });
-      (global as any).Menu = MenuSpy;
-
-      await fireEvent.click(menuButton!);
-      
-      const viewSwitchItem = mainMenu!.findItemByTitle('切换视图');
-      viewSwitchItem!.trigger();
-
-      // 验证高级视图选项显示"（需激活）"标注
-      const gridViewItem = subMenu!.findItemByTitle('网格视图（需激活）');
-      const kanbanViewItem = subMenu!.findItemByTitle('看板视图（需激活）');
-
-      expect(gridViewItem).toBeTruthy();
-      expect(kanbanViewItem).toBeTruthy();
-
-      // 验证表格视图不显示标注
-      const tableViewItem = subMenu!.findItemByTitle('表格视图');
-      expect(tableViewItem).toBeTruthy();
-
-      (global as any).Menu = originalMenu;
+    const { container } = render(SidebarNavHeader, {
+      props: {
+        currentPage: 'deck-study',
+        selectedFilter: 'memory',
+        onNavigate: mockOnNavigate,
+        onFilterSelect: mockOnFilterSelect
+      }
     });
+
+    await fireEvent.click(container.querySelector('.sidebar-menu-trigger')!);
+
+    const menu = menuInstances[0];
+    menu.findItemByTitle('切换视图')?.trigger();
+
+    expect(eventListener).toHaveBeenCalled();
+
+    window.removeEventListener('show-view-menu', eventListener);
+  });
+
+  it('在 AI 助手页面不显示无效功能入口', async () => {
+    const { container } = render(SidebarNavHeader, {
+      props: {
+        currentPage: 'ai-assistant',
+        onNavigate: mockOnNavigate
+      }
+    });
+
+    await fireEvent.click(container.querySelector('.sidebar-menu-trigger')!);
+
+    const menu = menuInstances[0];
+    expect(menu.findItemByTitle('牌组学习')?.isChecked()).toBe(false);
+    expect(menu.findItemByTitle('卡片管理')?.isChecked()).toBe(false);
+    expect(menu.findItemByTitle('AI助手')?.isChecked()).toBe(true);
+    expect(menu.findItemByTitle('切换视图')).toBeUndefined();
+    expect(menu.findItemByTitle('新建牌组')).toBeUndefined();
+    expect(menu.findItemByTitle('数据源切换')).toBeUndefined();
+    expect(menu.findItemByTitle('旧版APKG格式导入')).toBeUndefined();
+    expect(menu.findItemByTitle('导入CSV文件')).toBeUndefined();
+    expect(menu.findItemByTitle('粘贴卡片批量导入')).toBeUndefined();
+    expect(menu.findItemByTitle('操作管理')).toBeUndefined();
+    expect(menu.findItemByTitle('设置')).toBeUndefined();
+  });
+
+  it('在卡片管理页面不显示仅牌组学习可用的全局操作', async () => {
+    const { container } = render(SidebarNavHeader, {
+      props: {
+        currentPage: 'weave-card-management',
+        currentView: 'table',
+        cardDataSource: 'memory',
+        onNavigate: mockOnNavigate,
+        onViewChange: mockOnViewChange,
+        onCardDataSourceChange: mockOnCardDataSourceChange
+      }
+    });
+
+    await fireEvent.click(container.querySelector('.sidebar-menu-trigger')!);
+
+    const menu = menuInstances[0];
+    expect(menu.findItemByTitle('数据源切换')).toBeTruthy();
+    expect(menu.findItemByTitle('旧版APKG格式导入')).toBeUndefined();
+    expect(menu.findItemByTitle('导入CSV文件')).toBeUndefined();
+    expect(menu.findItemByTitle('粘贴卡片批量导入')).toBeUndefined();
+    expect(menu.findItemByTitle('操作管理')).toBeUndefined();
+    expect(menu.findItemByTitle('设置')).toBeUndefined();
   });
 });

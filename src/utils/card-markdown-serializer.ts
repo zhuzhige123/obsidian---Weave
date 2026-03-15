@@ -12,6 +12,7 @@ import { getCardDeckIds } from './yaml-utils';
 import { QACardParser } from '../parsers/card-type-parsers/QACardParser';
 import { ChoiceCardParser } from '../parsers/card-type-parsers/ChoiceCardParser';
 import { ClozeCardParser } from '../parsers/card-type-parsers/ClozeCardParser';
+import { hasProgressiveClozeContent } from '../types/progressive-cloze-v2';
 
 /**
  * 将卡片数据转换为Obsidian兼容的Markdown格式（遵循卡片数据结构规范 v1.0）
@@ -470,10 +471,14 @@ export function markdownToCard(content: string, originalCard: Card): Card {
     // 3. V2架构：不再自动设置 'progressive'，由 ProgressiveClozeGateway 统一处理
     const detectedType = detectCardTypeFromContent(markdownContent);
     
-    // 🆕 只在type为默认值(basic)且检测到其他类型时才更新
-    if (updatedCard.type === 'basic' && detectedType !== 'basic') {
+    const isStillProgressive =
+      (updatedCard.type === CardType.ProgressiveParent || updatedCard.type === CardType.ProgressiveChild) &&
+      hasProgressiveClozeContent(markdownContent);
+
+    // 内容已不再是渐进式时，允许题型跟随内容自动切换
+    if (!isStillProgressive && updatedCard.type !== detectedType) {
       updatedCard.type = detectedType as any;
-      logger.debug(`[CardMarkdownSerializer] ✅ 自动检测并更新type: basic → ${detectedType}`);
+      logger.debug(`[CardMarkdownSerializer] ✅ 自动检测并更新type: ${originalCard.type} → ${detectedType}`);
     }
 
     // 从frontmatter更新元数据

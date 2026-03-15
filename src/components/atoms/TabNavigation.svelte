@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import EnhancedIcon from "../ui/EnhancedIcon.svelte";
   import type { IconName } from "../../icons/index.js";
   //  导入国际化系统
@@ -67,6 +68,80 @@
       handleTabClick(item);
     }
   }
+
+  // touch swipe support for mobile
+  let tabsEl: HTMLDivElement | undefined = $state(undefined);
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+  let isScrolling = false;
+
+  function handleTouchStart(e: TouchEvent) {
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchStartTime = Date.now();
+    isScrolling = false;
+  }
+
+  function handleTouchMove(e: TouchEvent) {
+    if (isScrolling) return;
+    const touch = e.touches[0];
+    const deltaY = Math.abs(touch.clientY - touchStartY);
+    // if vertical movement exceeds 15px, treat as scroll not swipe
+    if (deltaY > 15) {
+      isScrolling = true;
+    }
+  }
+
+  function handleTouchEnd(e: TouchEvent) {
+    if (isScrolling) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+    const elapsed = Date.now() - touchStartTime;
+
+    // swipe validation: >80px horizontal, strict angle (<22deg), 100-800ms duration
+    if (
+      Math.abs(deltaX) > 80 &&
+      Math.abs(deltaY) < Math.abs(deltaX) * 0.4 &&
+      elapsed > 100 && elapsed < 800
+    ) {
+      const currentIndex = items.findIndex(item => item.id === activeId);
+      if (currentIndex === -1) return;
+
+      if (deltaX < 0 && currentIndex < items.length - 1) {
+        // swipe left -> next tab
+        const next = items.slice(currentIndex + 1).find(i => !i.disabled);
+        if (next) {
+          onChange(next.id);
+          scrollTabIntoView(next.id);
+        }
+      } else if (deltaX > 0 && currentIndex > 0) {
+        // swipe right -> previous tab
+        const prev = items.slice(0, currentIndex).reverse().find(i => !i.disabled);
+        if (prev) {
+          onChange(prev.id);
+          scrollTabIntoView(prev.id);
+        }
+      }
+    }
+  }
+
+  function scrollTabIntoView(tabId: string) {
+    if (!tabsEl) return;
+    requestAnimationFrame(() => {
+      const tabButton = tabsEl?.querySelector(`[aria-selected="true"]`) as HTMLElement;
+      if (tabButton) {
+        tabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    });
+  }
+
+  // scroll active tab into view on mount
+  onMount(() => {
+    scrollTabIntoView(activeId);
+  });
 </script>
 
 <div
@@ -75,6 +150,10 @@
   class:weave-tabs-animated={animated}
   role="tablist"
   aria-orientation={orientation}
+  bind:this={tabsEl}
+  ontouchstart={handleTouchStart}
+  ontouchmove={handleTouchMove}
+  ontouchend={handleTouchEnd}
 >
   {#each items as item, index}
     <button
@@ -419,5 +498,30 @@
     .weave-tabs-underline .weave-tab.active {
       border-bottom-width: 3px;
     }
+  }
+
+  /* Obsidian mobile: ensure horizontal scroll on tab bar */
+  :global(body.is-mobile) .weave-tabs-horizontal {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+
+  :global(body.is-mobile) .weave-tabs-horizontal::-webkit-scrollbar {
+    display: none;
+  }
+
+  :global(body.is-mobile) .weave-tabs-horizontal .weave-tab {
+    flex-shrink: 0;
+  }
+
+  :global(body.is-phone) .weave-tabs-horizontal .weave-tab {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
+  }
+
+  :global(body.is-phone) .weave-tabs-horizontal .weave-tab-label {
+    font-size: 0.75rem;
   }
 </style>

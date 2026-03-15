@@ -10,20 +10,20 @@
   import LazyGridCard from '../cards/LazyGridCard.svelte';
   import EnhancedIcon from '../ui/EnhancedIcon.svelte';
 
-  type GridCardAttributeType = 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified';
+  type GridCardAttributeType = 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified' | 'accuracy' | 'question_type' | 'ir_state' | 'ir_priority';
   
   interface Props {
     cards: Card[];
     selectedCards: Set<string>;
     plugin: WeavePlugin;
     attributeType?: GridCardAttributeType;
-    isMobile?: boolean; // 🆕 移动端状态
+    isMobile?: boolean; // 移动端状态
     onCardClick?: (card: Card) => void;
     onCardEdit?: (card: Card) => void;
     onCardDelete?: (card: Card) => void;
     onCardView?: (card: Card) => void;
-    onSourceJump?: (card: Card) => void; // 🆕 源文档跳转
-    onCardLongPress?: (card: Card) => void; // 🆕 长按触发多选
+    onSourceJump?: (card: Card) => void; // 源文档跳转
+    onCardLongPress?: (card: Card) => void; // 长按触发多选
     columnCount?: number;
     loading?: boolean;
   }
@@ -59,6 +59,8 @@
   let updateScrollbarRAF: number | null = null;
   let distributeCardsRAF: number | null = null;
   let lastScrollbarWidth = 0;
+  let lastContainerWidth = 0;
+  let resizeRAF: number | null = null;
   
   //  性能优化：渐进式加载
   const INITIAL_VISIBLE_COUNT = 40;     // 初始显示40张
@@ -67,6 +69,13 @@
   let isLoadingMore = $state(false);
   let sentinel = $state<HTMLElement>();
   let observer: IntersectionObserver | null = null;
+
+  // 渲染状态检测
+  const RENDERING_OVERLAY_THRESHOLD = 30;
+  let isRendering = $state(false);
+  let renderingProgress = $derived(
+    cards.length > 0 ? Math.round((visibleCount / cards.length) * 100) : 0
+  );
 
   /**
    * 计算响应式列数
@@ -105,7 +114,7 @@
   
   /**
    * 分配卡片到列
-   * 使用贪心算法：总是将卡片添加到当前高度最小的列
+   * 使用轮询分配：按索引依次分配到各列
    * 使用RAF批处理，避免强制回流
    */
   function distributeCards() {
@@ -133,14 +142,32 @@
   }
 
   /**
-   * 处理窗口大小变化
+   * 设置 ResizeObserver 监听容器宽度
    */
-  function handleResize() {
-    const newColumnCount = calculateColumnCount();
-    if (newColumnCount !== actualColumnCount) {
-      actualColumnCount = newColumnCount;
-      distributeCards();
-    }
+  function setupResizeObserver(): ResizeObserver | null {
+    if (!containerElement) return null;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (resizeRAF !== null) {
+        cancelAnimationFrame(resizeRAF);
+      }
+      resizeRAF = requestAnimationFrame(() => {
+        for (const entry of entries) {
+          const width = entry.contentRect.width;
+          if (Math.abs(width - lastContainerWidth) < 10) return;
+          lastContainerWidth = width;
+          const newColumnCount = calculateColumnCount();
+          if (newColumnCount !== actualColumnCount) {
+            actualColumnCount = newColumnCount;
+            distributeCards();
+          }
+        }
+        resizeRAF = null;
+      });
+    });
+
+    resizeObserver.observe(containerElement);
+    return resizeObserver;
   }
 
   /**
@@ -231,6 +258,8 @@
    * 组件挂载
    */
   onMount(() => {
+    let resizeObserver: ResizeObserver | null = null;
+
     tick().then(() => {
       actualColumnCount = calculateColumnCount();
       distributeCards();
@@ -239,23 +268,27 @@
       if (hasMore) {
         setupIntersectionObserver();
       }
-    });
 
-    // 监听窗口大小变化
-    window.addEventListener('resize', handleResize);
+      // 使用 ResizeObserver 监听容器宽度变化（侧边栏展开/收起等）
+      resizeObserver = setupResizeObserver();
+    });
 
     // 清理函数
     return () => {
-      window.removeEventListener('resize', handleResize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       if (observer) {
         observer.disconnect();
       }
-      // 清理RAF
       if (updateScrollbarRAF !== null) {
         cancelAnimationFrame(updateScrollbarRAF);
       }
       if (distributeCardsRAF !== null) {
         cancelAnimationFrame(distributeCardsRAF);
+      }
+      if (resizeRAF !== null) {
+        cancelAnimationFrame(resizeRAF);
       }
     };
   });
@@ -299,9 +332,42 @@
       updateScrollbarWidth();
     }
   });
+
+  // 渲染状态检测：卡片数据变化时显示遮罩
+  $effect(() => {
+    const totalCards = cards.length;
+    if (totalCards >= RENDERING_OVERLAY_THRESHOLD) {
+      isRendering = true;
+      tick().then(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            isRendering = false;
+          });
+        });
+      });
+    } else {
+      isRendering = false;
+    }
+  });
 </script>
 
 <div class="masonry-grid-view" bind:this={containerElement}>
+    <!-- 渲染进度遮罩 -->
+    {#if isRendering && !loading}
+      <div class="weave-rendering-overlay"></div>
+      <div class="weave-rendering-progress-container">
+        {#if renderingProgress < 100}
+          <div class="weave-rendering-progress-bar" style="width: {renderingProgress}%"></div>
+        {:else}
+          <div class="weave-rendering-progress-bar weave-rendering-progress-bar--indeterminate"></div>
+        {/if}
+      </div>
+      <div class="weave-rendering-info">
+        <div class="weave-spinner-small"></div>
+        <span>{Math.min(visibleCount, cards.length)} / {cards.length} 张卡片</span>
+      </div>
+    {/if}
+
     {#if !loading && cards.length > 0}
       <!-- 顶部横向滚动条 -->
       <div 
@@ -334,7 +400,7 @@
         >
         {#each columns as column, columnIndex (columnIndex)}
           <div class="masonry-column">
-            {#each column as card, cardIdx (card.uuid || 'unknown')}
+            {#each column as card, cardIdx (card.uuid || `__idx_${columnIndex}_${cardIdx}`)}
               <div class="masonry-card-wrapper" data-card-index={columnIndex * 100 + cardIdx}>
                 <LazyGridCard
                   {card}
@@ -391,6 +457,7 @@
 
   /* 内容区 */
   .masonry-grid-view {
+    position: relative;
     display: flex;
     flex-direction: column;
     flex: 1;

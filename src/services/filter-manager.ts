@@ -188,7 +188,7 @@ export class FilterManager {
   saveFilter(filter: Omit<SavedFilter, 'id' | 'createdAt' | 'updatedAt' | 'useCount' | 'isBuiltIn'>): SavedFilter {
     const newFilter: SavedFilter = {
       ...filter,
-      id: `filter-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `filter-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       useCount: 0,
@@ -606,7 +606,7 @@ export class FilterManager {
       
       nonBuiltInFilters.forEach(_filter => {
         // 生成新ID避免冲突
-        _filter.id = `filter-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        _filter.id = `filter-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
         _filter.createdAt = new Date().toISOString();
         _filter.updatedAt = new Date().toISOString();
         this.storage.savedFilters.push(_filter);

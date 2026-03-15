@@ -57,8 +57,7 @@ export class SiliconFlowService extends OpenAIService {
 
       return response.status === 200;
     } catch (error) {
-      logger.error('SiliconFlow connection test failed:', error);
-      return false;
+      throw this.classifyConnectionError(error);
     }
   }
 

@@ -64,7 +64,7 @@ describe('AnimationController', () => {
       await promise;
       
       expect(mockElement.style.opacity).toBe('1');
-      expect(mockElement.style.transform).toBe('translateY(0px)');
+      expect(mockElement.style.transform).toBe('translateY(0) scale(1)');
     });
 
     it('should skip animation when disabled', async () => {
@@ -128,7 +128,7 @@ describe('AnimationController', () => {
       await promise;
       
       expect(clozeElement.style.opacity).toBe('1');
-      expect(clozeElement.classList.contains('cloze-revealed')).toBe(true);
+      expect(clozeElement.style.backgroundColor).toContain('var(--weave-secondary-light');
     });
 
     it('should animate multiple cloze elements', async () => {
@@ -156,7 +156,7 @@ describe('AnimationController', () => {
       // All elements should be revealed
       clozeElements.forEach(_el => {
         expect(_el.style.opacity).toBe('1');
-        expect(_el.classList.contains('cloze-revealed')).toBe(true);
+        expect(_el.style.backgroundColor).toContain('var(--weave-secondary-light');
       });
     });
   });
@@ -203,7 +203,7 @@ describe('AnimationController', () => {
       
       await promise;
       
-      expect(mockElement.style.transform).toBe('translateY(0px)');
+      expect(mockElement.style.transform).toBe('translateY(0) scale(1)');
     });
 
     it('should handle rapid hover changes', async () => {
@@ -212,7 +212,7 @@ describe('AnimationController', () => {
       
       await Promise.all([enterPromise, leavePromise]);
       
-      expect(mockElement.style.transform).toBe('translateY(0px)');
+      expect(mockElement.style.transform).toBe('translateY(0) scale(1)');
     });
   });
 
@@ -251,16 +251,14 @@ describe('AnimationController', () => {
     });
 
     it('should cancel pending animations', () => {
-      const spy = vi.spyOn(global, 'cancelAnimationFrame');
-      
       // Start animation
       controller.animateContentReveal(mockElement);
+      expect(controller.getAnimationStats().activeAnimations).toBeGreaterThan(0);
       
       // Cleanup
       controller.cleanup();
       
-      // Should have called cancelAnimationFrame
-      expect(spy).toHaveBeenCalled();
+      expect(controller.getAnimationStats().activeAnimations).toBe(0);
     });
   });
 

@@ -4,6 +4,8 @@
   import type WeavePlugin from '../../../main';
   import type { Card } from '../../../data/types';
   import ObsidianRenderer from '../../atoms/ObsidianRenderer.svelte';
+  import { extractBodyContent } from '../../../utils/yaml-utils';
+  import { MAIN_SEPARATOR, DELIMITER_PATTERNS } from '../../../constants/markdown-delimiters';
 
   interface Props {
     sections: PreviewSection[];
@@ -13,7 +15,7 @@
     animationController?: AnimationController;
     enableAnimations?: boolean;
     card?: Card;
-    activeClozeOrdinal?: number; // 渐进式挖空：当前激活的挖空序号 (1-based)
+    activeClozeOrdinal?: number;
   }
 
   let { 
@@ -26,57 +28,145 @@
     card,
     activeClozeOrdinal
   }: Props = $props();
+
+  function normalizeDivSeparator(text: string): string {
+    return text.replace(DELIMITER_PATTERNS.MAIN_SEPARATOR, '\n\n' + MAIN_SEPARATOR + '\n\n');
+  }
+
+  // 统一渲染：使用完整 body content（保留脚注定义在同一渲染上下文中）
+  const fullBodyContent = $derived.by(() => {
+    if (card?.content) {
+      return normalizeDivSeparator(extractBodyContent(card.content));
+    }
+    // 回退：从 sections 重建
+    const frontParts = sections.filter(s => s.type === 'front').map(s => s.content);
+    const backParts = sections.filter(s => s.type === 'back').map(s => s.content);
+    if (backParts.length > 0) {
+      return [...frontParts, MAIN_SEPARATOR, ...backParts].join('\n\n');
+    }
+    return frontParts.join('\n\n');
+  });
+
+  // DOM 引用：渲染后切分产生的问答区域
+  let questionTitleEl: HTMLElement | null = null;
+  let backDividerEl: HTMLHRElement | null = null;
+  let answerTitleEl: HTMLElement | null = null;
+  let backSectionEl: HTMLElement | null = null;
+
+  // 防止切换卡片时答案闪烁：内容就绪前隐藏渲染区域
+  let contentReady = $state(false);
+
+  $effect(() => {
+    const _content = fullBodyContent;
+    contentReady = false;
+  });
+
+  // 渲染完成后切分 DOM
+  function handleRenderComplete(container: HTMLElement): void {
+    if (!container) {
+      contentReady = true;
+      return;
+    }
+
+    questionTitleEl = null;
+    backDividerEl = null;
+    answerTitleEl = null;
+    backSectionEl = null;
+
+    const children = Array.from(container.children) as HTMLElement[];
+    let separatorEl: HTMLElement | null = null;
+
+    for (const el of children) {
+      if (el.textContent?.trim() === MAIN_SEPARATOR) {
+        separatorEl = el;
+        break;
+      }
+    }
+
+    if (!separatorEl) {
+      contentReady = true;
+      return;
+    }
+
+    // 收集分隔符之后的所有节点
+    const afterNodes: Node[] = [];
+    let sibling = separatorEl.nextSibling;
+    while (sibling) {
+      const next = sibling.nextSibling;
+      afterNodes.push(sibling);
+      sibling = next;
+    }
+
+    // 移除分隔符
+    separatorEl.remove();
+
+    // 插入“问题”标签到容器最前面
+    const qTitleEl = document.createElement('div');
+    qTitleEl.className = 'weave-qa-question-title';
+    qTitleEl.innerHTML = '<span class="weave-qa-label">问题</span>';
+    container.insertBefore(qTitleEl, container.firstChild);
+    questionTitleEl = qTitleEl;
+
+    // 插入真正的 <hr> 元素，自动继承 Obsidian 主题样式
+    const hrEl = document.createElement('hr');
+    hrEl.className = 'weave-cloze-divider';
+    container.appendChild(hrEl);
+    backDividerEl = hrEl;
+
+    // 插入“答案”标签
+    const aTitleEl = document.createElement('div');
+    aTitleEl.className = 'weave-qa-answer-title';
+    aTitleEl.innerHTML = '<span class="weave-qa-label weave-qa-label--answer">答案</span>';
+    container.appendChild(aTitleEl);
+    answerTitleEl = aTitleEl;
+
+    // 创建答案内容容器
+    const backWrapper = document.createElement('div');
+    backWrapper.className = 'weave-cloze-back-section';
+    afterNodes.forEach(node => backWrapper.appendChild(node));
+    container.appendChild(backWrapper);
+    backSectionEl = backWrapper;
+
+    // 应用初始显隐状态
+    updateBackVisibility();
+    contentReady = true;
+  }
+
+  function updateBackVisibility(): void {
+    if (backDividerEl) {
+      backDividerEl.style.display = showAnswer ? '' : 'none';
+    }
+    if (answerTitleEl) {
+      answerTitleEl.style.display = showAnswer ? '' : 'none';
+    }
+    if (backSectionEl) {
+      backSectionEl.style.display = showAnswer ? '' : 'none';
+    }
+  }
+
+  $effect(() => {
+    const _show = showAnswer;
+    updateBackVisibility();
+  });
 </script>
 
-<!-- 应用weave-card-base基础样式 -->
-<div class="weave-card-base weave-cloze-card weave-card-mount">
-  <!--  统一使用ObsidianRenderer，通过传递card参数处理渐进式挖空 -->
-  
-  <!-- 挖空内容 -->
+<div class="weave-card-base weave-cloze-card weave-card-mount" data-type="markdown">
   <div class="weave-cloze-content">
-    {#each sections as section}
-      <!-- 只渲染front类型的section作为挖空区域 -->
-      {#if section.type === 'front'}
-        <div class="weave-cloze-section">
-          {#if section.metadata?.title}
-            <div class="weave-cloze-section-title">{section.metadata.title}</div>
-          {/if}
-          
-          <!--  ObsidianRenderer处理所有挖空（包括渐进式挖空子卡片） -->
-          <div class="weave-cloze-text">
-            <ObsidianRenderer
-              {plugin}
-              content={section.content}
-              {sourcePath}
-              enableClozeProcessing={true}
-              showClozeAnswers={showAnswer}
-              {card}
-              {activeClozeOrdinal}
-            />
-          </div>
-        </div>
-      {/if}
-    {/each}
+    <div class="weave-cloze-section">
+      <div class="weave-cloze-text view-content" style:visibility={contentReady ? 'visible' : 'hidden'}>
+        <ObsidianRenderer
+          {plugin}
+          content={fullBodyContent}
+          {sourcePath}
+          enableClozeProcessing={true}
+          showClozeAnswers={showAnswer}
+          {card}
+          {activeClozeOrdinal}
+          onRenderComplete={handleRenderComplete}
+        />
+      </div>
+    </div>
   </div>
-  
-  <!--  背面内容区域（---div---分隔符后的内容） -->
-  {#if showAnswer}
-    {#each sections as section}
-      {#if section.type === 'back'}
-        <div class="weave-cloze-back-section">
-          <ObsidianRenderer
-            {plugin}
-            content={section.content}
-            {sourcePath}
-            enableClozeProcessing={false}
-            showClozeAnswers={true}
-            {card}
-            {activeClozeOrdinal}
-          />
-        </div>
-      {/if}
-    {/each}
-  {/if}
 </div>
 
 <style>
@@ -104,23 +194,52 @@
 
   /*  已移除hover浮动和颜色变化效果 */
 
-  .weave-cloze-section-title {
-    font-size: var(--weave-font-size-sm, 0.875rem);
-    font-weight: 600;
-    color: var(--weave-text-secondary, var(--text-muted));
-    margin-bottom: var(--weave-space-md, 1rem);
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-  }
-
   .weave-cloze-text {
     color: var(--weave-text-primary, var(--text-normal));
     line-height: 1.6;
     font-size: var(--weave-font-size-md, 1rem);
   }
 
-  /* 背面内容区域样式 - 保持Obsidian原生渲染风格 */
-  .weave-cloze-back-section {
+  /* 问题标题（由 JS 动态插入，需要 :global） */
+  .weave-cloze-text :global(.weave-qa-question-title) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: var(--weave-space-md, 1rem);
+    padding-bottom: var(--weave-space-sm, 0.5rem);
+  }
+
+  .weave-cloze-text :global(.weave-qa-label) {
+    padding: var(--weave-space-xs, 0.25rem) var(--weave-space-sm, 0.5rem);
+    background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+    color: var(--interactive-accent);
+    border-radius: var(--weave-radius-sm, 0.375rem);
+    font-size: var(--weave-font-size-xs, 0.75rem);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  /* 问答分割线（真正的 <hr>，继承 Obsidian 主题样式） */
+  .weave-cloze-text :global(.weave-cloze-divider) {
+    margin: var(--weave-space-md, 1rem) 0;
+  }
+
+  /* 答案标题（由 JS 动态插入，需要 :global） */
+  .weave-cloze-text :global(.weave-qa-answer-title) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: var(--weave-space-md, 1rem);
+  }
+
+  .weave-cloze-text :global(.weave-qa-label--answer) {
+    background: var(--weave-success-light, rgba(16, 185, 129, 0.1));
+    color: var(--weave-success, #10b981);
+  }
+
+  /* 背面内容区域样式（由 JS 动态插入，需要 :global） */
+  .weave-cloze-text :global(.weave-cloze-back-section) {
     margin-top: var(--weave-space-md, 1rem);
   }
 

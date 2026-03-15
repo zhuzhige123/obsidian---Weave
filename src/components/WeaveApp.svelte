@@ -261,7 +261,9 @@
             <p>增量阅读功能已整合到左侧边栏中。<br/>点击左侧边栏的图标即可访问日历视图和材料列表。</p>
           </div>
         {:else if activePage === "ai-assistant"}
-          <AIAssistantPage {plugin} {dataStorage} {fsrs} />
+          <div class="weave-page-host">
+            <AIAssistantPage {plugin} {dataStorage} {fsrs} />
+          </div>
         {:else if activePage === "settings"}
           <SettingsPage plugin={plugin as any} />
         {/if}
@@ -285,8 +287,9 @@
 
 <style>
   .weave-app {
-    height: 100%;
     width: 100%;
+    height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     background: var(--background-primary);
@@ -297,28 +300,41 @@
 
   .weave-app-inner {
     height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
 
   .weave-main-content {
-    flex: 1;
-    overflow-y: auto;  /* 🔧 修复：改为 auto 允许滚动 */
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    /* 🔧 修复：移除固定的顶部间距，因为 SidebarNavHeader 现在在所有桌面端都显示 */
     padding-top: 0;
     margin-top: 0;
+    overflow: hidden;
     transition: padding-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* 📱 移动端：始终不需要顶部间距（由各页面的 MobileHeader 处理） */
   .weave-main-content.mobile {
     padding-top: 0;
   }
 
-  /* 🗑️ 功能移除提示样式 */
+  .weave-main-content > :global(*) {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .weave-page-host {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
   .removed-feature-notice {
     display: flex;
     flex-direction: column;

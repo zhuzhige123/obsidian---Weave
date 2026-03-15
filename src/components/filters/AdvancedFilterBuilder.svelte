@@ -81,10 +81,10 @@
   // 添加条件组
   function addGroup() {
     filterConfig.groups.push({
-      id: `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `group-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       logic: 'AND',
       conditions: [{
-        id: `cond-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `cond-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
         field: 'status',
         operator: 'equals',
         value: 'new',
@@ -124,7 +124,7 @@
     const group = filterConfig.groups.find(g => g.id === groupId);
     if (group) {
       group.conditions.push({
-        id: `cond-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `cond-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
         field: 'status',
         operator: 'equals',
         value: 'new',
@@ -193,15 +193,17 @@
       return count + group.conditions.filter(c => c.enabled).length;
     }, 0);
   }
+
+  function handleOverlayPointerDown(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  }
 </script>
 
 {#if visible}
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="advanced-filter-overlay" onclick={onClose} role="presentation">
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="advanced-filter-builder" onclick={(e) => { e.stopPropagation(); }} role="dialog" aria-modal="true">
+  <div class="advanced-filter-overlay" onmousedown={handleOverlayPointerDown} role="presentation">
+    <div class="advanced-filter-builder" role="dialog" aria-modal="true" tabindex="-1">
       <!-- 头部 -->
       <header class="builder-header">
         <div class="header-title">

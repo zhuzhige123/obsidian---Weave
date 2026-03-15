@@ -38,7 +38,7 @@ let resizeHandle = $state<string | null>(null);
 let dragStart = $state<{x: number; y: number; maskX: number; maskY: number; maskRadius?: number; maskWidth?: number; maskHeight?: number} | null>(null);
 
 // 元素引用
-let shapeElement: SVGElement | null = null;
+let shapeElement = $state<SVGElement | null>(null);
 let activePointerId: number | null = null;
 
 // 样式计算

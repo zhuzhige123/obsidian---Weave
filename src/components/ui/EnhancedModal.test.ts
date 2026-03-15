@@ -136,7 +136,7 @@ describe('EnhancedModal', () => {
       }
     });
     
-    const closeButton = container.querySelector('.weave-modal__close button');
+    const closeButton = container.querySelector('.weave-modal__close');
     await fireEvent.click(closeButton!);
     
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -182,7 +182,7 @@ describe('EnhancedModal', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('calls onClose when Escape key is pressed and keyboard is true', async () => {
+  it('does not call onClose when Escape key is pressed because Obsidian handles it natively', async () => {
     const onClose = vi.fn();
     render(EnhancedModal, {
       props: {
@@ -198,7 +198,7 @@ describe('EnhancedModal', () => {
     
     await fireEvent.keyDown(document, { key: 'Escape' });
     
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('does not call onClose when Escape key is pressed and keyboard is false', async () => {
@@ -349,11 +349,9 @@ describe('EnhancedModal', () => {
       }
     });
     
-    const modal = container.querySelector('.weave-modal');
-    const backdrop = container.querySelector('.weave-modal-backdrop');
+    const modalContainer = container.querySelector('.weave-modal-container');
     
-    expect(modal).toHaveStyle('z-index: 2000');
-    expect(backdrop).toHaveStyle('z-index: 1999');
+    expect(modalContainer).toHaveStyle('z-index: 2000');
   });
 
   it('applies custom class names', () => {

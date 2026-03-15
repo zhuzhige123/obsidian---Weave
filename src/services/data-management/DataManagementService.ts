@@ -20,37 +20,41 @@ import {
   type CardYAMLMetadata 
 } from '../../utils/yaml-utils';
 import { getDeckNameById } from '../DeckNameMapper';
-import { SchemaV2MigrationService } from '../data-migration/SchemaV2MigrationService';
 import { diagnoseFilename, type SyncIssueType } from '../../utils/sync-safe-filename';
 import { hasProgressiveClozeContent, isProgressiveClozeParent, isProgressiveClozeChild } from '../../types/progressive-cloze-v2';
+import {
+  UnifiedDataMigrationService,
+  type DataMigrationPlan,
+  type DataMigrationReport,
+} from '../data-migration/UnifiedDataMigrationService';
 
 // ===== 类型定义 =====
 
-/** 检测类型枚举 */
+/** 检测类型枚�?*/
 export type CheckType = 
-  | 'yaml_migration'      // YAML 元数据迁移
+  | 'yaml_migration'      // YAML 元数据迁�?
   | 'we_decks_fix'        // we_decks 牌组ID修复
   | 'we_block_migration'  // we_block -> we_source 合并迁移
-  | 'deprecated_fields'   // 弃用字段检测
-  | 'card_deck_consistency' // 卡片-牌组一致性
-  | 'ir_material_consistency' // 导入材料一致性（增量阅读）
+  | 'deprecated_fields'   // 弃用字段检�?
+  | 'card_deck_consistency' // 卡片-牌组一致�?
+  | 'ir_material_consistency' // 导入材料一致性（增量阅读�?
   | 'orphan_cards'        // 孤立卡片
   | 'duplicate_cards'     // 重复卡片
   | 'invalid_refs'        // 无效引用
   | 'schema_migration'    // Schema V2 数据迁移
   | 'structure_check'     // 目录结构核对
-  | 'legacy_cleanup'      // 旧目录清理
-  | 'filename_compatibility' // 文件名云同步兼容性
-  | 'sync_conflict_files'    // 云同步冲突副本检测
-  | 'progressive_cloze_unconverted'  // 符合渐进式挖空格式但未转换
+  | 'legacy_cleanup'      // 旧目录清�?
+  | 'filename_compatibility' // 文件名云同步兼容�?
+  | 'sync_conflict_files'    // 云同步冲突副本检�?
+  | 'progressive_cloze_unconverted'  // 符合渐进式挖空格式但未转�?
   | 'progressive_cloze_orphan'       // 孤儿子卡片（父卡片已不存在）
-  | 'progressive_cloze_missing_children'  // 父卡片缺少序号对应的子卡片
-  | 'progressive_cloze_extra_children';   // 子卡片序号在父卡片内容中不存在
+  | 'progressive_cloze_missing_children'  // 父卡片缺少序号对应的子卡�?
+  | 'progressive_cloze_extra_children';   // 子卡片序号在父卡片内容中不存�?
 
-/** 检测状态 */
+/** 检测状�?*/
 export type CheckStatus = 'ok' | 'warning' | 'error';
 
-/** 数据检测结果 */
+/** 数据检测结�?*/
 export interface DataCheckResult {
   type: CheckType;
   status: CheckStatus;
@@ -67,7 +71,7 @@ export interface DataFixResult {
   errors: Array<{ uuid: string; error: string }>;
 }
 
-/** 检测进度回调 */
+/** 检测进度回�?*/
 export type ProgressCallback = (current: number, total: number, message: string) => void;
 
 // ===== 弃用字段定义 =====
@@ -75,12 +79,12 @@ export type ProgressCallback = (current: number, total: number, message: string)
 /** 
  * 需要直接删除的弃用字段
  * 注意：sourceFile, sourceBlock, type, priority, tags 是从 content YAML 解析的派生字段，
- * 它们在运行时是正常的，不需要清理
+ * 它们在运行时是正常的，不需要清�?
  */
 const DEPRECATED_FIELDS_TO_DELETE = [
   'template',
   'templateId',
-  'deckId',           // 引用式牌组架构下不再需要
+  'deckId',           // 引用式牌组架构下不再需�?
   'referencedByDecks', // 已由 deck.cardUUIDs 替代
   'fields',           // Content-Only 架构下从 content 实时解析
 ] as const;
@@ -94,15 +98,19 @@ export class DataManagementService {
     this.plugin = plugin;
   }
 
-  // ===== 检测方法 =====
+  private getMigrationService(): UnifiedDataMigrationService {
+    return new UnifiedDataMigrationService(this.plugin.app, this.plugin.settings);
+  }
+
+  // ===== 检测方�?=====
 
   /**
-   * 检测所有问题
+   * 检测所有问�?
    */
   async checkAll(onProgress?: ProgressCallback): Promise<DataCheckResult[]> {
     const results: DataCheckResult[] = [];
-    // 注意：orphan_cards（孤立卡片）在引用式牌组架构下是允许存在的，不作为问题检测
-    // 注意：redundant_fields 已移除，因为 Content-Only 架构下 type/tags 是从 content YAML 派生的运行时字段
+    // 注意：orphan_cards（孤立卡片）在引用式牌组架构下是允许存在的，不作为问题检�?
+    // 注意：redundant_fields 已移除，因为 Content-Only 架构�?type/tags 是从 content YAML 派生的运行时字段
     const checks: CheckType[] = [
       'yaml_migration',
       'we_decks_fix',
@@ -121,7 +129,7 @@ export class DataManagementService {
     ];
 
     for (let i = 0; i < checks.length; i++) {
-      onProgress?.(i + 1, checks.length, `检测 ${this.getCheckName(checks[i])}...`);
+      onProgress?.(i + 1, checks.length, `检�?${this.getCheckName(checks[i])}...`);
       const result = await this.check(checks[i]);
       results.push(result);
     }
@@ -130,7 +138,7 @@ export class DataManagementService {
   }
 
   /**
-   * 检测单项
+   * 检测单�?
    */
   async check(type: CheckType): Promise<DataCheckResult> {
     const cards = await this.plugin.dataStorage.getCards();
@@ -145,7 +153,7 @@ export class DataManagementService {
         return this.checkDeprecatedFields(cards);
       case 'we_block_migration':
         return this.checkWeBlockMigration(cards);
-      // redundant_fields 已移除：Content-Only 架构下 type/tags 是从 content YAML 派生的运行时字段
+      // redundant_fields 已移除：Content-Only 架构�?type/tags 是从 content YAML 派生的运行时字段
       case 'orphan_cards':
         return this.checkOrphanCards(cards, decks);
       case 'duplicate_cards':
@@ -182,7 +190,7 @@ export class DataManagementService {
   // ===== 修复方法 =====
 
   /**
-   * 修复所有问题
+   * 修复所有问�?
    */
   async fixAll(onProgress?: ProgressCallback): Promise<DataFixResult[]> {
     const results: DataFixResult[] = [];
@@ -205,7 +213,7 @@ export class DataManagementService {
       const result = await this.fix(fixes[i]);
       results.push(result);
       
-      // 每个修复操作后清除缓存，确保下次读取时获取最新数据
+      // 每个修复操作后清除缓存，确保下次读取时获取最新数�?
       if (this.plugin.cardFileService) {
         this.plugin.cardFileService.clearCache();
       }
@@ -213,7 +221,7 @@ export class DataManagementService {
       await new Promise(resolve => setTimeout(resolve, 50));
     }
 
-    // 最终等待文件系统完全同步
+    // 最终等待文件系统完全同�?
     await new Promise(resolve => setTimeout(resolve, 100));
 
     return results;
@@ -259,10 +267,10 @@ export class DataManagementService {
     }
   }
 
-  // ===== 具体检测实现 =====
+  // ===== 具体检测实�?=====
 
   /**
-   * 检测需要 YAML 迁移的卡片
+   * 检测需�?YAML 迁移的卡�?
    */
   private checkYAMLMigration(cards: Card[]): DataCheckResult {
     const needsMigration: string[] = [];
@@ -279,13 +287,13 @@ export class DataManagementService {
       count: needsMigration.length,
       items: needsMigration,
       message: needsMigration.length > 0 
-        ? `发现 ${needsMigration.length} 张卡片需要 YAML 迁移`
+        ? `发现 ${needsMigration.length} 张卡片需�?YAML 迁移`
         : '所有卡片已迁移'
     };
   }
 
   /**
-   * 检测 we_decks 中写入牌组ID的卡片
+   * 检�?we_decks 中写入牌组ID的卡�?
    */
   private checkWeDecksId(cards: Card[]): DataCheckResult {
     const needsFix: string[] = [];
@@ -302,13 +310,13 @@ export class DataManagementService {
       count: needsFix.length,
       items: needsFix,
       message: needsFix.length > 0 
-        ? `发现 ${needsFix.length} 张卡片 we_decks 写入了牌组ID`
+        ? `发现 ${needsFix.length} 张卡�?we_decks 写入了牌组ID`
         : 'we_decks 数据正常'
     };
   }
 
   /**
-   * 检测卡片中的弃用字段
+   * 检测卡片中的弃用字�?
    */
   private checkDeprecatedFields(cards: Card[]): DataCheckResult {
     const hasDeprecated: string[] = [];
@@ -326,12 +334,12 @@ export class DataManagementService {
       items: hasDeprecated,
       message: hasDeprecated.length > 0 
         ? `发现 ${hasDeprecated.length} 张卡片存在弃用字段`
-        : '无弃用字段'
+        : 'No deprecated fields'
     };
   }
 
   /**
-   * 检测需要 we_block -> we_source 合并迁移的卡片
+   * 检测需�?we_block -> we_source 合并迁移的卡�?
    */
   private checkWeBlockMigration(cards: Card[]): DataCheckResult {
     const needsMigration: string[] = [];
@@ -348,18 +356,18 @@ export class DataManagementService {
       count: needsMigration.length,
       items: needsMigration,
       message: needsMigration.length > 0 
-        ? `发现 ${needsMigration.length} 张卡片需要合并 we_block 到 we_source`
+        ? `发现 ${needsMigration.length} 张卡片需要合�?we_block �?we_source`
         : 'we_source 格式正常'
     };
   }
 
   /**
-   * 检测卡片-牌组一致性（引用式牌组数据一致性）
+   * 检测卡�?牌组一致性（引用式牌组数据一致性）
    * 
-   * 🔧 P1重构：简化为只检查牌组侧的无效引用
-   * - 以 deck.cardUUIDs 为唯一权威数据源
+   * 🔧 P1重构：简化为只检查牌组侧的无效引�?
+   * - �?deck.cardUUIDs 为唯一权威数据�?
    * - 只检查牌组中是否存在指向不存在卡片的UUID
-   * - 不再检查已废弃的 card.referencedByDecks 字段
+   * - 不再检查已废弃�?card.referencedByDecks 字段
    */
   private async checkCardDeckConsistency(cards: Card[], decks: Deck[]): Promise<DataCheckResult> {
     // 构建卡片UUID集合
@@ -389,15 +397,15 @@ export class DataManagementService {
       items: affectedDecks,
       message: invalidDeckRefs > 0 
         ? `发现 ${invalidDeckRefs} 个牌组无效引用（${affectedDecks.length} 个牌组受影响）`
-        : '牌组引用一致'
+        : 'Deck references are consistent'
     };
   }
 
   /**
-   * 修复卡片-牌组一致性
+   * 修复卡片-牌组一致�?
    * 
-   * 🔧 P1重构：简化为只清理牌组侧的无效引用
-   * - 以 deck.cardUUIDs 为唯一权威数据源
+   * 🔧 P1重构：简化为只清理牌组侧的无效引�?
+   * - �?deck.cardUUIDs 为唯一权威数据�?
    * - 只清理牌组中指向不存在卡片的UUID
    * - 不再尝试修改已废弃的 card.referencedByDecks 字段（该字段是派生字段，保存时会被剥离）
    */
@@ -406,7 +414,7 @@ export class DataManagementService {
     let failed = 0;
     const errors: Array<{ uuid: string; error: string }> = [];
     
-    logger.info('[DataManagement] 开始修复牌组无效引用...');
+    logger.info('[DataManagement] 开始修复牌组无效引�?..');
     
     // 构建卡片UUID集合
     const cardUUIDSet = new Set(cards.map(c => c.uuid));
@@ -423,7 +431,7 @@ export class DataManagementService {
           deck.modified = new Date().toISOString();
           await this.plugin.dataStorage.saveDeck(deck);
           success += removedCount;
-          logger.debug(`[DataManagement] 清理牌组 ${deck.name} 的 ${removedCount} 个无效引用`);
+          logger.debug(`[DataManagement] 清理牌组 ${deck.name} �?${removedCount} 个无效引用`);
         } catch (e) {
           failed += removedCount;
           errors.push({ uuid: deck.id, error: `牌组 ${deck.name}: ${String(e)}` });
@@ -431,7 +439,7 @@ export class DataManagementService {
       }
     }
     
-    logger.info(`[DataManagement] 牌组无效引用修复完成: 清理 ${success} 个无效引用, 失败 ${failed}`);
+    logger.info(`[DataManagement] 牌组无效引用修复完成: 清理 ${success} 个无效引�? 失败 ${failed}`);
     
     return {
       type: 'card_deck_consistency',
@@ -470,17 +478,17 @@ export class DataManagementService {
       items: orphans,
       message: orphans.length > 0 
         ? `发现 ${orphans.length} 张孤立卡片`
-        : '无孤立卡片'
+        : 'No orphan cards'
     };
   }
 
   /**
    * 检测内容重复卡片（AnkiConnect同步Bug导致的重复）
    * 
-   * 检测逻辑：
+   * 检测逻辑�?
    * 1. 提取每张卡片的内容指纹（去除YAML frontmatter后的纯内容）
    * 2. 按指纹分组，找出内容相同但UUID不同的卡片组
-   * 3. 每组中只需保留1张，其余为重复
+   * 3. 每组中只需保留1张，其余为重�?
    */
   private checkDuplicateCards(cards: Card[]): DataCheckResult {
     const groups = new Map<string, Card[]>();
@@ -503,7 +511,7 @@ export class DataManagementService {
       duplicateGroups++;
       // 排序：有学习记录的优先，其次最早创建的
       groupCards.sort((a, b) => this.getCardRetentionScore(b) - this.getCardRetentionScore(a));
-      // 第一张保留，其余标记为重复
+      // 第一张保留，其余标记为重�?
       for (let i = 1; i < groupCards.length; i++) {
         duplicateUUIDs.push(groupCards[i].uuid);
       }
@@ -515,16 +523,16 @@ export class DataManagementService {
       count: duplicateUUIDs.length,
       items: duplicateUUIDs.slice(0, 200),
       message: duplicateUUIDs.length > 0
-        ? `发现 ${duplicateUUIDs.length} 张内容重复卡片（${duplicateGroups} 组），通常由 AnkiConnect 同步异常导致`
-        : '无内容重复卡片'
+        ? `Found ${duplicateUUIDs.length} duplicate cards (${duplicateGroups} groups), usually caused by AnkiConnect sync issues`
+        : 'No duplicate cards'
     };
   }
 
   /**
    * 修复内容重复卡片
    * 
-   * 修复逻辑：
-   * 1. 按内容指纹分组，每组保留"最佳"卡片（有FSRS学习记录 > 有复习记录 > 最早创建）
+   * 修复逻辑�?
+   * 1. 按内容指纹分组，每组保留"最�?卡片（有FSRS学习记录 > 有复习记�?> 最早创建）
    * 2. 删除重复卡片
    * 3. 更新牌组 cardUUIDs：将重复UUID替换为保留的UUID
    */
@@ -533,9 +541,9 @@ export class DataManagementService {
     let failed = 0;
     const errors: Array<{ uuid: string; error: string }> = [];
     
-    logger.info('[DataManagement] 开始修复内容重复卡片...');
+    logger.info('[DataManagement] 开始修复内容重复卡�?..');
     
-    // 1. 按内容指纹分组
+    // 1. 按内容指纹分�?
     const groups = new Map<string, Card[]>();
     for (const card of cards) {
       const fp = this.getContentFingerprint(card);
@@ -544,7 +552,7 @@ export class DataManagementService {
       groups.get(fp)!.push(card);
     }
     
-    // 2. 找出需要删除的重复卡片，建立 UUID 重映射
+    // 2. 找出需要删除的重复卡片，建�?UUID 重映�?
     const uuidRemapping = new Map<string, string>(); // removedUUID -> keptUUID
     const toDelete: string[] = [];
     
@@ -559,7 +567,7 @@ export class DataManagementService {
     }
     
     if (toDelete.length === 0) {
-      logger.info('[DataManagement] 无需修复，没有重复卡片');
+      logger.info('[DataManagement] No duplicate cards to fix');
       return { type: 'duplicate_cards', success: 0, failed: 0, errors: [] };
     }
     
@@ -568,14 +576,12 @@ export class DataManagementService {
     // 3. 删除重复卡片
     for (const uuid of toDelete) {
       try {
-        if (this.plugin.cardFileService) {
-          const deleted = await this.plugin.cardFileService.deleteCard(uuid);
-          if (deleted) {
-            success++;
-          } else {
-            failed++;
-            errors.push({ uuid, error: '删除失败' });
-          }
+        const deleted = await this.plugin.dataStorage.deleteCard(uuid);
+        if (deleted.success) {
+          success++;
+        } else {
+          failed++;
+          errors.push({ uuid, error: deleted.error || '删除失败' });
         }
       } catch (e) {
         failed++;
@@ -601,7 +607,7 @@ export class DataManagementService {
         } else if (keptUUIDs.has(uuid)) {
           newUUIDs.add(uuid);
         } else {
-          // 不在任何卡片中的无效引用，丢弃
+          // 不在任何卡片中的无效引用，丢�?
           changed = true;
         }
       }
@@ -624,18 +630,18 @@ export class DataManagementService {
   }
 
   /**
-   * 提取卡片内容指纹（去除YAML frontmatter后标准化）
-   * 使用完整内容的哈希值，避免截断导致不同卡片误判为重复
+   * 提取卡片内容指纹（去除YAML frontmatter后标准化�?
+   * 使用完整内容的哈希值，避免截断导致不同卡片误判为重�?
    */
   private getContentFingerprint(card: Card): string {
     const content = card.content || '';
     if (!content.trim()) return '';
     // 去除 YAML frontmatter
     const stripped = content.replace(/^---[\s\S]*?---\s*/, '').trim();
-    // 标准化空白
+    // 标准化空�?
     const normalized = stripped.replace(/\s+/g, ' ');
     if (!normalized) return '';
-    // 使用简单哈希生成固定长度指纹
+    // 使用简单哈希生成固定长度指�?
     return this.simpleHash(normalized);
   }
 
@@ -660,17 +666,17 @@ export class DataManagementService {
     let score = 0;
     const cardAny = card as any;
     
-    // 有FSRS状态且非new的卡片最有价值
+    // 有FSRS状态且非new的卡片最有价�?
     if (cardAny.fsrs && cardAny.fsrs.state !== undefined && cardAny.fsrs.state > 0) {
       score += 10000;
     }
     
-    // 有复习记录
+    // 有复习记�?
     if (Array.isArray(cardAny.reviewLog) && cardAny.reviewLog.length > 0) {
       score += 5000 + cardAny.reviewLog.length;
     }
     
-    // 有学习状态（从YAML解析）
+    // 有学习状态（从YAML解析�?
     const content = card.content || '';
     const weStatus = content.match(/we_status:\s*"?(\w+)"?/);
     if (weStatus && weStatus[1] !== 'new') {
@@ -682,7 +688,7 @@ export class DataManagementService {
       score += 100;
     }
     
-    // 更早创建的优先
+    // 更早创建的优�?
     let created = 0;
     if (card.created) {
       if (typeof card.created === 'number') {
@@ -744,7 +750,7 @@ export class DataManagementService {
     let failed = 0;
     const errors: Array<{ uuid: string; error: string }> = [];
 
-    logger.info(`[DataManagement] 开始修复 we_decks，共 ${cards.length} 张卡片，${decks.length} 个牌组`);
+    logger.info(`[DataManagement] 开始修�?we_decks，共 ${cards.length} 张卡片，${decks.length} 个牌组`);
 
     for (const card of cards) {
       if (!this.cardHasWeDecksId(card)) continue;
@@ -765,7 +771,7 @@ export class DataManagementService {
             // 验证保存结果
             if (result.data) {
               const savedYAML = parseYAMLFromContent(result.data.content || '');
-              logger.debug(`[DataManagement] 保存后验证 ${card.uuid}:`, {
+              logger.debug(`[DataManagement] 保存后验�?${card.uuid}:`, {
                 saved_we_decks: savedYAML.we_decks
               });
             }
@@ -837,7 +843,7 @@ export class DataManagementService {
     let failed = 0;
     const errors: Array<{ uuid: string; error: string }> = [];
 
-    logger.info(`[DataManagement] 开始合并 we_block 到 we_source...`);
+    logger.info(`[DataManagement] 开始合�?we_block �?we_source...`);
 
     for (const card of cards) {
       if (!card.content || !needsSourceMigration(card.content)) continue;
@@ -855,7 +861,7 @@ export class DataManagementService {
           const result = await this.plugin.dataStorage.saveCard(updatedCard);
           if (result.success) {
             success++;
-            logger.debug(`[DataManagement] ✅ we_block 合并成功: ${card.uuid}`);
+            logger.debug(`[DataManagement] �?we_block 合并成功: ${card.uuid}`);
           } else {
             failed++;
             errors.push({ uuid: card.uuid, error: result.error || '保存失败' });
@@ -880,7 +886,7 @@ export class DataManagementService {
   // ===== 辅助方法 =====
 
   /**
-   * 检测卡片是否需要 YAML 迁移
+   * 检测卡片是否需�?YAML 迁移
    */
   private cardNeedsYAMLMigration(card: Card): boolean {
     // 有旧字段但没有对应的 YAML 字段
@@ -889,7 +895,7 @@ export class DataManagementService {
     try {
       const yaml = parseYAMLFromContent(card.content);
       
-      // 检查是否有旧字段但没有迁移到 YAML
+      // 检查是否有旧字段但没有迁移�?YAML
       const hasOldSource = card.sourceFile || card.sourceBlock;
       const hasYAMLSource = yaml.we_source;
       
@@ -903,7 +909,7 @@ export class DataManagementService {
   }
 
   /**
-   * 检测卡片 we_decks 是否包含牌组ID
+   * 检测卡�?we_decks 是否包含牌组ID
    */
   private cardHasWeDecksId(card: Card): boolean {
     if (!card.content) return false;
@@ -912,7 +918,7 @@ export class DataManagementService {
       const yaml = parseYAMLFromContent(card.content);
       if (!yaml.we_decks || yaml.we_decks.length === 0) return false;
 
-      // 检查是否有 deck_ 开头的值（牌组ID格式）
+      // 检查是否有 deck_ 开头的值（牌组ID格式�?
       return yaml.we_decks.some((value: string) => value.startsWith('deck_'));
     } catch {
       return false;
@@ -921,7 +927,7 @@ export class DataManagementService {
 
   /**
    * 检测卡片是否有弃用字段
-   * 注意：只检测真正需要删除的字段，不检测派生字段
+   * 注意：只检测真正需要删除的字段，不检测派生字�?
    */
   private cardHasDeprecatedFields(card: Card): boolean {
     const cardAny = card as any;
@@ -935,7 +941,7 @@ export class DataManagementService {
   }
 
   /**
-   * 迁移卡片到 YAML 格式
+   * 迁移卡片�?YAML 格式
    */
   private migrateCardToYAML(card: Card): Card {
     const metadata: CardYAMLMetadata = {};
@@ -1005,9 +1011,9 @@ export class DataManagementService {
 
       if (!needsFix) return null;
 
-      // 无论 fixedDeckNames 是否为空，都需要更新 we_decks
-      // 如果为空，表示所有牌组ID都找不到对应牌组，清空 we_decks
-      // 使用 undefined 可以在 setCardProperties 中删除该字段
+      // 无论 fixedDeckNames 是否为空，都需要更�?we_decks
+      // 如果为空，表示所有牌组ID都找不到对应牌组，清�?we_decks
+      // 使用 undefined 可以�?setCardProperties 中删除该字段
       const newContent = setCardProperties(card.content, { 
         we_decks: fixedDeckNames.length > 0 ? fixedDeckNames : undefined 
       });
@@ -1040,15 +1046,15 @@ export class DataManagementService {
     return cleanedCard as Card;
   }
 
-  // ===== 导入材料一致性检测 (v2.1 新增) =====
+  // ===== 导入材料一致性检�?(v2.1 新增) =====
   
   /**
-   * 检测导入材料一致性
+   * 检测导入材料一致�?
    * 
-   * 检测项目:
+   * 检测项�?
    * 1. materials.json 中记录的文件是否实际存在
    * 2. blocks.json 中内容块的源文件是否存在
-   * 3. IR牌组中的 blockIds 是否都有效
+   * 3. IR牌组中的 blockIds 是否都有�?
    */
   private async checkIRMaterialConsistency(): Promise<DataCheckResult> {
     const issues: string[] = [];
@@ -1057,7 +1063,7 @@ export class DataManagementService {
     let orphanedDeckRefs = 0;
     
     try {
-      // 1. 检测 materials.json 中的残留记录
+      // 1. 检�?materials.json 中的残留记录
       if (this.plugin.readingMaterialManager) {
         const storage = (this.plugin.readingMaterialManager as any).storage;
         if (storage) {
@@ -1074,21 +1080,21 @@ export class DataManagementService {
         }
       }
       
-      // 2. 检测IR存储服务中的孤立内容块（只检测不清理）
+      // 2. 检测IR存储服务中的孤立内容块（只检测不清理�?
       const irStorageService = await this.getIRStorageService();
       if (irStorageService) {
         // 检测孤立内容块（源文件已删除的内容块）
         const orphanedBlockIds = await irStorageService.findOrphanedBlocks();
         orphanedBlocks = orphanedBlockIds.length;
         if (orphanedBlocks > 0) {
-          issues.push(`孤立内容块: ${orphanedBlocks} 个`);
+          issues.push(`孤立内容�? ${orphanedBlocks} 个`);
         }
-        // 注意: 检测模式不调用 validateAndCleanOrphanedReferences，避免自动清理
+        // 注意: 检测模式不调用 validateAndCleanOrphanedReferences，避免自动清�?
       }
       
     } catch (error) {
-      logger.error('[DataManagement] 检测导入材料一致性失败:', error);
-      issues.push(`检测失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error('[DataManagement] 检测导入材料一致性失�?', error);
+      issues.push(`检测失�? ${error instanceof Error ? error.message : String(error)}`);
     }
     
     const totalIssues = orphanedMaterials + orphanedBlocks;
@@ -1099,17 +1105,17 @@ export class DataManagementService {
       count: totalIssues,
       items: issues,
       message: totalIssues > 0 
-        ? `发现 ${totalIssues} 个一致性问题（材料记录: ${orphanedMaterials}, 内容块: ${orphanedBlocks}）`
-        : '导入材料数据一致'
+        ? `Found ${totalIssues} consistency issues (materials: ${orphanedMaterials}, blocks: ${orphanedBlocks})`
+        : 'IR material data is consistent'
     };
   }
   
   /**
-   * 修复导入材料一致性问题
+   * 修复导入材料一致性问�?
    * 
    * 修复操作:
    * 1. 清理 materials.json 中的残留记录
-   * 2. 清理 blocks.json 中的孤立内容块
+   * 2. 清理 blocks.json 中的孤立内容�?
    * 3. 清理 IR牌组中的无效引用
    */
   private async fixIRMaterialConsistency(): Promise<DataFixResult> {
@@ -1148,15 +1154,15 @@ export class DataManagementService {
         const cleanedBlocks = await irStorageService.cleanOrphanedBlocks();
         success += cleanedBlocks;
         
-        // 校验并清理牌组中的悬空引用
+        // 校验并清理牌组中的悬空引�?
         const validationResult = await irStorageService.validateAndCleanOrphanedReferences();
         success += validationResult.orphanedBlockIds + validationResult.orphanedSourceFiles;
       }
       
-      logger.info(`[DataManagement] 导入材料一致性修复完成: 成功 ${success}, 失败 ${failed}`);
+      logger.info(`[DataManagement] 导入材料一致性修复完�? 成功 ${success}, 失败 ${failed}`);
       
     } catch (error) {
-      logger.error('[DataManagement] 修复导入材料一致性失败:', error);
+      logger.error('[DataManagement] 修复导入材料一致性失�?', error);
       failed++;
       errors.push({ uuid: 'ir_material_consistency', error: String(error) });
     }
@@ -1169,18 +1175,18 @@ export class DataManagementService {
     };
   }
   
-  // ===== 文件名云同步兼容性检测/修复 =====
+  // ===== 文件名云同步兼容性检�?修复 =====
 
   /**
-   * 检测文件名云同步兼容性问题
+   * 检测文件名云同步兼容性问�?
    * 
    * 扫描 weave/ 数据目录下所有文件和子目录名称，检测：
    * - Emoji 字符
    * - 全角标点
-   * - 方括号 []
+   * - 方括�?[]
    * - 超长路径
-   * - 无扩展名的标记文件
-   * - 其它不安全字符
+   * - 无扩展名的标记文�?
+   * - 其它不安全字�?
    */
   private async checkFilenameCompatibility(): Promise<DataCheckResult> {
     const issues: string[] = [];
@@ -1197,11 +1203,11 @@ export class DataManagementService {
           status: 'ok',
           count: 0,
           items: [],
-          message: '数据目录不存在，无需检测'
+          message: 'Data directory does not exist, no check needed'
         };
       }
 
-      // 递归扫描目录（只检测每个路径的最后一段，避免重复计数）
+      // 递归扫描目录（只检测每个路径的最后一段，避免重复计数�?
       const scanDir = async (dir: string, depth: number): Promise<void> => {
         if (depth > 8) return;
         try {
@@ -1240,8 +1246,8 @@ export class DataManagementService {
       await scanDir(root, 0);
 
     } catch (error) {
-      logger.error('[DataManagement] 文件名兼容性检测失败:', error);
-      issues.push(`检测失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error('[DataManagement] 文件名兼容性检测失�?', error);
+      issues.push(`检测失�? ${error instanceof Error ? error.message : String(error)}`);
     }
 
     return {
@@ -1250,15 +1256,15 @@ export class DataManagementService {
       count: issues.length,
       items: issues.slice(0, 50),
       message: issues.length > 0
-        ? `发现 ${issues.length} 个文件/目录名不兼容云同步`
-        : '文件名均兼容云同步'
+        ? `Found ${issues.length} file or directory names incompatible with cloud sync`
+        : 'All file names are cloud-sync compatible'
     };
   }
 
   /**
-   * 修复文件名云同步兼容性问题
+   * 修复文件名云同步兼容性问�?
    * 
-   * 对不兼容的文件/目录执行安全重命名
+   * 对不兼容的文�?目录执行安全重命�?
    */
   private async fixFilenameCompatibility(): Promise<DataFixResult> {
     let success = 0;
@@ -1293,7 +1299,7 @@ export class DataManagementService {
             const diag = diagnoseFilename(fileName, true, filePath.length);
             const fixableIssues = diag.issues.filter(i => i !== 'path_too_long');
             if (fixableIssues.length > 0) {
-              // 只替换最后一段，保持父路径不变
+              // 只替换最后一段，保持父路径不�?
               const parentPath = segments.slice(0, -1).join('/');
               const newPath = parentPath ? `${parentPath}/${diag.suggested}` : diag.suggested;
               fileRenames.push({ oldPath: filePath, newPath });
@@ -1327,46 +1333,46 @@ export class DataManagementService {
         try {
           if (await adapter.exists(item.newPath)) {
             logger.warn(`[DataManagement] 目标路径已存在，跳过: ${item.newPath}`);
-            errors.push({ uuid: item.oldPath, error: `目标路径已存在: ${item.newPath}` });
+            errors.push({ uuid: item.oldPath, error: `目标路径已存�? ${item.newPath}` });
             failed++;
             continue;
           }
           await adapter.rename(item.oldPath, item.newPath);
           success++;
-          logger.info(`[DataManagement] 重命名文件: ${item.oldPath} → ${item.newPath}`);
+          logger.info(`[DataManagement] 重命名文�? ${item.oldPath} �?${item.newPath}`);
         } catch (error) {
           failed++;
           errors.push({ uuid: item.oldPath, error: String(error) });
-          logger.warn(`[DataManagement] 重命名文件失败: ${item.oldPath}`, error);
+          logger.warn(`[DataManagement] 重命名文件失�? ${item.oldPath}`, error);
         }
       }
 
-      // 2. 再重命名目录（按深度从深到浅，避免父目录先改名导致子路径失效）
+      // 2. 再重命名目录（按深度从深到浅，避免父目录先改名导致子路径失效�?
       folderRenames.sort((a, b) => b.depth - a.depth);
       for (const item of folderRenames) {
         try {
           if (await adapter.exists(item.newPath)) {
             logger.warn(`[DataManagement] 目标路径已存在，跳过: ${item.newPath}`);
-            errors.push({ uuid: item.oldPath, error: `目标路径已存在: ${item.newPath}` });
+            errors.push({ uuid: item.oldPath, error: `目标路径已存�? ${item.newPath}` });
             failed++;
             continue;
           }
           await adapter.rename(item.oldPath, item.newPath);
           success++;
-          logger.info(`[DataManagement] 重命名目录: ${item.oldPath} → ${item.newPath}`);
+          logger.info(`[DataManagement] 重命名目�? ${item.oldPath} �?${item.newPath}`);
         } catch (error) {
           failed++;
           errors.push({ uuid: item.oldPath, error: String(error) });
-          logger.warn(`[DataManagement] 重命名目录失败: ${item.oldPath}`, error);
+          logger.warn(`[DataManagement] 重命名目录失�? ${item.oldPath}`, error);
         }
       }
 
       if (success > 0) {
-        logger.info(`[DataManagement] 文件名兼容性修复完成: 成功 ${success}, 失败 ${failed}`);
+        logger.info(`[DataManagement] 文件名兼容性修复完�? 成功 ${success}, 失败 ${failed}`);
       }
 
     } catch (error) {
-      logger.error('[DataManagement] 文件名兼容性修复失败:', error);
+      logger.error('[DataManagement] 文件名兼容性修复失�?', error);
       failed++;
       errors.push({ uuid: 'filename_compatibility', error: String(error) });
     }
@@ -1380,17 +1386,17 @@ export class DataManagementService {
   }
 
   /**
-   * 获取同步问题类型的中文标签
+   * 获取同步问题类型的中文标�?
    */
   private getSyncIssueLabel(type: SyncIssueType): string {
     const labels: Record<SyncIssueType, string> = {
       'emoji': 'Emoji',
       'fullwidth_punctuation': '全角标点',
-      'square_brackets': '方括号',
+      'square_brackets': 'square brackets',
       'path_too_long': '路径过长',
       'no_extension': '无扩展名',
-      'unsafe_chars': '不安全字符',
-      'leading_dot': '点开头'
+      'unsafe_chars': 'unsafe chars',
+      'leading_dot': 'leading dot'
     };
     return labels[type] || type;
   }
@@ -1416,73 +1422,91 @@ export class DataManagementService {
    */
   private getCheckName(type: CheckType): string {
     const names: Record<CheckType, string> = {
-      'yaml_migration': 'YAML 元数据迁移',
+      'yaml_migration': 'YAML metadata migration',
       'we_decks_fix': 'we_decks 牌组ID',
       'we_block_migration': 'we_block 合并迁移',
       'deprecated_fields': '弃用字段',
-      'card_deck_consistency': '引用式牌组一致性',
-      'ir_material_consistency': '导入材料一致性',
+      'card_deck_consistency': 'reference deck consistency',
+      'ir_material_consistency': 'import material consistency',
       'orphan_cards': '孤立卡片',
       'duplicate_cards': '重复卡片',
       'invalid_refs': '无效引用',
       'schema_migration': 'Schema V2 数据迁移',
       'structure_check': '目录结构核对',
-      'legacy_cleanup': '旧目录清理',
-      'filename_compatibility': '文件名云同步兼容性',
-      'sync_conflict_files': '云同步冲突副本',
-      'progressive_cloze_unconverted': '未转换的渐进式挖空',
-      'progressive_cloze_orphan': '孤儿子卡片',
+      'legacy_cleanup': 'legacy cleanup',
+      'filename_compatibility': 'filename cloud-sync compatibility',
+      'sync_conflict_files': 'cloud sync conflict copies',
+      'progressive_cloze_unconverted': 'unconverted progressive cloze',
+      'progressive_cloze_orphan': 'orphan progressive child cards',
       'progressive_cloze_missing_children': '缺失的子卡片',
       'progressive_cloze_extra_children': '多余的子卡片'
     };
     return names[type] || type;
   }
 
-  // ===== Schema V2 迁移相关 =====
+  // ===== 数据迁移相关 =====
+
+  async getLatestMigrationPlan(): Promise<DataMigrationPlan | null> {
+    return this.getMigrationService().getLatestPlan();
+  }
+
+  async getLatestMigrationReport(): Promise<DataMigrationReport | null> {
+    return this.getMigrationService().getLatestReport();
+  }
+
+  async planUnifiedMigration(
+    requestedParentFolder?: string,
+    reason: 'startup-auto' | 'manual-review' | 'change-parent-folder' = 'manual-review',
+  ): Promise<DataMigrationPlan> {
+    return this.getMigrationService().planDataMigration({
+      requestedParentFolder,
+      reason,
+    });
+  }
 
   /**
-   * 检测是否需要 Schema V2 迁移
-   */
+   * 检测是否需要数据迁�?   */
   async checkSchemaMigration(): Promise<DataCheckResult> {
     try {
-      const migrationService = new SchemaV2MigrationService(this.plugin.app);
-      const needsMigration = await migrationService.needsMigration({ allowWhenSchemaUpToDate: true });
+      const plan = await this.planUnifiedMigration(undefined, 'manual-review');
       
       return {
         type: 'schema_migration',
-        status: needsMigration ? 'warning' : 'ok',
-        count: needsMigration ? 1 : 0,
-        items: [],
-        message: needsMigration ? '需要执行 Schema V2 数据迁移' : '数据结构已是最新版本'
+        status: plan.requiresMigration ? 'warning' : 'ok',
+        count: plan.requiresMigration ? Math.max(plan.activeSourceRoots.length, 1) : 0,
+        items: plan.activeSourceRoots.map(root => `${root.kind}: ${root.path}`),
+        message: plan.requiresMigration ? 'Pending migration data sources detected' : 'Current data path and structure are normalized'
       };
     } catch (error) {
-      logger.error('[DataManagement] Schema迁移检测失败:', error);
+      logger.error('[DataManagement] 迁移检测失�?', error);
       return {
         type: 'schema_migration',
         status: 'error',
         count: 0,
         items: [],
-        message: `检测失败: ${error instanceof Error ? error.message : String(error)}`
+        message: `迁移检查失�? ${error instanceof Error ? error.message : String(error)}`
       };
     }
   }
 
   /**
-   * 执行 Schema V2 迁移
+   * 执行统一数据迁移
    */
   async executeSchemaMigration(): Promise<DataFixResult> {
     try {
-      const migrationService = new SchemaV2MigrationService(this.plugin.app);
-      const result = await migrationService.migrate();
+      const migrationService = this.getMigrationService();
+      const plan = await migrationService.planDataMigration({ reason: 'manual-review' });
+      const result = await migrationService.executeDataMigration(plan);
+      await this.plugin.saveSettings();
       
       return {
         type: 'schema_migration',
-        success: result.migratedCount,
-        failed: result.failedCount,
+        success: result.movedFiles,
+        failed: result.errors.length,
         errors: result.errors.map(e => ({ uuid: '', error: e }))
       };
     } catch (error) {
-      logger.error('[DataManagement] Schema迁移执行失败:', error);
+      logger.error('[DataManagement] 迁移执行失败:', error);
       return {
         type: 'schema_migration',
         success: 0,
@@ -1493,7 +1517,7 @@ export class DataManagementService {
   }
 
   /**
-   * 检测目录结构是否符合 V2 规范
+   * 检测目录结构是否符�?V2 规范
    */
   async checkStructure(): Promise<DataCheckResult> {
     const adapter = this.plugin.app.vault.adapter;
@@ -1502,7 +1526,7 @@ export class DataManagementService {
     const parentFolder = normalizeWeaveParentFolder(this.plugin.settings?.weaveParentFolder);
     const v2Paths = getV2Paths(parentFolder);
 
-    // 预期的 V2 目录结构
+    // 预期�?V2 目录结构
     const expectedDirs = [
       v2Paths.memory.root,
       v2Paths.memory.cards,
@@ -1522,14 +1546,14 @@ export class DataManagementService {
       this.plugin.settings?.weaveParentFolder
     );
     if (irImportFolder === '.weave' || irImportFolder.startsWith('.weave/')) {
-      issues.push(`导入材料存储文件夹不应位于隐藏目录: ${irImportFolder}`);
+      issues.push(`导入材料存储文件夹不应位于隐藏目�? ${irImportFolder}`);
     }
 
-    // 检查 IR 导入文件夹不应位于内部数据子目录（memory/cards, question-bank 等）
+    // 检�?IR 导入文件夹不应位于内部数据子目录（memory/cards, question-bank 等）
     const internalDirs = [v2Paths.memory.cards, v2Paths.memory.learning.root, v2Paths.questionBank.root];
     for (const intDir of internalDirs) {
       if (irImportFolder === intDir || irImportFolder.startsWith(`${intDir}/`)) {
-        issues.push(`导入材料存储文件夹不应位于内部数据目录: ${irImportFolder}`);
+        issues.push(`导入材料存储文件夹不应位于内部数据目�? ${irImportFolder}`);
         break;
       }
     }
@@ -1593,10 +1617,10 @@ export class DataManagementService {
     
     const v2Paths = getV2Paths(parentFolder);
 
-    // 旧版本可能存在的目录（不包含当前活跃目录）
+    // 旧版本可能存在的目录（不包含当前活跃目录�?
     const possibleLegacyDirs = [
       LEGACY_DOT_TUANKI,
-      // v1.x 旧路径
+      // v1.x 旧路�?
       'weave/flashcards',
       'weave/decks',
       'weave/cards',
@@ -1615,7 +1639,7 @@ export class DataManagementService {
       `${v2Paths.root}/_data/question-bank`,
       `${v2Paths.root}/_data/profile`,
       `${v2Paths.root}/_data/decks`,
-      // v2.x 旧 IR 位置（现在应在 incremental-reading/IR 下）
+      // v2.x �?IR 位置（现在应�?incremental-reading/IR 下）
       `${v2Paths.root}/IR`,
       // 隐藏文件/标记
       `${v2Paths.root}/.temp`,
@@ -1643,7 +1667,7 @@ export class DataManagementService {
   }
 
   /**
-   * 清理旧目录
+   * 清理旧目�?
    */
   async cleanupLegacyDirectories(): Promise<DataFixResult> {
     const adapter = this.plugin.app.vault.adapter;
@@ -1660,7 +1684,7 @@ export class DataManagementService {
         const files: string[] = listing?.files || [];
         const folders: string[] = listing?.folders || [];
 
-        // 先递归删除子目录
+        // 先递归删除子目�?
         for (const folder of folders) {
           await tryRemoveRecursive(folder, depth - 1);
         }
@@ -1670,16 +1694,16 @@ export class DataManagementService {
           try {
             await adapter.remove(file);
           } catch {
-            logger.debug(`[DataManagement] 删除旧文件失败: ${file}`);
+            logger.debug(`[DataManagement] 删除旧文件失�? ${file}`);
           }
         }
 
-        // 最后删除目录本身
+        // 最后删除目录本�?
         try {
           await adapter.rmdir(dir, false);
           return true;
         } catch {
-          // 再尝试强制删除
+          // 再尝试强制删�?
           try {
             await adapter.rmdir(dir, true);
             return true;
@@ -1730,7 +1754,7 @@ export class DataManagementService {
       errors.push({ uuid: 'manifest_rename', error: String(error) });
     }
 
-    // 迁移 weave/media/ → weave/memory/media/（v3.0 媒体归属 memory 模块）
+    // 迁移 weave/media/ �?weave/memory/media/（v3.0 媒体归属 memory 模块�?
     try {
       const oldMediaDir = `${v2Paths.root}/media`;
       const newMediaDir = v2Paths.memory.media;
@@ -1751,7 +1775,7 @@ export class DataManagementService {
               try {
                 await (adapter as any).rename(item, dest);
                 success++;
-                logger.info(`[DataManagement] 迁移媒体: ${item} → ${dest}`);
+                logger.info(`[DataManagement] 迁移媒体: ${item} �?${dest}`);
               } catch (e) {
                 errors.push({ uuid: item, error: String(e) });
               }
@@ -1765,10 +1789,10 @@ export class DataManagementService {
 
     // 按深度从深到浅删除（不包含当前活跃目录）
     const legacyDirs = [
-      // 旧隐藏数据目录
+      // 旧隐藏数据目�?
       LEGACY_DOT_TUANKI,
       ...(parentFolder ? [`${parentFolder}/${LEGACY_DOT_TUANKI}`] : []),
-      // v1.x 旧路径
+      // v1.x 旧路�?
       'weave/flashcards/decks',
       'weave/flashcards/cards',
       'weave/flashcards/learning/sessions',
@@ -1800,11 +1824,11 @@ export class DataManagementService {
       `${v2Paths.root}/_data/profile`,
       `${v2Paths.root}/_data/decks`,
       `${v2Paths.root}/_data`,
-      // v2.x 旧 IR 位置（现在应在 incremental-reading/IR 下）
+      // v2.x �?IR 位置（现在应�?incremental-reading/IR 下）
       `${v2Paths.root}/IR`,
       // 隐藏目录/文件
       `${v2Paths.root}/.temp`,
-      // v3.0 合并后的旧 QB 子目录
+      // v3.0 合并后的�?QB 子目�?
       `${v2Paths.root}/question-bank/test-history`,
       `${v2Paths.root}/question-bank/in-progress`,
       `${v2Paths.root}/question-bank/error-book`,
@@ -1813,7 +1837,7 @@ export class DataManagementService {
       // 迁移残留
       `${v2Paths.root}/profile`,
       `${v2Paths.root}/_migration_conflicts`,
-      // v3.0 媒体迁移后的旧根级目录
+      // v3.0 媒体迁移后的旧根级目�?
       `${v2Paths.root}/media`,
     ];
 
@@ -1823,7 +1847,7 @@ export class DataManagementService {
           const removed = await tryRemoveRecursive(dir, 8);
           if (removed) {
             success++;
-            logger.info(`[DataManagement] 删除旧目录: ${dir}`);
+            logger.info(`[DataManagement] 删除旧目�? ${dir}`);
           }
         }
       } catch (error) {
@@ -1864,7 +1888,7 @@ export class DataManagementService {
 
     const basePath: string | undefined = adapter?.basePath;
     if (!basePath) {
-      result.errors.push('无法获取 Vault 基础路径，跳过冲突文件导入');
+      result.errors.push('Could not determine the Vault base path; skipped conflict-file import');
       return result;
     }
 
@@ -2100,7 +2124,7 @@ export class DataManagementService {
           await this.plugin.app.vault.adapter.write(uuidFilePath, JSON.stringify({ cardUUIDs: deck.cardUUIDs }));
         }
       }
-      // decks.json 中剥离 cardUUIDs
+      // decks.json 中剥�?cardUUIDs
       const strippedDecks = mergedDecks.map(d => {
         const { cardUUIDs, ...rest } = d;
         return rest;
@@ -2164,10 +2188,10 @@ export class DataManagementService {
         const isLegacy = baseName.startsWith('legacy-') || f === legacyDefaultFileName;
 
         if (cards.length === 0) {
-          // 空文件直接删除
+          // 空文件直接删�?
           toDelete.push(f);
         } else if (isLegacy) {
-          // legacy 文件中有卡片则合并到 default 后删除
+          // legacy 文件中有卡片则合并到 default 后删�?
           toMergeIntoDefault.push(...cards.filter(c => c?.uuid));
           toDelete.push(f);
         }
@@ -2199,11 +2223,11 @@ export class DataManagementService {
           await vaultAdapter.remove(`${cardsDir}/${f}`);
           result.deleted++;
         } catch (e) {
-          result.errors.push(`删除空卡片文件失败: ${f} (${String(e)})`);
+          result.errors.push(`删除空卡片文件失�? ${f} (${String(e)})`);
         }
       }
 
-      // 总是尝试清理索引（包括删除的文件条目和 cardCount=0 的僵尸条目）
+      // 总是尝试清理索引（包括删除的文件条目�?cardCount=0 的僵尸条目）
       try {
         const indexPath = `${cardsDir}/${indexFileName}`;
         if (await this.plugin.app.vault.adapter.exists(indexPath)) {
@@ -2215,7 +2239,7 @@ export class DataManagementService {
             const deletedSet = new Set(toDelete.map(f => f.replace(/\.json$/, '')));
             const beforeLen = index.files.length;
 
-            // 移除已删除文件的条目 + cardCount=0 的僵尸条目（非 default）
+            // 移除已删除文件的条目 + cardCount=0 的僵尸条目（�?default�?
             index.files = index.files.filter((entry: any) => {
               if (deletedSet.has(entry?.fileName)) return false;
               if (entry?.cardCount === 0 && entry?.fileName !== 'default' && !entry?.isDefault) return false;
@@ -2249,9 +2273,9 @@ export class DataManagementService {
         result.errors.push(`更新 card-files-index.json 失败: ${String(e)}`);
       }
 
-      logger.info(`[DataManagement] 空卡片文件清理: 删除=${result.deleted}, 合并=${result.merged}`);
+      logger.info(`[DataManagement] 空卡片文件清�? 删除=${result.deleted}, 合并=${result.merged}`);
     } catch (e) {
-      result.errors.push(`清理空卡片文件失败: ${String(e)}`);
+      result.errors.push(`清理空卡片文件失�? ${String(e)}`);
     }
 
     return result;
@@ -2285,28 +2309,28 @@ export class DataManagementService {
     } catch { }
     return renamed;
   }
-  // ===== 云同步冲突副本检测 =====
+  // ===== 云同步冲突副本检�?=====
 
-  /** 常见云同步冲突副本命名模式 */
+  /** 常见云同步冲突副本命名模�?*/
   private static readonly CONFLICT_PATTERNS: RegExp[] = [
     / \d+\.json$/,                              // iCloud: "file 2.json"
     / \(\d+\)\.json$/,                          // OneDrive: "file (1).json"
     /-[A-Z0-9]{7,}\.json$/,                     // Syncthing: short device ID suffix
     /\.sync-conflict-\d{8}-\d{6}-[A-Z0-9]+\.json$/, // Syncthing full
-    / \(SyncConflict\)\.json$/i,                // 坚果云
+    / \(SyncConflict\)\.json$/i,                // 坚果�?
     / \(conflicted copy .+\)\.json$/i,          // Dropbox
     /-conflict-\d+\.json$/,                     // generic
   ];
 
   /**
-   * 检测是否为冲突副本文件名
+   * 检测是否为冲突副本文件�?
    */
   private isSyncConflictFile(fileName: string): boolean {
     return DataManagementService.CONFLICT_PATTERNS.some(p => p.test(fileName));
   }
 
   /**
-   * 递归扫描目录下的所有 JSON 文件
+   * 递归扫描目录下的所�?JSON 文件
    */
   private async listJsonFilesRecursive(dir: string): Promise<string[]> {
     const adapter = this.plugin.app.vault.adapter as any;
@@ -2343,7 +2367,7 @@ export class DataManagementService {
           status: 'ok',
           count: 0,
           items: [],
-          message: '未检测到云同步冲突副本'
+          message: 'No cloud sync conflict copies detected'
         };
       }
 
@@ -2352,7 +2376,7 @@ export class DataManagementService {
         status: 'warning',
         count: conflicts.length,
         items: conflicts,
-        message: `检测到 ${conflicts.length} 个云同步冲突副本文件，可能包含未合并的数据`
+        message: `Detected ${conflicts.length} cloud sync conflict-copy files that may contain unmerged data`
       };
     } catch (error) {
       logger.error('[DataManagement] checkSyncConflictFiles failed:', error);
@@ -2361,13 +2385,13 @@ export class DataManagementService {
         status: 'ok',
         count: 0,
         items: [],
-        message: '检测失败'
+        message: 'Check failed'
       };
     }
   }
 
   /**
-   * 修复云同步冲突副本：合并数据后删除冲突文件
+   * 修复云同步冲突副本：合并数据后删除冲突文�?
    */
   private async fixSyncConflictFiles(): Promise<DataFixResult> {
     const result: DataFixResult = { type: 'sync_conflict_files', success: 0, failed: 0, errors: [] };
@@ -2398,7 +2422,7 @@ export class DataManagementService {
           }
           const originalPath = `${dir}/${originalName}`;
 
-          // 尝试合并卡片数据（如果是卡片分片文件）
+          // 尝试合并卡片数据（如果是卡片分片文件�?
           if (dir.includes('/cards') && await adapter.exists(originalPath)) {
             try {
               const conflictRaw = await adapter.read(conflictPath);
@@ -2442,7 +2466,7 @@ export class DataManagementService {
                 const merged = new Set([...originalData.cardUUIDs, ...conflictData.cardUUIDs]);
                 if (merged.size > originalData.cardUUIDs.length) {
                   await adapter.write(originalPath, JSON.stringify({ cardUUIDs: Array.from(merged) }));
-                  logger.info(`[DataManagement] 合并 deck-cards UUID 从冲突副本: ${fileName}`);
+                  logger.info(`[DataManagement] 合并 deck-cards UUID 从冲突副�? ${fileName}`);
                 }
               }
             } catch (mergeError) {
@@ -2453,7 +2477,7 @@ export class DataManagementService {
           // 删除冲突副本
           await adapter.remove(conflictPath);
           result.success++;
-          logger.info(`[DataManagement] 已删除冲突副本: ${conflictPath}`);
+          logger.info(`[DataManagement] 已删除冲突副�? ${conflictPath}`);
         } catch (e) {
           result.failed++;
           result.errors.push({ uuid: conflictPath, error: String(e) });
@@ -2466,25 +2490,25 @@ export class DataManagementService {
     return result;
   }
 
-  // ===== 渐进式挖空检测 =====
+  // ===== 渐进式挖空检�?=====
 
   /**
-   * 检测符合渐进式挖空格式但未转换的卡片
+   * 检测符合渐进式挖空格式但未转换的卡�?
    * 
-   * 条件：
-   * 1. 卡片不是 ProgressiveParent 或 ProgressiveChild 类型
-   * 2. 卡片 content 包含 2+ 不同序号的 {{cN::}} 挖空
+   * 条件�?
+   * 1. 卡片不是 ProgressiveParent �?ProgressiveChild 类型
+   * 2. 卡片 content 包含 2+ 不同序号�?{{cN::}} 挖空
    */
   private checkProgressiveClozeUnconverted(cards: Card[]): DataCheckResult {
     const unconverted: string[] = [];
 
     for (const card of cards) {
-      // 跳过已经是渐进式挖空的卡片
+      // 跳过已经是渐进式挖空的卡�?
       if (isProgressiveClozeParent(card) || isProgressiveClozeChild(card)) {
         continue;
       }
 
-      // 检测 content 是否符合渐进式挖空格式
+      // 检�?content 是否符合渐进式挖空格�?
       if (card.content && hasProgressiveClozeContent(card.content)) {
         unconverted.push(card.uuid);
       }
@@ -2502,8 +2526,8 @@ export class DataManagementService {
   }
 
   /**
-   * 修复未转换的渐进式挖空卡片
-   * 将符合格式的卡片转换为父卡片+子卡片
+   * 修复未转换的渐进式挖空卡�?
+   * 将符合格式的卡片转换为父卡片+子卡�?
    */
   private async fixProgressiveClozeUnconverted(cards: Card[]): Promise<DataFixResult> {
     let success = 0;
@@ -2520,15 +2544,15 @@ export class DataManagementService {
       try {
         const result = await gateway.processNewCard({ ...card });
         if (result.converted && result.cards.length > 0) {
-          // 先删除原卡片（避免UUID冲突，因为父卡片UUID与原卡片相同）
-          // processNewCard 返回的父卡片UUID就是原卡片UUID，直接覆盖保存即可
+          // 先删除原卡片（避免UUID冲突，因为父卡片UUID与原卡片相同�?
+          // processNewCard 返回的父卡片UUID就是原卡片UUID，直接覆盖保存即�?
           for (const c of result.cards) {
             const saveResult = await this.plugin.dataStorage.saveCard(c);
             if (!saveResult.success) {
               throw new Error(saveResult.error || '保存失败');
             }
           }
-          logger.info(`[DataManagement] 转换渐进式挖空: ${card.uuid} -> 1父+${result.cards.length - 1}子`);
+          logger.info(`[DataManagement] 转换渐进式挖�? ${card.uuid} -> 1�?${result.cards.length - 1}子`);
           success++;
         }
       } catch (error) {
@@ -2537,7 +2561,7 @@ export class DataManagementService {
           uuid: card.uuid,
           error: error instanceof Error ? error.message : String(error)
         });
-        logger.error(`[DataManagement] 转换渐进式挖空失败: ${card.uuid}`, error);
+        logger.error(`[DataManagement] 转换渐进式挖空失�? ${card.uuid}`, error);
       }
     }
 
@@ -2550,11 +2574,11 @@ export class DataManagementService {
   }
 
   /**
-   * 检测孤儿子卡片（父卡片已不存在）
+   * 检测孤儿子卡片（父卡片已不存在�?
    * 
-   * 条件：
-   * 1. 卡片类型为 ProgressiveChild
-   * 2. 其 parentCardId 指向的父卡片在所有卡片中不存在
+   * 条件�?
+   * 1. 卡片类型�?ProgressiveChild
+   * 2. �?parentCardId 指向的父卡片在所有卡片中不存�?
    */
   private checkProgressiveClozeOrphan(cards: Card[]): DataCheckResult {
     const parentUUIDs = new Set(
@@ -2586,7 +2610,7 @@ export class DataManagementService {
   }
 
   /**
-   * 检测父卡片缺少序号对应子卡片
+   * 检测父卡片缺少序号对应子卡�?
    * 
    * 条件：父卡片内容中存在的 cloze 序号，在子卡片中找不到对应的 clozeOrd
    */
@@ -2636,7 +2660,7 @@ export class DataManagementService {
   /**
    * 检测多余子卡片（序号在父卡片内容中不存在）
    * 
-   * 条件：子卡片的 clozeOrd 在父卡片当前内容的挖空序号中找不到
+   * 条件：子卡片�?clozeOrd 在父卡片当前内容的挖空序号中找不�?
    */
   private checkProgressiveClozeExtraChildren(cards: Card[]): DataCheckResult {
     const extras: string[] = [];
@@ -2689,3 +2713,8 @@ export function getDataManagementService(plugin: WeavePlugin): DataManagementSer
   }
   return instance;
 }
+
+export function resetDataManagementService(): void {
+  instance = null;
+}
+

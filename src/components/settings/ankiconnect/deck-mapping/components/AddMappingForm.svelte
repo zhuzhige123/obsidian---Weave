@@ -7,6 +7,9 @@
   import type { Deck } from '../../../../../data/types';
   import type { DeckSyncMapping } from '../../../types/settings-types';
   import ObsidianDropdown from '../../../../ui/ObsidianDropdown.svelte';
+  import { tr } from '../../../../../utils/i18n';
+
+  let t = $derived($tr);
 
   interface Props {
     isVisible: boolean;
@@ -56,13 +59,13 @@
 
 {#if isVisible}
   <div class="add-mapping-form">
-    <h5>添加新的牌组映射</h5>
+    <h5>{t('ankiConnect.addMapping.title')}</h5>
     <div class="form-row">
       <div class="form-field">
-        <label for="weave-deck-select">Weave 牌组</label>
+        <label for="weave-deck-select">{t('ankiConnect.addMapping.weaveDeckLabel')}</label>
         <ObsidianDropdown
           options={[
-            { id: '', label: '请选择 Weave 牌组...' },
+            { id: '', label: t('ankiConnect.addMapping.weaveDeckPlaceholder') },
             ...weaveDecks.map(deck => ({ id: deck.id, label: deck.name }))
           ]}
           value={selectedWeaveDeckId}
@@ -70,10 +73,10 @@
         />
       </div>
       <div class="form-field">
-        <label for="anki-deck-select">Anki 牌组</label>
+        <label for="anki-deck-select">{t('ankiConnect.addMapping.ankiDeckLabel')}</label>
         <ObsidianDropdown
           options={[
-            { id: '', label: '请选择 Anki 牌组...' },
+            { id: '', label: t('ankiConnect.addMapping.ankiDeckPlaceholder') },
             ...ankiDecks.map(deck => ({ id: deck.name, label: deck.name }))
           ]}
           value={selectedAnkiDeckName}
@@ -81,23 +84,23 @@
         />
       </div>
       <div class="form-field">
-        <label for="sync-direction-select">同步方向</label>
+        <label for="sync-direction-select">{t('ankiConnect.addMapping.syncDirectionLabel')}</label>
         <ObsidianDropdown
           options={[
-            { id: 'to_anki', label: '→ 到 Anki' },
-            { id: 'from_anki', label: '← 从 Anki' }
+            { id: 'to_anki', label: '→ ' + t('ankiConnect.deckMapping.directions.toAnki') },
+            { id: 'from_anki', label: '← ' + t('ankiConnect.deckMapping.directions.fromAnki') }
           ]}
           value={selectedSyncDirection}
           onchange={(value) => { selectedSyncDirection = value as 'to_anki' | 'from_anki'; }}
         />
       </div>
       <div class="form-field">
-        <label for="content-conversion-select">内容转换</label>
+        <label for="content-conversion-select">{t('ankiConnect.addMapping.contentConversionLabel')}</label>
         <ObsidianDropdown
           options={[
-            { id: 'standard', label: '标准' },
-            { id: 'preserve_style', label: '尽量保留样式' },
-            { id: 'minimal', label: '最少转换' }
+            { id: 'standard', label: t('ankiConnect.deckMapping.contentOptions.standard') },
+            { id: 'preserve_style', label: t('ankiConnect.deckMapping.contentOptions.preserveStyle') },
+            { id: 'minimal', label: t('ankiConnect.deckMapping.contentOptions.minimal') }
           ]}
           value={selectedContentConversion}
           onchange={(value) => { selectedContentConversion = value as any; }}
@@ -109,7 +112,7 @@
           onclick={handleAdd}
           disabled={!selectedWeaveDeckId || !selectedAnkiDeckName}
         >
-          ✓ 添加
+          {t('ankiConnect.addMapping.addButton')}
         </button>
       </div>
     </div>

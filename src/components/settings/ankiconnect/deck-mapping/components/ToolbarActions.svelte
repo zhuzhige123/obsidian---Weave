@@ -5,6 +5,9 @@
 <script lang="ts">
   import type { AnkiDeckInfo } from '../../../../../types/ankiconnect-types';
   import type { Deck } from '../../../../../data/types';
+  import { tr } from '../../../../../utils/i18n';
+
+  let t = $derived($tr);
 
   interface Props {
     ankiDecks: AnkiDeckInfo[];
@@ -31,18 +34,18 @@
     onclick={onFetchDecks}
     disabled={isFetchingDecks}
   >
-    {isFetchingDecks ? '获取中...' : '获取 Anki 牌组列表'}
+    {isFetchingDecks ? t('ankiConnect.toolbar.fetching') : t('ankiConnect.toolbar.fetchAnkiDecks')}
   </button>
   {#if ankiDecks.length > 0}
-    <span class="deck-count">已发现 {ankiDecks.length} 个 Anki 牌组</span>
+    <span class="deck-count">{t('ankiConnect.toolbar.deckCount', { count: ankiDecks.length })}</span>
   {/if}
   <button
     class="btn btn-success"
     onclick={onToggleAddModal}
     disabled={weaveDecks.length === 0 || ankiDecks.length === 0}
-    title={weaveDecks.length === 0 ? '请先创建 Weave 牌组' : ankiDecks.length === 0 ? '请先获取 Anki 牌组列表' : ''}
+    title={weaveDecks.length === 0 ? t('ankiConnect.toolbar.createWeaveFirst') : ankiDecks.length === 0 ? t('ankiConnect.toolbar.fetchAnkiFirst') : ''}
   >
-    {showAddModal ? '取消添加' : '➕ 添加映射'}
+    {showAddModal ? t('ankiConnect.toolbar.cancelAdd') : t('ankiConnect.toolbar.addMapping')}
   </button>
 </div>
 

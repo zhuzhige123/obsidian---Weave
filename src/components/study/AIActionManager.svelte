@@ -280,6 +280,7 @@
   onClose={onClose}
   size="xl"
   title="AI功能配置"
+  accentColor="purple"
   zIndex={6000}
   mask={false}
 >

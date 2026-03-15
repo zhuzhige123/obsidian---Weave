@@ -26,7 +26,7 @@ import { logger } from '../../utils/logger';
 export class LearningStepsManager {
   private config: LearningStepsConfig;
   private timers: Map<string, NodeJS.Timeout> = new Map();
-  private eventListeners: Map<string, Function[]> = new Map();
+  private eventListeners: Map<string, ((...args: any[]) => void)[]> = new Map();
   
   constructor(config: LearningStepsConfig) {
     this.config = config;
@@ -308,7 +308,7 @@ export class LearningStepsManager {
   /**
    * 添加事件监听器
    */
-  on(event: string, callback: Function): void {
+  on(event: string, callback: (...args: any[]) => void): void {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, []);
     }
@@ -318,7 +318,7 @@ export class LearningStepsManager {
   /**
    * 移除事件监听器
    */
-  off(event: string, callback: Function): void {
+  off(event: string, callback: (...args: any[]) => void): void {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
       const index = listeners.indexOf(callback);

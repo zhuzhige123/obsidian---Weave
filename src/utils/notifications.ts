@@ -18,39 +18,17 @@ export function showNotification(message: string, type: 'success' | 'error' | 'i
     return colors[type] || colors.info;
   };
 
-  Object.assign(n.style, {
-    position: 'fixed',
-    top: '20px',
-    right: '20px',
-    background: getThemeColors(),
-    color: 'white',
-    padding: '12px 16px',
-    borderRadius: '8px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    zIndex: '1000001',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    transform: 'translateX(100%)',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    fontSize: '14px',
-    fontWeight: '500',
-    maxWidth: '400px',
-    minWidth: '200px',
-    wordWrap: 'break-word',
-    fontFamily: 'var(--font-interface, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)'
-  } as CSSStyleDeclaration);
+  n.style.background = getThemeColors();
 
   // 添加图标
   const icon = document.createElement('span');
-  icon.style.fontSize = '16px';
-  icon.style.flexShrink = '0';
+  icon.className = 'weave-notification-icon';
 
   const iconMap = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ℹ'
+    success: '\u2713',
+    error: '\u2715',
+    warning: '\u26A0',
+    info: '\u2139'
   };
 
   icon.textContent = iconMap[type] || iconMap.info;
@@ -59,7 +37,7 @@ export function showNotification(message: string, type: 'success' | 'error' | 'i
   // 添加消息文本
   const textSpan = document.createElement('span');
   textSpan.textContent = message;
-  textSpan.style.flex = '1';
+  textSpan.className = 'weave-flex-1';
   n.appendChild(textSpan);
 
   document.body.appendChild(n);

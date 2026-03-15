@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { tr } from '../../utils/i18n';
+
   interface Props {
     newCards: number;
     learningCards: number;
@@ -9,6 +11,8 @@
   }
 
   let { newCards, learningCards, reviewCards, totalCards, deckName, onClick }: Props = $props();
+
+  let t = $derived($tr);
 
   // 计算已掌握卡片数
   const masteredCards = $derived(totalCards - (newCards + learningCards + reviewCards));
@@ -29,7 +33,7 @@
 <button 
   class="multi-segment-progress-bar"
   type="button"
-  aria-label="{deckName}进度：新{newCards}张，学习中{learningCards}张，待复习{reviewCards}张，已掌握{masteredCards}张"
+  aria-label={t('decks.progressBar.ariaLabel', { deckName, new: String(newCards), learning: String(learningCards), review: String(reviewCards), mastered: String(masteredCards) })}
   onclick={handleClick}
   disabled={!onClick}
 >
@@ -42,7 +46,7 @@
     ></div>
   {:else}
     <div class="progress-empty">
-      <span class="empty-text">暂无卡片</span>
+      <span class="empty-text">{t('decks.progressBar.empty')}</span>
     </div>
   {/if}
 </button>

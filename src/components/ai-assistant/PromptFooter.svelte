@@ -37,11 +37,14 @@
 
   // 输入框引用
   let textareaElement = $state<HTMLTextAreaElement | undefined>(undefined);
+  const promptTemplates = $derived(
+    plugin.settings.aiConfig?.promptTemplates ?? { official: [], custom: [] }
+  );
 
   // 获取提示词模板（依赖refreshKey以触发刷新）
   let officialPrompts = $derived<PromptTemplate[]>((() => {
     refreshKey; // 使refreshKey成为依赖项
-    return (plugin.settings.aiConfig?.promptTemplates.official || []).map(p => ({
+    return promptTemplates.official.map(p => ({
       ...p,
       category: 'official' as const,
       useBuiltinSystemPrompt: true
@@ -50,7 +53,7 @@
   
   let customPrompts = $derived<PromptTemplate[]>((() => {
     refreshKey; // 使refreshKey成为依赖项
-    return (plugin.settings.aiConfig?.promptTemplates.custom || []).map(p => ({
+    return promptTemplates.custom.map(p => ({
       ...p,
       category: 'custom' as const,
       useBuiltinSystemPrompt: true
@@ -267,7 +270,6 @@
 </div>
 
 <style>
-  /* ===== CSS 变量定义 ===== */
   :root {
     --prompt-footer-height: 36px;
     --prompt-footer-gap: 8px;
@@ -275,19 +277,20 @@
     --prompt-footer-radius: 6px;
   }
 
-  /* ===== 主容器 ===== */
   .prompt-footer {
     display: flex;
-    align-items: flex-start; /* 改为 flex-start 以支持 textarea 动态高度 */
+    align-items: flex-start;
     gap: var(--prompt-footer-gap);
     padding: var(--prompt-footer-padding);
-    padding-bottom: 16px; /* 固定底部间距 */
+    padding-bottom: 16px;
     background: var(--background-primary);
     border-top: 1px solid var(--background-modifier-border);
-    flex-shrink: 0; /* 防止被压缩 */
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
   }
 
-  /* ===== 提示词选择按钮 ===== */
   .prompt-selector-btn,
   .ai-provider-selector-btn {
     display: flex;
@@ -325,7 +328,6 @@
     text-overflow: ellipsis;
   }
 
-  /* ===== 自定义提示词输入框 ===== */
   .prompt-textarea {
     flex: 1;
     min-width: 0;
@@ -354,7 +356,6 @@
     color: var(--text-muted);
   }
 
-  /* ===== 生成按钮 ===== */
   .generate-btn {
     display: flex;
     align-items: center;
@@ -391,7 +392,6 @@
     transform: none;
   }
 
-  /* ===== 加载动画 ===== */
   .generate-btn :global(.lucide-loader) {
     animation: spin 1s linear infinite;
   }
@@ -405,7 +405,6 @@
     }
   }
 
-  /* ===== 响应式设计 ===== */
   @media (max-width: 768px) {
     .prompt-footer {
       flex-wrap: wrap;

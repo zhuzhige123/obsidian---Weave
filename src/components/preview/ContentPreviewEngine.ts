@@ -521,7 +521,7 @@ export class ContentPreviewEngine {
     renderMode: PreviewSection['renderMode']
   ): PreviewSection {
     return {
-      id: `section-${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `section-${type}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       type,
       content,
       renderMode,

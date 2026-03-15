@@ -72,18 +72,17 @@ export class IRCalendarView extends ItemView {
    */
   private renderPremiumLock(container: HTMLElement): void {
     const lockDiv = container.createDiv({ cls: 'weave-premium-lock' });
-    lockDiv.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;color:var(--text-muted);height:100%;';
     
     const iconDiv = lockDiv.createDiv();
-    iconDiv.style.cssText = 'font-size:2.5rem;margin-bottom:16px;opacity:0.4;';
+    iconDiv.addClass('weave-premium-lock-icon');
     iconDiv.textContent = 'lock';
     
     const title = lockDiv.createEl('h3');
-    title.style.cssText = 'font-size:1.1rem;font-weight:600;color:var(--text-normal);margin:0 0 8px 0;';
+    title.addClass('weave-premium-lock-title');
     title.textContent = '增量阅读 - 高级功能';
     
     const desc = lockDiv.createEl('p');
-    desc.style.cssText = 'font-size:0.85rem;line-height:1.5;color:var(--text-muted);margin:0;';
+    desc.addClass('weave-premium-lock-desc');
     desc.textContent = '增量阅读是高级功能，请激活许可证后使用。';
   }
   

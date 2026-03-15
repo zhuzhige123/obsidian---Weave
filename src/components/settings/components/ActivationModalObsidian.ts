@@ -1,4 +1,5 @@
 import { Modal, App } from 'obsidian';
+import { mount, unmount } from 'svelte';
 import EnhancedActivationForm from './EnhancedActivationForm.svelte';
 import './activation-modal.css';
 
@@ -27,7 +28,7 @@ export class ActivationModal extends Modal {
     this.modalEl.addClass('weave-activation-modal');
     
     // 挂载Svelte组件
-    this.component = new EnhancedActivationForm({
+    this.component = mount(EnhancedActivationForm, {
       target: contentEl,
       props: {
         plugin: this.plugin,
@@ -48,7 +49,7 @@ export class ActivationModal extends Modal {
     
     // 销毁Svelte组件
     if (this.component) {
-      this.component.$destroy();
+      unmount(this.component);
     }
     
     contentEl.empty();

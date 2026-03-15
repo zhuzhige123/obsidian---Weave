@@ -252,7 +252,7 @@
   }
 
   .bank-title {
-    font-family: 'Playfair Display', 'Noto Serif SC', serif;
+    font-family: var(--font-text, 'Playfair Display'), 'Noto Serif SC', serif;
     font-size: 24px;
     font-weight: 700;
     text-align: center;

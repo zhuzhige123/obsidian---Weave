@@ -1,4 +1,5 @@
 import type { App } from 'obsidian';
+import { logger } from '../../utils/logger';
 import { Notice } from 'obsidian';
 import { EpubLinkService } from './EpubLinkService';
 
@@ -25,7 +26,7 @@ export class EpubScreenshotService {
 
 			return await this.captureWithSvgCanvas(sourceEl, rect);
 		} catch (e) {
-			console.error('[EpubScreenshotService] captureFromCanvas failed:', e);
+			logger.error('[EpubScreenshotService] captureFromCanvas failed:', e);
 			return null;
 		}
 	}
@@ -51,7 +52,7 @@ export class EpubScreenshotService {
 			const buffer = nativeImage.toJPEG(92);
 			return new Blob([buffer], { type: 'image/jpeg' });
 		} catch (e) {
-			console.warn('[EpubScreenshotService] Electron capture failed:', e);
+			logger.warn('[EpubScreenshotService] Electron capture failed:', e);
 			return null;
 		}
 	}
@@ -145,7 +146,7 @@ export class EpubScreenshotService {
 						img.src = url;
 					});
 				} catch (e) {
-					console.warn('[EpubScreenshotService] iframe capture failed:', e);
+					logger.warn('[EpubScreenshotService] iframe capture failed:', e);
 				}
 			}
 
@@ -153,7 +154,7 @@ export class EpubScreenshotService {
 				canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.92);
 			});
 		} catch (e) {
-			console.error('[EpubScreenshotService] SVG canvas capture failed:', e);
+			logger.error('[EpubScreenshotService] SVG canvas capture failed:', e);
 			return null;
 		}
 	}
@@ -233,7 +234,7 @@ export class EpubScreenshotService {
 
 			return '';
 		} catch (e) {
-			console.warn('[EpubScreenshotService] extractTextFromRect failed:', e);
+			logger.warn('[EpubScreenshotService] extractTextFromRect failed:', e);
 			return '';
 		}
 	}

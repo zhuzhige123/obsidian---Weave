@@ -6,9 +6,12 @@
 -->
 <script lang="ts">
   import { Notice } from 'obsidian';
+  import { tr } from '../../../utils/i18n';
   import type WeavePlugin from '../../../main';
   import type { IRTagGroup, IRTagGroupMatchSource } from '../../../types/ir-types';
   import EnhancedIcon from '../../ui/EnhancedIcon.svelte';
+
+  let t = $derived($tr);
 
   interface Props {
     plugin: WeavePlugin;
@@ -82,7 +85,7 @@
     const trimmed = tag.trim().toLowerCase();
     if (!trimmed) return;
     if (tags.includes(trimmed)) {
-      new Notice('标签已存在');
+      new Notice(t('irTagGroup.tagExists'));
       return;
     }
     tags = [...tags, trimmed];
@@ -112,11 +115,11 @@
   // 验证并保存
   function handleSave() {
     if (!name.trim()) {
-      new Notice('请输入标签组名称');
+      new Notice(t('irTagGroup.nameRequired'));
       return;
     }
     if (tags.length === 0) {
-      new Notice('请至少添加一个匹配标签');
+      new Notice(t('irTagGroup.tagRequired'));
       return;
     }
 
@@ -142,15 +145,19 @@
   }
 
   // 点击背景关闭
-  function handleOverlayClick(e: MouseEvent) {
-    if (e.target === e.currentTarget) {
-      onCancel();
-    }
+  function handleOverlayClick() {
+    onCancel();
   }
 </script>
 
-<div class="editor-overlay" onclick={handleOverlayClick}>
-  <div class="editor-dialog" onclick={(e) => e.stopPropagation()}>
+<div class="editor-overlay">
+  <button
+    type="button"
+    class="editor-backdrop"
+    aria-label={t('common.close')}
+    onclick={handleOverlayClick}
+  ></button>
+  <div class="editor-dialog" role="dialog" aria-modal="true" tabindex="-1">
     <!-- 头部 -->
     <div class="dialog-header">
       <h3>{group ? '编辑标签组' : '新建标签组'}</h3>
@@ -163,25 +170,24 @@
     <div class="dialog-body">
       <!-- 名称 -->
       <div class="form-group">
-        <label class="form-label">
-          标签组名称 <span class="required">*</span>
-        </label>
+        <div class="form-label">
+          {t('irTagGroup.editor.nameLabel')} <span class="required">*</span>
+        </div>
         <input
           type="text"
           class="form-input"
           placeholder="例如：论文、技术文档、小说..."
           bind:value={name}
-          autofocus
         />
-        <p class="form-hint">用于识别这类阅读材料的名称</p>
+        <p class="form-hint">{t('irTagGroup.editor.nameHint')}</p>
       </div>
 
       <!-- 匹配标签 -->
       <div class="form-group">
-        <label class="form-label">
-          匹配标签 <span class="required">*</span>
-        </label>
-        <p class="form-hint">文档包含任一标签即归入此组</p>
+        <div class="form-label">
+          {t('irTagGroup.editor.tagsLabel')} <span class="required">*</span>
+        </div>
+        <p class="form-hint">{t('irTagGroup.editor.tagsHint')}</p>
         
         <div class="tags-container">
           {#if tags.length > 0}
@@ -211,12 +217,13 @@
             {#if showTagSuggestions && filteredSuggestions.length > 0}
               <div class="tag-suggestions">
                 {#each filteredSuggestions as suggestion}
-                  <div
+                  <button
+                    type="button"
                     class="suggestion-item"
                     onclick={() => addTag(suggestion)}
                   >
                     {suggestion}
-                  </div>
+                  </button>
                 {/each}
               </div>
             {/if}
@@ -226,8 +233,8 @@
 
       <!-- 匹配源配置 -->
       <div class="form-group">
-        <label class="form-label">匹配源</label>
-        <p class="form-hint">选择从文档的哪些位置提取标签进行匹配</p>
+        <div class="form-label">{t('irTagGroup.editor.matchSourceLabel')}</div>
+        <p class="form-hint">{t('irTagGroup.editor.matchSourceHint')}</p>
         <div class="match-source-options">
           <label class="checkbox-label">
             <input type="checkbox" bind:checked={useYamlTags} />
@@ -235,7 +242,7 @@
           </label>
           <label class="checkbox-label">
             <input type="checkbox" bind:checked={useInlineTags} />
-            <span>内联 #标签</span>
+            <span>{t('irTagGroup.editor.inlineTags')}</span>
           </label>
           <label class="checkbox-label">
             <input
@@ -246,7 +253,7 @@
                 if (!showCustomProps) customProperties = [];
               }}
             />
-            <span>自定义 YAML 属性</span>
+            <span>{t('irTagGroup.editor.customYaml')}</span>
           </label>
         </div>
 
@@ -286,7 +293,7 @@
 
       <!-- 匹配优先级 -->
       <div class="form-group">
-        <label class="form-label">匹配优先级</label>
+        <div class="form-label">{t('irTagGroup.editor.priorityLabel')}</div>
         <div class="priority-input">
           <input
             type="range"
@@ -299,7 +306,7 @@
           <span class="priority-value">{matchPriority}</span>
         </div>
         <p class="form-hint">
-          数值越小优先级越高。当文档匹配多个标签组时，优先归入优先级高的组。
+          {t('irTagGroup.editor.priorityHint')}
         </p>
       </div>
 
@@ -307,20 +314,19 @@
       <div class="algorithm-note">
         <div class="note-title">
           <EnhancedIcon name="info" size={14} />
-          <span>调度参数说明</span>
+          <span>{t('irTagGroup.editor.algorithmNoteTitle')}</span>
         </div>
         <div class="note-content">
-          标签组创建后，系统会为其初始化默认调度参数（间隔因子=1.5）。
-          随着该组文档的学习积累，参数会通过收缩学习（shrinkage）逐渐适应该类型材料的最佳节奏。
+          {t('irTagGroup.editor.algorithmNoteContent')}
         </div>
       </div>
     </div>
 
     <!-- 底部按钮 -->
     <div class="dialog-footer">
-      <button class="btn secondary" onclick={onCancel}>取消</button>
+      <button class="btn secondary" onclick={onCancel}>{t('irTagGroup.editor.cancelBtn')}</button>
       <button class="btn primary" onclick={handleSave}>
-        {group ? '保存' : '创建'}
+        {group ? t('irTagGroup.editor.saveBtn') : t('irTagGroup.editor.createBtn')}
       </button>
     </div>
   </div>
@@ -336,6 +342,15 @@
     justify-content: center;
     z-index: var(--weave-z-overlay);
     padding: 20px;
+  }
+
+  .editor-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: default;
   }
 
   .editor-dialog {
@@ -524,6 +539,11 @@
   }
 
   .suggestion-item {
+    display: block;
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: left;
     padding: 8px 12px;
     font-size: 0.85rem;
     color: var(--text-normal);

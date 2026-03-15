@@ -5,6 +5,7 @@
   import type { Card } from '../../data/types';
   import type { StudySession } from '../../data/study-types';
   import type { WeaveDataStorage } from '../../data/storage';
+  import { tr } from '../../utils/i18n';
   interface Props {
     currentCard: Card | undefined;
     session: StudySession;
@@ -20,6 +21,8 @@
     onOpenRelationPanel,
     onOpenSourceNote
   }: Props = $props();
+
+  let t = $derived($tr);
   
   // 临时学习统计（从session派生）
   let studiedToday = $derived(session?.cardsReviewed || 0);
@@ -155,21 +158,21 @@
   <!-- 学习进度 -->
   <div class="sidebar-section">
     <div class="section-title">
-      <span>学习统计</span>
+      <span>{t('study.sidebar.studyStats')}</span>
     </div>
     
     <div class="stat-item">
-      <span class="stat-label">今日完成</span>
-      <span class="stat-value">{studiedToday} 张</span>
+      <span class="stat-label">{t('study.sidebar.completedToday')}</span>
+      <span class="stat-value">{studiedToday} {t('study.sidebar.cardsUnit')}</span>
     </div>
     
     <div class="stat-item">
-      <span class="stat-label">剩余卡片</span>
-      <span class="stat-value">{remainingCards} 张</span>
+      <span class="stat-label">{t('study.sidebar.remainingCards')}</span>
+      <span class="stat-value">{remainingCards} {t('study.sidebar.cardsUnit')}</span>
     </div>
     
     <div class="stat-item">
-      <span class="stat-label">学习进度</span>
+      <span class="stat-label">{t('study.sidebar.studyProgress')}</span>
       <span class="stat-value">
         {formatProgress(studiedToday, studiedToday + remainingCards)}
       </span>
@@ -187,18 +190,18 @@
   {#if currentCard?.sourceFile}
     <div class="sidebar-section">
       <div class="section-title">
-        <span>来源笔记</span>
+        <span>{t('study.sidebar.sourceNote')}</span>
       </div>
       
       <div 
         class="note-preview"
         onclick={onOpenSourceNote}
-        title="点击打开源笔记"
+        title={t('study.sidebar.openSourceNote')}
         role="button"
         tabindex="0"
         onkeydown={(e) => e.key === 'Enter' && onOpenSourceNote?.()}
       >
-        {currentCard.sourceFile.split('/').pop()?.replace('.md', '') || '未知笔记'}
+        {currentCard.sourceFile.split('/').pop()?.replace('.md', '') || t('study.sidebar.unknownNote')}
       </div>
     </div>
   {/if}
@@ -206,7 +209,7 @@
   <!-- 卡片关联（核心功能） -->
   <div class="sidebar-section highlight">
     <div class="section-title">
-      <span>卡片关联</span>
+      <span>{t('study.sidebar.cardRelation')}</span>
     </div>
     
     {#if currentCard}
@@ -214,12 +217,12 @@
         class="sidebar-button active"
         onclick={onOpenRelationPanel}
       >
-        <span class="button-text">卡片关联</span>
-        <span style="font-size: 0.75em; color: var(--text-faint); margin-left: 4px;">(管理|图谱)</span>
+        <span class="button-text">{t('study.sidebar.cardRelation')}</span>
+        <span style="font-size: 0.75em; color: var(--text-faint); margin-left: 4px;">{t('study.sidebar.cardRelationSub')}</span>
       </button>
     {:else}
       <div class="empty-state">
-        当前没有卡片
+        {t('study.sidebar.noCard')}
       </div>
     {/if}
   </div>
@@ -227,11 +230,11 @@
   <!-- 知识图谱（未来功能） -->
   <div class="sidebar-section">
     <div class="section-title">
-      <span>知识图谱</span>
+      <span>{t('study.sidebar.knowledgeGraph')}</span>
     </div>
     
     <button class="sidebar-button">
-      <span class="button-text">查看笔记图谱</span>
+      <span class="button-text">{t('study.sidebar.viewNoteGraph')}</span>
     </button>
     
   </div>
@@ -239,22 +242,22 @@
   <!-- 学习设置 -->
   <div class="sidebar-section">
     <div class="section-title">
-      <span>学习设置</span>
+      <span>{t('study.sidebar.studySettings')}</span>
     </div>
     
     <div class="stat-item">
-      <span class="stat-label">复习模式</span>
-      <span class="stat-value">顺序</span>
+      <span class="stat-label">{t('study.sidebar.reviewMode')}</span>
+      <span class="stat-value">{t('study.sidebar.sequential')}</span>
     </div>
     
     <div class="stat-item">
-      <span class="stat-label">自动播放</span>
-      <span class="stat-value">关闭</span>
+      <span class="stat-label">{t('study.sidebar.autoPlay')}</span>
+      <span class="stat-value">{t('study.sidebar.off')}</span>
     </div>
     
     <div class="stat-item">
-      <span class="stat-label">显示关联</span>
-      <span class="stat-value">开启</span>
+      <span class="stat-label">{t('study.sidebar.showRelation')}</span>
+      <span class="stat-value">{t('study.sidebar.on')}</span>
     </div>
   </div>
 </div>

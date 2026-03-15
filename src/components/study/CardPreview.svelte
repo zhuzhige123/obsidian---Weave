@@ -6,6 +6,7 @@
   import Icon from '../ui/Icon.svelte';
   import type { ParsedCard } from '../../types/newCardParsingTypes';
   import type { WeavePlugin } from '../../main';
+  import { tr } from '../../utils/i18n';
 
   // Props
   interface Props {
@@ -14,6 +15,8 @@
     plugin: WeavePlugin;
   }
   const { card, showAnswer = false, plugin }: Props = $props();
+
+  let t = $derived($tr);
 
   // 内部状态
   let revealedClozes = $state<Set<string>>(new Set());
@@ -117,11 +120,11 @@
   function getCardTypeLabel(type: string): string {
     switch (type) {
       case 'qa':
-        return 'Q&A 卡片';
+        return t('study.cardPreview.typeQA');
       case 'cloze':
-        return '挖空卡片';
+        return t('study.cardPreview.typeCloze');
       case 'basic':
-        return '基础卡片';
+        return t('study.cardPreview.typeBasic');
       default:
         return type;
     }
@@ -146,7 +149,7 @@
   tabindex="0"
   onkeydown={handleKeydown}
   role="button"
-  aria-label="卡片预览"
+  aria-label={t('study.cardPreview.ariaLabel')}
 >
   <!-- 卡片头部 -->
   <div class="card-header">
@@ -159,15 +162,15 @@
       </span>
       {#if hasClozes}
         <span class="cloze-counter">
-          {revealedCount}/{totalClozes} 已显示
+          {t('study.cardPreview.clozeCounter', { revealed: String(revealedCount), total: String(totalClozes) })}
         </span>
       {/if}
     </div>
     
     <div class="keyboard-hints">
-      <span class="hint">空格键: 显示答案</span>
+      <span class="hint">{t('study.cardPreview.hintShowAnswer')}</span>
       {#if hasClozes}
-        <span class="hint">H: 切换挖空</span>
+        <span class="hint">{t('study.cardPreview.hintToggleCloze')}</span>
       {/if}
     </div>
   </div>
@@ -210,7 +213,7 @@
           <div class="divider-container">
             <div class="divider-line-left"></div>
             <div class="divider-content">
-              <span class="divider-text">答案解析</span>
+              <span class="divider-text">{t('study.cardPreview.answerDivider')}</span>
             </div>
             <div class="divider-line-right"></div>
           </div>
@@ -244,12 +247,12 @@
           class="action-button primary"
           onclick={() => internalShowBack = !internalShowBack}
         >
-          {showBack ? '隐藏挖空答案' : '显示挖空答案'}
+          {showBack ? t('study.cardPreview.hideClozeAnswers') : t('study.cardPreview.showClozeAnswers')}
         </button>
       {:else}
         <div class="empty-state-inline">
           <Icon name="alert-circle" size={20} />
-          <span>未检测到挖空标记</span>
+          <span>{t('study.cardPreview.noClozeMarks')}</span>
         </div>
       {/if}
     {:else}
@@ -261,9 +264,9 @@
           disabled={!hasClozes}
         >
           {#if allRevealed}
-            隐藏答案
+            {t('study.cardPreview.hideAnswers')}
           {:else}
-            显示答案 ({revealedCount}/{totalClozes})
+            {t('study.cardPreview.showAnswers', { revealed: String(revealedCount), total: String(totalClozes) })}
           {/if}
         </button>
       {/if}
@@ -273,14 +276,14 @@
           class="action-button secondary"
           onclick={toggleBack}
         >
-          {showBack ? '隐藏' : '显示'}背面
+          {showBack ? t('study.cardPreview.hideBack') : t('study.cardPreview.showBack')}
         </button>
       {/if}
     {/if}
 
     {#if !hasClozes && !hasBack}
       <div class="no-actions">
-        <span class="no-actions-text">无交互内容</span>
+        <span class="no-actions-text">{t('study.cardPreview.noInteractiveContent')}</span>
       </div>
     {/if}
   </div>
@@ -290,17 +293,17 @@
     <div class="card-metadata">
       {#if card.metadata.sourceContent}
         <span class="metadata-item">
-          来源: {card.metadata.sourceContent.substring(0, 50)}...
+          {t('study.cardPreview.metaSource', { text: card.metadata.sourceContent.substring(0, 50) + '...' })}
         </span>
       {/if}
       {#if card.metadata.parseMethod}
         <span class="metadata-item">
-          解析方式: {card.metadata.parseMethod}
+          {t('study.cardPreview.metaParseMethod', { method: card.metadata.parseMethod })}
         </span>
       {/if}
       {#if card.metadata.confidence}
         <span class="metadata-item">
-          置信度: {Math.round(card.metadata.confidence * 100)}%
+          {t('study.cardPreview.metaConfidence', { value: String(Math.round(card.metadata.confidence * 100)) })}
         </span>
       {/if}
     </div>
@@ -452,10 +455,6 @@
     z-index: 1;
   }
 
-  .divider-icon {
-    font-size: 1.2rem;
-    animation: iconPulse 2s ease-in-out infinite;
-  }
 
   .divider-text {
     font-size: var(--font-ui-small, 0.875rem);
@@ -624,9 +623,6 @@
       font-size: var(--font-ui-smaller, 0.75rem);
     }
 
-    .divider-icon {
-      font-size: 1rem;
-    }
   }
 
   /* 减少动画偏好 */
@@ -640,9 +636,6 @@
       animation: none;
     }
 
-    .divider-icon {
-      animation: none;
-    }
   }
 
   /* 打印样式 */

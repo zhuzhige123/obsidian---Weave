@@ -226,6 +226,12 @@
     }
   }
 
+  function handleOverlayKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      onClose();
+    }
+  }
+
   // 触摸滑动关闭
   let touchStartY = 0;
   let sheetElement = $state<HTMLElement | null>(null);
@@ -257,8 +263,10 @@
     class="mobile-sheet-overlay" 
     class:active={show}
     onclick={handleOverlayClick}
+    onkeydown={handleOverlayKeydown}
     role="dialog"
     aria-modal="true"
+    tabindex="-1"
   >
     <div 
       class="mobile-bottom-sheet"
@@ -682,7 +690,7 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-accent);
-    font-family: 'SF Mono', 'Menlo', monospace;
+    font-family: var(--font-monospace, 'SF Mono', 'Menlo', monospace);
   }
 
   .timer-label {
@@ -1006,15 +1014,6 @@
   .setting-desc {
     font-size: 0.75rem;
     color: var(--text-muted);
-  }
-
-  .setting-select {
-    padding: 0.25rem 0.5rem;
-    background: var(--background-secondary);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 0.25rem;
-    color: var(--text-normal);
-    font-size: 0.8125rem;
   }
 
   /* ==================== AI菜单样式 ==================== */

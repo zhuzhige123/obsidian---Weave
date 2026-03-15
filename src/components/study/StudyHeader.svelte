@@ -6,6 +6,7 @@
   import type { StudySession } from "../../data/study-types";
   import type { Card } from "../../data/types";
   import { onMount } from "svelte";
+  import { tr } from '../../utils/i18n';
 
   interface Props {
     currentDeckName: string;
@@ -49,6 +50,8 @@
   let hasMultipleReferences = $derived(referencedDecks.length > 1);
 
   // 🆕 检测是否为移动端（Obsidian 移动端会添加 is-phone 或 is-mobile 类）
+  let t = $derived($tr);
+
   let isMobile = $state(false);
   
   onMount(() => {
@@ -63,9 +66,9 @@
   <!--  桌面端布局 -->
   <div class="header-left">
     <div class="deck-info">
-      <h2 class="study-title">{currentDeckName || '学习'}</h2>
+      <h2 class="study-title">{currentDeckName || t('study.header.defaultTitle')}</h2>
       {#if hasMultipleReferences}
-        <span class="multi-deck-badge" title="此卡片被多个牌组引用: {referencedDecks.map(d => d.name).join(', ')}">
+        <span class="multi-deck-badge" title={t('study.header.multiDeckBadge', { decks: referencedDecks.map(d => d.name).join(', ') })}>
           +{referencedDecks.length - 1}
         </span>
       {/if}
@@ -79,9 +82,9 @@
   <!-- 中间：多彩彩色圆点（复用主界面设计） -->
   <div class="header-center">
     <div class="header-dots-container">
-      <span class="header-dot" style="background: linear-gradient(135deg, #ef4444, #dc2626)" title="增量阅读"></span>
-      <span class="header-dot" style="background: linear-gradient(135deg, #3b82f6, #2563eb)" title="记忆牌组"></span>
-      <span class="header-dot" style="background: linear-gradient(135deg, #10b981, #059669)" title="考试牌组"></span>
+      <span class="header-dot" style="background: linear-gradient(135deg, #ef4444, #dc2626)" title={t('study.header.dotReading')}></span>
+      <span class="header-dot" style="background: linear-gradient(135deg, #3b82f6, #2563eb)" title={t('study.header.dotMemory')}></span>
+      <span class="header-dot" style="background: linear-gradient(135deg, #10b981, #059669)" title={t('study.header.dotExam')}></span>
     </div>
   </div>
 
@@ -90,7 +93,7 @@
     <EnhancedButton
       variant="ghost"
       onclick={onToggleSourceInfo}
-      ariaLabel={sourceInfoCollapsed ? "展开来源信息" : "收起来源信息"}
+      ariaLabel={sourceInfoCollapsed ? t('study.header.expandSourceInfo') : t('study.header.collapseSourceInfo')}
       class="weave-topbar-btn source-info-toggle-btn"
     >
       <EnhancedIcon name={sourceInfoCollapsed ? "book-open" : "book-open"} size="18" />
@@ -100,7 +103,7 @@
     <EnhancedButton
       variant="ghost"
       onclick={onToggleStats}
-      ariaLabel={statsCollapsed ? "展开统计" : "收起统计"}
+      ariaLabel={statsCollapsed ? t('study.header.expandStats') : t('study.header.collapseStats')}
       class="weave-topbar-btn stats-toggle-btn"
     >
       <EnhancedIcon name={statsCollapsed ? "chevron-down" : "chevron-up"} size="18" />
@@ -110,14 +113,14 @@
     <EnhancedButton
       variant="ghost"
       onclick={onToggleSidebar}
-      ariaLabel={showSidebar ? "隐藏侧边栏" : "显示侧边栏"}
+      ariaLabel={showSidebar ? t('study.header.hideSidebar') : t('study.header.showSidebar')}
       class="weave-topbar-btn sidebar-toggle-btn"
     >
       <EnhancedIcon name={showSidebar ? "sidebar-close" : "sidebar-open"} size="18" />
     </EnhancedButton>
 
     <!-- 关闭按钮 -->
-    <EnhancedButton variant="ghost" onclick={onClose} ariaLabel="关闭" class="weave-topbar-btn close-btn">
+    <EnhancedButton variant="ghost" onclick={onClose} ariaLabel={t('study.header.close')} class="weave-topbar-btn close-btn">
       <EnhancedIcon name="times" size="18" />
     </EnhancedButton>
   </div>

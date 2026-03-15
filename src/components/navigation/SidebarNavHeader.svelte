@@ -17,9 +17,6 @@
   import { onMount, onDestroy } from 'svelte';
   import ObsidianIcon from '../ui/ObsidianIcon.svelte';
   import { tr } from '../../utils/i18n';
-  import { WeaveMenuRegistry } from '../../services/plugin-system/WeaveMenuRegistry';
-  import type { InstalledPluginInfo } from '../../services/plugin-system/WeaveMenuRegistry';
-  import type { WeaveMenuRegistration } from '../../types/weave-plugin-types';
   import { PremiumFeatureGuard, PREMIUM_FEATURES } from '../../services/premium/PremiumFeatureGuard';
 
   // 牌组学习页面的筛选类型
@@ -187,117 +184,64 @@
       menu.addSeparator();
     }
 
-    // 🆕 更多操作分组（直接展开，不使用子菜单）
-    menu.addItem((item) => {
-      item
-        .setTitle('旧版APKG格式导入')
-        .setIcon('package')
-        .onClick(() => {
-          const event = new CustomEvent('apkg-import', { detail: { event: evt } });
-          document.dispatchEvent(event);
-        });
-    });
-
-    menu.addItem((item) => {
-      item
-        .setTitle('导入CSV文件')
-        .setIcon('file-text')
-        .onClick(() => {
-          const event = new CustomEvent('csv-import', { detail: { event: evt } });
-          document.dispatchEvent(event);
-        });
-    });
-
-    menu.addSeparator();
-
-    // 操作管理子菜单
-    menu.addItem((item) => {
-      item.setTitle('操作管理').setIcon('more-horizontal');
-      const operationSub = (item as any).setSubmenu();
-
-      operationSub.addItem((subItem: any) => {
-        subItem
-          .setTitle('恢复官方教程牌组')
-          .setIcon('book-open')
-          .onClick(() => {
-            document.dispatchEvent(new CustomEvent('Weave:restore-guide-deck'));
-          });
-      });
-    });
-
-    // 设置
-    menu.addItem((item) => {
-      item
-        .setTitle('设置')
-        .setIcon('settings')
-        .onClick(() => {
-          document.dispatchEvent(new CustomEvent('Weave:open-settings'));
-        });
-    });
-
-    // 插件管理（子菜单列出已安装的第三方插件）
-    if (installedPlugins.length > 0) {
-      menu.addSeparator();
+    // 仅在牌组学习页面显示这些操作。
+    // 它们的事件监听当前挂在 DeckStudyPage 中，在其他页面显示会造成“点击无反应”的误导。
+    if (currentPage === 'deck-study') {
       menu.addItem((item) => {
         item
-          .setTitle('插件管理')
-          .setIcon('puzzle');
-        const sub = (item as any).setSubmenu();
-
-        for (const p of installedPlugins) {
-          const reg = pluginMenuRegistrations.find(r => r.pluginId === p.id);
-          const hasMenuItems = reg && reg.categories.length > 0;
-
-          sub.addItem((pluginItem: any) => {
-            const label = p.name + (p.state === 'enabled' ? '' : ' (已禁用)');
-            pluginItem
-              .setTitle(label)
-              .setIcon(p.configurable ? 'settings' : 'puzzle');
-
-            if (p.state !== 'enabled') {
-              pluginItem.setDisabled(true);
-              return;
-            }
-
-            // 有注册菜单项：用子菜单展示所有操作
-            if (hasMenuItems) {
-              const innerSub = pluginItem.setSubmenu();
-              // 可配置插件在子菜单顶部加入"打开配置"
-              if (p.configurable) {
-                innerSub.addItem((cfgItem: any) => {
-                  cfgItem
-                    .setTitle('打开配置')
-                    .setIcon('settings')
-                    .onClick(() => {
-                      document.dispatchEvent(new CustomEvent('Weave:open-plugin-config', { detail: { pluginId: p.id } }));
-                    });
-                });
-                if (reg) innerSub.addSeparator();
-              }
-              if (reg) {
-                for (const cat of reg.categories) {
-                  for (const action of cat.items) {
-                    innerSub.addItem((actionItem: any) => {
-                      actionItem
-                        .setTitle(action.label)
-                        .setIcon(action.icon || 'chevron-right')
-                        .onClick(() => {
-                          try { action.callback(); } catch (e) { console.error('[PluginMenu]', e); }
-                        });
-                    });
-                  }
-                }
-              }
-            } else if (p.configurable) {
-              // 仅可配置、无注册菜单项：直接点击打开配置
-              pluginItem.onClick(() => {
-                document.dispatchEvent(new CustomEvent('Weave:open-plugin-config', { detail: { pluginId: p.id } }));
-              });
-            } else {
-              pluginItem.setDisabled(true);
-            }
+          .setTitle('旧版APKG格式导入')
+          .setIcon('package')
+          .onClick(() => {
+            const event = new CustomEvent('apkg-import', { detail: { event: evt } });
+            document.dispatchEvent(event);
           });
-        }
+      });
+
+      menu.addItem((item) => {
+        item
+          .setTitle('导入CSV文件')
+          .setIcon('file-text')
+          .onClick(() => {
+            const event = new CustomEvent('csv-import', { detail: { event: evt } });
+            document.dispatchEvent(event);
+          });
+      });
+
+      menu.addItem((item) => {
+        item
+          .setTitle('粘贴卡片批量导入')
+          .setIcon('clipboard-paste')
+          .onClick(() => {
+            const event = new CustomEvent('clipboard-import', { detail: { event: evt } });
+            document.dispatchEvent(event);
+          });
+      });
+
+      menu.addSeparator();
+
+      // 操作管理子菜单
+      menu.addItem((item) => {
+        item.setTitle('操作管理').setIcon('more-horizontal');
+        const operationSub = (item as any).setSubmenu();
+
+        operationSub.addItem((subItem: any) => {
+          subItem
+            .setTitle('恢复官方教程牌组')
+            .setIcon('book-open')
+            .onClick(() => {
+              document.dispatchEvent(new CustomEvent('Weave:restore-guide-deck'));
+            });
+        });
+      });
+
+      // 设置
+      menu.addItem((item) => {
+        item
+          .setTitle('设置')
+          .setIcon('settings')
+          .onClick(() => {
+            document.dispatchEvent(new CustomEvent('Weave:open-settings'));
+          });
       });
     }
 
@@ -330,24 +274,6 @@
     return `background: linear-gradient(135deg, ${colorStart}, ${colorEnd})`;
   }
 
-  // ===== 插件菜单注册表 + 已安装插件列表 =====
-  let pluginMenuRegistrations = $state<WeaveMenuRegistration[]>([]);
-  let installedPlugins = $state<InstalledPluginInfo[]>([]);
-  let unsubMenuChange: (() => void) | null = null;
-
-  function refreshPluginData() {
-    pluginMenuRegistrations = WeaveMenuRegistry.getAll();
-    installedPlugins = WeaveMenuRegistry.getInstalledPlugins();
-  }
-
-  onMount(() => {
-    refreshPluginData();
-    unsubMenuChange = WeaveMenuRegistry.onChange(refreshPluginData);
-  });
-
-  onDestroy(() => {
-    if (unsubMenuChange) unsubMenuChange();
-  });
 
 </script>
 
@@ -548,10 +474,6 @@
       opacity: 1;
       transform: translate(-50%, -50%) scale(1);
     }
-  }
-
-  .sidebar-header-spacer {
-    display: none;
   }
 
   .sidebar-header-actions {

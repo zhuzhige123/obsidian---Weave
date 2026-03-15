@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { DesignTokens } from '../../design/tokens';
   import type { ButtonVariant, ButtonSize } from './index';
 
@@ -10,6 +11,7 @@
     loading?: boolean;
     fullWidth?: boolean;
     onclick?: (event?: MouseEvent) => void;
+    children?: Snippet;
   }
   const {
     variant = 'primary',
@@ -17,7 +19,8 @@
     disabled = false,
     loading = false,
     fullWidth = false,
-    onclick
+    onclick,
+    children
   }: Props = $props();
 
   // 内部状态
@@ -83,7 +86,7 @@
     <span class="loading-spinner" aria-hidden="true"></span>
   {/if}
   <span class="button-content" class:loading>
-    <slot />
+    {#if children}{@render children()}{/if}
   </span>
 </button>
 
@@ -96,7 +99,7 @@
     gap: 0.5rem;
     border: 1px solid transparent;
     border-radius: var(--weave-radius-md);
-    font-family: var(--weave-font-sans);
+    font-family: var(--weave-font-sans, var(--font-interface));
     font-weight: 500;
     text-align: center;
     text-decoration: none;

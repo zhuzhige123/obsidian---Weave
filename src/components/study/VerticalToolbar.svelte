@@ -38,6 +38,8 @@
     onRemoveFromDeck?: () => void; // 🆕 v2.0 从牌组移除（引用式牌组系统）
     onSetReminder?: () => void;
     onChangePriority?: () => void;
+    onReminderAnchorChange?: (element: HTMLElement | null) => void;
+    onPriorityAnchorChange?: (element: HTMLElement | null) => void;
     onChangeDeck?: (deckId: string) => void | Promise<void>;
     onOpenPlainEditor?: () => void;
     onAIFormatCustom?: (actionId: string) => void;
@@ -66,10 +68,15 @@
     onGraphLeafChange?: (leaf: any) => void; //  传递graphSyncLeaf引用
     //  高级功能控制 - 插件未激活时隐藏AI助手和原文功能
     isPremium?: boolean;
+    timerAutoPauseSeconds?: number;
+    onTimerAutoPauseChange?: (seconds: number) => void;
+    hintMaxUses?: number;
+    onHintMaxUsesChange?: (value: number) => void;
     //  卡片关联 - 功能已移除，保留接口定义以便将来作为第三方插件实现
     // onOpenRelationPanel?: () => void;
     // onOpenRelationGraph?: () => void;
     // relationCount?: number;
+    onPanelOpen?: () => void;
   }
 
   // 来源信息接口
@@ -94,6 +101,8 @@
     onRemoveFromDeck, // 🆕 v2.0 从牌组移除
     onSetReminder,
     onChangePriority,
+    onReminderAnchorChange,
+    onPriorityAnchorChange,
     onChangeDeck,
     onOpenPlainEditor,
     onAIFormatCustom,
@@ -126,6 +135,11 @@
     // onOpenRelationPanel,
     // onOpenRelationGraph,
     // relationCount = 0,
+    timerAutoPauseSeconds = 60,
+    onTimerAutoPauseChange,
+    hintMaxUses = 5,
+    onHintMaxUsesChange,
+    onPanelOpen,
   }: Props = $props();
 
   //  响应式翻译函数
@@ -228,10 +242,20 @@
     return Math.min(Math.max(priority, 1), 4);
   }
 
+  let reminderButtonElement: HTMLElement | null = $state(null);
+  let priorityButtonElement: HTMLElement | null = $state(null);
+
+  $effect(() => {
+    onReminderAnchorChange?.(reminderButtonElement);
+  });
+
+  $effect(() => {
+    onPriorityAnchorChange?.(priorityButtonElement);
+  });
+
   // 牌组切换功能
   let showDeckMenu = $state(false);
   let deckButtonElement: HTMLElement | null = $state(null);
-  let lastDeckMenuPosition: { x: number; y: number } | null = $state(null);
   
   //  关联菜单功能 - 已移除
   // let showRelationMenu = $state(false);
@@ -280,14 +304,14 @@
   let overflowTabs = $state<string[]>([]);
   
   // 所有标签定义
-  const allTabs = [
-    { id: 'core', label: '核心特性' },
-    { id: 'basics', label: '基础格式' },
-    { id: 'ai', label: 'AI助手' },
-    { id: 'progressive', label: '渐进式挖空' },
-    { id: 'priority', label: '卡片优先级' },
-    { id: 'queue', label: '学习队列' }
-  ] as const;
+  const allTabs = $derived([
+    { id: 'core' as const, label: t('toolbar.tabCore') },
+    { id: 'basics' as const, label: t('toolbar.tabBasics') },
+    { id: 'ai' as const, label: t('toolbar.tabAI') },
+    { id: 'progressive' as const, label: t('toolbar.tabProgressive') },
+    { id: 'priority' as const, label: t('toolbar.tabPriority') },
+    { id: 'queue' as const, label: t('toolbar.tabQueue') }
+  ]);
 
   // 🆕 AI助手菜单构建器
   let aiAssistantMenuBuilder: AIAssistantMenuBuilder | null = $state(null);
@@ -327,70 +351,14 @@
   });
 
   function toggleDeckMenu() {
-    showDeckMenu = !showDeckMenu;
-  }
-
-  /**
-   * 🆕 使用Obsidian原生Menu API显示牌组列表
-   * 靠左显示，与其他Obsidian菜单风格一致
-   */
-  function handleDeckMenuClick(evt: MouseEvent) {
     if (!decks || decks.length === 0) {
-      new Notice('没有可用的牌组');
+      new Notice(t('toolbar.noDecksAvailable'));
       return;
     }
 
-    const rect = (evt.currentTarget as HTMLElement).getBoundingClientRect();
-    lastDeckMenuPosition = { x: rect.left, y: rect.bottom + 4 };
-
-    showDeckMultiSelectMenu();
-  }
-
-  function showDeckMultiSelectMenu() {
-    if (!decks || decks.length === 0) return;
-    if (!card) return;
-
-    if (!lastDeckMenuPosition) {
-      lastDeckMenuPosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-    }
-
-    const { deckIds } = getCardDeckIds(card, decks);
-    const selectedDeckIds = new Set(deckIds);
-
-    const menu = new Menu();
-
-    menu.addItem((item) => {
-      item
-        .setTitle('设置卡片所属牌组')
-        .setDisabled(true);
-    });
-
-    menu.addSeparator();
-
-    decks.forEach((deck) => {
-      const indentLevel = deck.level || 0;
-      const prefix = indentLevel > 0 ? '  '.repeat(indentLevel) + '└ ' : '';
-      const isSelected = selectedDeckIds.has(deck.id);
-
-      menu.addItem((item) => {
-        item.setTitle(prefix + deck.name);
-        item.setIcon(isSelected ? 'check-square' : 'square');
-
-        item.onClick(async () => {
-          if (onChangeDeck) {
-            await Promise.resolve(onChangeDeck(deck.id));
-          }
-
-          if (lastDeckMenuPosition) {
-            setTimeout(() => {
-              showDeckMultiSelectMenu();
-            }, 0);
-          }
-        });
-      });
-    });
-
-    menu.showAtPosition(lastDeckMenuPosition);
+    const next = !showDeckMenu;
+    closeAllPanels();
+    showDeckMenu = next;
   }
   
   //  关联功能已移除 - 以下函数已注释
@@ -438,7 +406,7 @@
 
   // 多功能信息键相关函数
   function toggleMultiInfoMenu() {
-    showMultiInfoMenu = !showMultiInfoMenu;
+    const next = !showMultiInfoMenu; closeAllPanels(); showMultiInfoMenu = next;
   }
 
   // 🆕 源块文本浮窗相关函数
@@ -447,7 +415,7 @@
       // 打开时加载源块内容
       loadSourceBlockContent();
     }
-    showSourceBlockMenu = !showSourceBlockMenu;
+    const next = !showSourceBlockMenu; closeAllPanels(); showSourceBlockMenu = next;
   }
 
   /**
@@ -457,7 +425,7 @@
   async function loadSourceBlockContent() {
     //  v2.1 修复：使用响应式 sourceInfo 从 content YAML 获取来源
     if (!sourceInfo.sourceFile || !plugin) {
-      sourceBlockError = '该卡片没有关联的源文档';
+      sourceBlockError = t('toolbar.noSourceDoc');
       return;
     }
 
@@ -472,7 +440,7 @@
       const linkText = sourceInfo.sourceFile.replace(/\.md$/, '');
       const file = plugin.app.metadataCache.getFirstLinkpathDest(linkText, contextPath);
       if (!file) {
-        sourceBlockError = '源文档不存在或已被删除';
+        sourceBlockError = t('toolbar.sourceDocDeleted');
         isLoadingSourceBlock = false;
         return;
       }
@@ -499,7 +467,7 @@
       }
 
       if (targetLine === -1) {
-        sourceBlockError = `未找到块引用 ^${blockId}`;
+        sourceBlockError = t('toolbar.blockRefNotFound', { blockId });
         isLoadingSourceBlock = false;
         return;
       }
@@ -526,7 +494,7 @@
       renderSourceBlockContents();
     } catch (error) {
       logger.error('[VerticalToolbar] 加载源块内容失败:', error);
-      sourceBlockError = '读取源文档失败';
+      sourceBlockError = t('toolbar.readSourceFailed');
       isLoadingSourceBlock = false;
     }
   }
@@ -537,7 +505,7 @@
   function copySourceBlockContent() {
     if (sourceBlockContent) {
       navigator.clipboard.writeText(sourceBlockContent);
-      new Notice('已复制源块内容');
+      new Notice(t('toolbar.copiedSourceBlock'));
     }
   }
 
@@ -657,8 +625,10 @@
   });
 
   // 更多设置相关函数
+  function closeAllPanels() { showMultiInfoMenu = false; showSourceBlockMenu = false; showMoreSettingsMenu = false; showTutorialMenu = false; showDeckMenu = false; onPanelOpen?.(); }
+
   function toggleMoreSettingsMenu() {
-    showMoreSettingsMenu = !showMoreSettingsMenu;
+    const next = !showMoreSettingsMenu; closeAllPanels(); showMoreSettingsMenu = next;
   }
 
   //  AI助手按钮点击处理（Store自动保持最新数据）
@@ -670,7 +640,7 @@
 
   // 🆕 教程菜单相关函数
   function toggleTutorialMenu() {
-    showTutorialMenu = !showTutorialMenu;
+    const next = !showTutorialMenu; closeAllPanels(); showTutorialMenu = next;
   }
 
   function switchTab(tab: 'core' | 'basics' | 'ai' | 'progressive' | 'priority' | 'queue') {
@@ -799,12 +769,12 @@
       const { EpubLinkService } = await import('../../services/epub/EpubLinkService');
       const linkService = new EpubLinkService(plugin.app);
       await linkService.navigateToEpubLocation(file.path, '', '');
-      new Notice('已打开EPUB源文档');
+      new Notice(t('toolbar.openedEpub'));
       showMultiInfoMenu = false;
       return;
     }
     
-    plugin.app.workspace.openLinkText(linkText, contextPath, true);
+    plugin.app.workspace.openLinkText(linkText, contextPath, 'tab');
     showMultiInfoMenu = false;
   }
 
@@ -838,13 +808,13 @@
         const { EpubLinkService } = await import('../../services/epub/EpubLinkService');
         const linkService = new EpubLinkService(plugin.app);
         await linkService.navigateToEpubLocation(file.path, '', '');
-        new Notice('已打开EPUB源文档');
+        new Notice(t('toolbar.openedEpub'));
         showMultiInfoMenu = false;
         return;
       }
       
       // 使用 Obsidian 原生 API 跳转，自动处理文件查找和块定位
-      await plugin.app.workspace.openLinkText(linkText, contextPath, true);
+      await plugin.app.workspace.openLinkText(linkText, contextPath, 'tab');
       showMultiInfoMenu = false;
     } catch (error) {
       logger.error('跳转到块引用失败:', error);
@@ -914,7 +884,7 @@
   }
 
   function formatDateTime(dateStr: string | undefined): string {
-    if (!dateStr) return '未知';
+    if (!dateStr) return t('toolbar.unknown');
     try {
       const date = new Date(dateStr);
       return date.toLocaleString('zh-CN', {
@@ -925,29 +895,29 @@
         minute: '2-digit'
       });
     } catch {
-      return '格式错误';
+      return t('toolbar.formatError');
     }
   }
 
   // 格式化时间间隔（天数）
   function formatInterval(days: number | undefined): string {
-    if (days === undefined || days === null) return '未知';
-    if (days < 1) return '少于1天';
-    if (days === 1) return '1天';
-    if (days < 30) return `${Math.round(days)}天`;
-    if (days < 365) return `${Math.round(days / 30)}个月`;
-    return `${Math.round(days / 365)}年`;
+    if (days === undefined || days === null) return t('toolbar.unknown');
+    if (days < 1) return t('toolbar.lessThanOneDay');
+    if (days === 1) return t('toolbar.daysUnit', { n: 1 });
+    if (days < 30) return t('toolbar.daysUnit', { n: Math.round(days) });
+    if (days < 365) return t('toolbar.monthsUnit', { n: Math.round(days / 30) });
+    return t('toolbar.yearsUnit', { n: Math.round(days / 365) });
   }
 
   // 获取卡片状态文本
   function getCardStateText(state: number): string {
     const stateMap: Record<number, string> = {
-      0: '新卡片',
-      1: '学习中',
-      2: '复习中',
-      3: '重学中'
+      0: t('toolbar.stateNew'),
+      1: t('toolbar.stateLearning'),
+      2: t('toolbar.stateReview'),
+      3: t('toolbar.stateRelearning')
     };
-    return stateMap[state] || '未知';
+    return stateMap[state] || t('toolbar.stateUnknown');
   }
 
   // 获取当前牌组名称 - 优先从 content YAML 获取
@@ -1023,7 +993,7 @@
       const currentLeaf = plugin.app.workspace.activeLeaf;
       if (!currentLeaf) {
         logger.error('[图谱联动] 未找到当前StudyView的leaf');
-        new Notice('未找到学习视图');
+        new Notice(t('toolbar.studyViewNotFound'));
         return false;
       }
       
@@ -1102,7 +1072,7 @@
     <!-- 平均用时 -->
     <div class="timer-display avg-timer">
       <span class="timer-text">{formatTime(averageTime)}</span>
-      <div class="timer-label">平均用时</div>
+      <div class="timer-label">{t('toolbar.avgTime')}</div>
     </div>
   </div>
 
@@ -1125,10 +1095,10 @@
       onmousedown={(e) => handleButtonLongPressStart(e, e.currentTarget)}
       onmouseup={handleButtonDragEnd}
       ontouchstart={(e) => handleButtonLongPressStart(e, e.currentTarget)}
-      title={isEditing ? "保存并预览（长按拖拽调整位置）" : "编辑卡片（长按拖拽调整位置）"}
+      title={isEditing ? t('toolbar.saveAndPreview') + '（' + t('toolbar.longPressDrag') + '）' : t('toolbar.editCard') + '（' + t('toolbar.longPressDrag') + '）'}
     >
       <EnhancedIcon name={isEditing ? "eye" : "edit"} size="18" />
-      <span class="btn-label">{isEditing ? "预览" : "编辑"}</span>
+      <span class="btn-label">{isEditing ? t('toolbar.preview') : t('toolbar.edit')}</span>
     </button>
 
 
@@ -1144,10 +1114,10 @@
       <button
         class="toolbar-btn plain-editor-btn"
         onclick={onOpenPlainEditor}
-        title="普通文本编辑器"
+        title={t('toolbar.plainTextEditor')}
       >
         <EnhancedIcon name="fileText" size="18" />
-        <span class="btn-label">文本编辑</span>
+        <span class="btn-label">{t('toolbar.textEdit')}</span>
       </button>
     {/if}
 
@@ -1158,10 +1128,10 @@
       onmousedown={(e) => handleButtonLongPressStart(e, e.currentTarget)}
       onmouseup={handleButtonDragEnd}
       ontouchstart={(e) => handleButtonLongPressStart(e, e.currentTarget)}
-      title={enableDirectDelete ? "直接删除卡片（长按拖拽调整位置）" : "删除卡片（长按拖拽调整位置）"}
+      title={enableDirectDelete ? t('toolbar.directDeleteCard') + '（' + t('toolbar.longPressDrag') + '）' : t('toolbar.deleteCard') + '（' + t('toolbar.longPressDrag') + '）'}
     >
       <EnhancedIcon name="delete" size="18" />
-      <span class="btn-label">删除</span>
+      <span class="btn-label">{t('toolbar.delete')}</span>
     </button>
 
     <!-- 🆕 v2.0 从牌组移除（引用式牌组系统） -->
@@ -1169,40 +1139,42 @@
       <button
         class="toolbar-btn remove-from-deck-btn"
         onclick={onRemoveFromDeck}
-        title="从当前牌组移除（保留卡片数据）"
+        title={t('toolbar.removeFromDeck')}
       >
         <EnhancedIcon name="unlink" size="18" />
-        <span class="btn-label">移除</span>
+        <span class="btn-label">{t('toolbar.remove')}</span>
       </button>
     {/if}
 
     <!-- 提醒 -->
     <button
+      bind:this={reminderButtonElement}
       class="toolbar-btn reminder-btn"
-      onclick={onSetReminder}
+      onclick={() => { closeAllPanels(); onSetReminder?.(); }}
       onmousedown={(e) => handleButtonLongPressStart(e, e.currentTarget)}
       onmouseup={handleButtonDragEnd}
       ontouchstart={(e) => handleButtonLongPressStart(e, e.currentTarget)}
-      title="设置提醒（长按拖拽调整位置）"
+      title={t('toolbar.setReminder') + '（' + t('toolbar.longPressDrag') + '）'}
     >
       <EnhancedIcon name="bell" size="18" />
-      <span class="btn-label">提醒</span>
+      <span class="btn-label">{t('toolbar.reminder')}</span>
     </button>
 
     <!-- 优先级 -->
     <button
+      bind:this={priorityButtonElement}
       class="toolbar-btn priority-btn"
-      onclick={onChangePriority}
+      onclick={() => { closeAllPanels(); onChangePriority?.(); }}
       onmousedown={(e) => handleButtonLongPressStart(e, e.currentTarget)}
       onmouseup={handleButtonDragEnd}
       ontouchstart={(e) => handleButtonLongPressStart(e, e.currentTarget)}
-      title="设置优先级（长按拖拽调整位置）"
+      title={t('toolbar.setPriority') + '（' + t('toolbar.longPressDrag') + '）'}
       style="color: {getPriorityColor(card.priority || 2)}"
     >
       <div class="priority-indicator">
         {'!'.repeat(Math.min(card.priority || 2, 3))}
       </div>
-      <span class="btn-label">优先级</span>
+      <span class="btn-label">{t('toolbar.priority')}</span>
     </button>
 
     <!-- 🆕 AI助手 - 统一AI功能入口（高级功能，需激活） -->
@@ -1213,10 +1185,10 @@
         onmousedown={(e) => handleButtonLongPressStart(e, e.currentTarget)}
         onmouseup={handleButtonDragEnd}
         ontouchstart={(e) => handleButtonLongPressStart(e, e.currentTarget)}
-        title="AI助手（长按拖拽调整位置）"
+        title={t('toolbar.aiAssistant') + '（' + t('toolbar.longPressDrag') + '）'}
       >
         <EnhancedIcon name="robot" size="18" />
-        <span class="btn-label">AI助手</span>
+        <span class="btn-label">{t('toolbar.aiAssistant')}</span>
       </button>
     {/if}
 
@@ -1230,15 +1202,15 @@
       onmouseup={handleButtonDragEnd}
       ontouchstart={(e) => handleButtonLongPressStart(e, e.currentTarget)}
       title={isGraphLinked 
-        ? t('toolbar.graphLinkEnabled') + '（长按拖拽调整位置）'
+        ? t('toolbar.graphLinkEnabled') + '（' + t('toolbar.longPressDrag') + '）'
         : hasSourceFile 
-          ? t('toolbar.graphLinkDisabled') + ' (有来源文档，长按拖拽调整位置)'
-          : t('toolbar.graphLinkDisabled') + ' (无来源文档，长按拖拽调整位置)'}
+          ? t('toolbar.graphLinkDisabled') + ' (' + t('toolbar.hasSourceDoc') + ', ' + t('toolbar.longPressDrag') + ')'
+          : t('toolbar.graphLinkDisabled') + ' (' + t('toolbar.noSourceDocShort') + ', ' + t('toolbar.longPressDrag') + ')'}
     >
       <div class="btn-icon-wrapper">
         <EnhancedIcon name="link" size="18" />
         {#if hasSourceFile}
-          <span class="source-indicator" title="该卡片有来源文档，可查看局部知识图谱"></span>
+          <span class="source-indicator" title={t('toolbar.sourceIndicatorTip')}></span>
         {/if}
       </div>
       <span class="btn-label">{t('toolbar.graphLink')}</span>
@@ -1253,12 +1225,68 @@
         bind:this={deckButtonElement}
         class="toolbar-btn deck-btn"
         class:active={showDeckMenu}
-        onclick={handleDeckMenuClick}
-        title="更换牌组"
+        onclick={toggleDeckMenu}
+        title={t('toolbar.changeDeck')}
       >
         <EnhancedIcon name="folder" size="18" />
-        <span class="btn-label">牌组</span>
+        <span class="btn-label">{t('toolbar.deck')}</span>
       </button>
+
+      <FloatingMenu
+        bind:show={showDeckMenu}
+        anchor={deckButtonElement}
+        placement="left-start"
+        onClose={() => showDeckMenu = false}
+        class="deck-menu-container"
+      >
+        {#snippet children()}
+          <div class="multi-info-menu-header">
+            <span>{t('toolbar.setCardDeck')}</span>
+            <button class="close-btn" onclick={() => showDeckMenu = false}>
+              <EnhancedIcon name="times" size="12" />
+            </button>
+          </div>
+
+          <div class="deck-menu-content">
+            {#if !decks || decks.length === 0}
+              <div class="deck-menu-empty">{t('toolbar.noDecksAvailable')}</div>
+            {:else}
+              {@const selectedDeckIds = new Set(getCardDeckIds(card, decks).deckIds)}
+              {#each decks as deck}
+                {@const indentLevel = deck.level || 0}
+                {@const isSelected = selectedDeckIds.has(deck.id)}
+                <button
+                  type="button"
+                  class="deck-menu-item"
+                  class:selected={isSelected}
+                  onclick={async () => {
+                    if (onChangeDeck) {
+                      await Promise.resolve(onChangeDeck(deck.id));
+                    }
+                  }}
+                  title={deck.name}
+                >
+                  <span class="deck-menu-item-main">
+                    <span
+                      class="deck-menu-indent"
+                      style={`padding-left: ${indentLevel * 16}px;`}
+                    >
+                      {#if indentLevel > 0}└ {/if}{deck.name}
+                    </span>
+                  </span>
+                  <span class="deck-menu-check">
+                    {#if isSelected}
+                      <EnhancedIcon name="check-square" size="14" />
+                    {:else}
+                      <EnhancedIcon name="square" size="14" />
+                    {/if}
+                  </span>
+                </button>
+              {/each}
+            {/if}
+          </div>
+        {/snippet}
+      </FloatingMenu>
     </div>
 
     <!-- 多功能信息键（查看+来源） -->
@@ -1268,23 +1296,23 @@
         class="toolbar-btn multi-info-btn"
         class:active={showMultiInfoMenu}
         onclick={toggleMultiInfoMenu}
-        title="查看卡片信息与来源"
-        aria-label="打开卡片详细信息和来源菜单"
+        title={t('toolbar.viewCardInfo')}
+        aria-label={t('toolbar.openInfoMenu')}
       >
         <EnhancedIcon name="eye" size="18" />
-        <span class="btn-label">查看</span>
+        <span class="btn-label">{t('toolbar.view')}</span>
       </button>
 
       <FloatingMenu
         bind:show={showMultiInfoMenu}
         anchor={multiInfoButtonElement}
-        placement="bottom-start"
+        placement="left-start"
         onClose={() => showMultiInfoMenu = false}
         class="multi-info-menu-container"
       >
         {#snippet children()}
           <div class="multi-info-menu-header">
-            <span>卡片信息与来源</span>
+            <span>{t('toolbar.cardInfoAndSource')}</span>
             <button class="close-btn" onclick={() => showMultiInfoMenu = false}>
               <EnhancedIcon name="times" size="12" />
             </button>
@@ -1293,35 +1321,35 @@
           <div class="multi-info-menu-content">
             <!-- 基础信息 -->
             <div class="info-section">
-              <div class="info-section-title">基础信息</div>
+              <div class="info-section-title">{t('toolbar.basicInfo')}</div>
               <div class="info-item">
-                <span class="info-label">卡片ID</span>
+                <span class="info-label">{t('toolbar.cardId')}</span>
                 <span class="info-value">{card.uuid.slice(0, 8)}...</span>
               </div>
               <div class="info-item">
-                <span class="info-label">所属牌组</span>
+                <span class="info-label">{t('toolbar.belongToDeck')}</span>
                 <span class="info-value">{getDeckName()}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">卡片状态</span>
+                <span class="info-label">{t('toolbar.cardState')}</span>
                 <span class="info-value">{card.fsrs ? getCardStateText(card.fsrs.state) : 'N/A'}</span>
               </div>
               <!-- 🆕 卡片关系 -->
               <div class="info-item">
-                <span class="info-label">卡片关系</span>
+                <span class="info-label">{t('toolbar.cardRelation')}</span>
                 <span class="info-value">
                   {#if card.parentCardId}
-                    <span class="relation-badge-compact child">子卡片</span>
+                    <span class="relation-badge-compact child">{t('toolbar.childCard')}</span>
                     {#if card.relationMetadata?.derivationMetadata?.method}
                       <span class="relation-note">({getDerivationMethodName(card.relationMetadata.derivationMetadata.method)})</span>
                     {/if}
                   {:else if card.relationMetadata?.isParent || (card.relationMetadata?.childCardIds && card.relationMetadata.childCardIds.length > 0)}
-                    <span class="relation-badge-compact parent">父卡片</span>
+                    <span class="relation-badge-compact parent">{t('toolbar.parentCard')}</span>
                     {#if card.relationMetadata?.childCardIds}
-                      <span class="relation-note">(含 {card.relationMetadata.childCardIds.length} 张)</span>
+                      <span class="relation-note">({t('toolbar.containCards', { n: card.relationMetadata.childCardIds.length })})</span>
                     {/if}
                   {:else}
-                    <span class="relation-badge-compact normal">独立卡片</span>
+                    <span class="relation-badge-compact normal">{t('toolbar.independentCard')}</span>
                   {/if}
                 </span>
               </div>
@@ -1329,46 +1357,46 @@
 
             <!-- 学习数据 -->
             <div class="info-section">
-              <div class="info-section-title">学习数据</div>
+              <div class="info-section-title">{t('toolbar.studyData')}</div>
               <div class="info-item">
-                <span class="info-label">稳定性</span>
+                <span class="info-label">{t('toolbar.stability')}</span>
                 <span class="info-value">{card.fsrs ? card.fsrs.stability.toFixed(2) : 'N/A'}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">难度</span>
+                <span class="info-label">{t('toolbar.difficulty')}</span>
                 <span class="info-value">{card.fsrs ? card.fsrs.difficulty.toFixed(2) : 'N/A'}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">间隔</span>
+                <span class="info-label">{t('toolbar.interval')}</span>
                 <span class="info-value">{card.fsrs ? formatInterval(card.fsrs.scheduledDays) : 'N/A'}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">总复习次数</span>
-                <span class="info-value">{card.stats?.totalReviews || 0}次</span>
+                <span class="info-label">{t('toolbar.totalReviews')}</span>
+                <span class="info-value">{t('toolbar.timesUnit', { n: card.stats?.totalReviews || 0 })}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">平均用时</span>
-                <span class="info-value">{card.stats?.averageTime ? Math.round(card.stats.averageTime) + '秒' : '未知'}</span>
+                <span class="info-label">{t('toolbar.avgTime')}</span>
+                <span class="info-value">{card.stats?.averageTime ? t('toolbar.secondsUnit', { n: Math.round(card.stats.averageTime) }) : t('toolbar.unknown')}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">记忆成功率</span>
-                <span class="info-value">{card.stats?.memoryRate ? Math.round(card.stats.memoryRate * 100) + '%' : '未知'}</span>
+                <span class="info-label">{t('toolbar.memoryRate')}</span>
+                <span class="info-value">{card.stats?.memoryRate ? Math.round(card.stats.memoryRate * 100) + '%' : t('toolbar.unknown')}</span>
               </div>
             </div>
 
             <!-- 时间信息 -->
             <div class="info-section">
-              <div class="info-section-title">时间信息</div>
+              <div class="info-section-title">{t('toolbar.timeInfo')}</div>
               <div class="info-item">
-                <span class="info-label">创建时间</span>
+                <span class="info-label">{t('toolbar.createdTime')}</span>
                 <span class="info-value">{formatDateTime(card.created)}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">修改时间</span>
+                <span class="info-label">{t('toolbar.modifiedTime')}</span>
                 <span class="info-value">{formatDateTime(card.modified)}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">下次复习</span>
+                <span class="info-label">{t('toolbar.nextReview')}</span>
                 <span class="info-value">{card.fsrs ? formatDateTime(card.fsrs.due) : 'N/A'}</span>
               </div>
             </div>
@@ -1376,7 +1404,7 @@
             <!-- 来源信息 - 使用响应式 sourceInfo ($derived) -->
             {#if true}
               <div class="info-section">
-                <div class="info-section-title">来源信息</div>
+                <div class="info-section-title">{t('toolbar.sourceInfo')}</div>
                 {#if !sourceInfo.sourceFile && !sourceInfo.sourceBlock}
                   <!-- 无来源信息 -->
                   <div class="info-item no-source">
@@ -1440,7 +1468,7 @@
                   type="button"
                 >
                   <EnhancedIcon name="maximize-2" size="14" />
-                  <span>查看详细信息</span>
+                  <span>{t('toolbar.viewDetails')}</span>
                 </button>
               </div>
             {/if}
@@ -1455,10 +1483,10 @@
                     onOpenCardDebug?.();
                   }}
                   type="button"
-                  title="查看完整的卡片数据结构（JSON格式）"
+                  title={t('toolbar.viewDataStructureTitle')}
                 >
                   <EnhancedIcon name="code" size="14" />
-                  <span>查看数据结构</span>
+                  <span>{t('toolbar.viewDataStructure')}</span>
                 </button>
               </div>
             {/if}
@@ -1486,7 +1514,7 @@
       <FloatingMenu
         bind:show={showSourceBlockMenu}
         anchor={sourceBlockButtonElement}
-        placement="bottom-start"
+        placement="left-start"
         onClose={() => showSourceBlockMenu = false}
         class="source-block-menu-container"
       >
@@ -1593,7 +1621,7 @@
       <FloatingMenu
         bind:show={showMoreSettingsMenu}
         anchor={moreSettingsButtonElement}
-        placement="bottom-start"
+        placement="left-start"
         onClose={() => showMoreSettingsMenu = false}
         class="more-settings-menu-container"
       >
@@ -1684,6 +1712,44 @@
                   ]}
                   value={cardOrder}
                   onchange={(value) => onCardOrderChange?.(value as 'sequential' | 'random')}
+                />
+              </div>
+            </div>
+
+            <!-- 超时自动暂停计时 -->
+            <div class="setting-section">
+              <div class="setting-item interval-item">
+                <div class="setting-label">
+                  超时暂停
+                  <span class="interval-value">{timerAutoPauseSeconds >= 60 ? (timerAutoPauseSeconds / 60) + 'min' : timerAutoPauseSeconds + 's'}</span>
+                </div>
+                <input
+                  type="range"
+                  class="setting-slider"
+                  min="30"
+                  max="300"
+                  step="30"
+                  value={timerAutoPauseSeconds}
+                  oninput={(e) => onTimerAutoPauseChange?.(parseInt((e.target as HTMLInputElement).value))}
+                />
+              </div>
+            </div>
+
+            <!-- 提示次数限制 -->
+            <div class="setting-section">
+              <div class="setting-item interval-item">
+                <div class="setting-label">
+                  提示次数
+                  <span class="interval-value">{hintMaxUses}</span>
+                </div>
+                <input
+                  type="range"
+                  class="setting-slider"
+                  min="1"
+                  max="20"
+                  step="1"
+                  value={hintMaxUses}
+                  oninput={(e) => onHintMaxUsesChange?.(parseInt((e.target as HTMLInputElement).value))}
                 />
               </div>
             </div>
@@ -2093,33 +2159,39 @@ tags: [学习]
                     
                     <div class="tutorial-text">
                       <h4>功能介绍</h4>
-                      <p>AI测试题生成是基于记忆卡片内容智能生成练习题的功能，用于巩固学习效果。</p>
+                      <p>AI测试题生成会基于当前记忆卡片内容，自动生成用于练习和自测的题目，帮助你把“会看”进一步转成“会做”。</p>
                       
-                      <h4>记忆牌组与考试牌组的关系</h4>
-                      <p><strong>记忆牌组</strong>：</p>
+                      <h4>当前数据结构：不再维护独立测试题牌组</h4>
+                      <p>这里需要特别说明：旧教程里提到的“为每个记忆牌组单独创建一个考试牌组 / 测试题牌组”的方案，已经弃用。</p>
                       <ul>
-                        <li>用途：间隔重复学习</li>
-                        <li>使用FSRS算法调度复习</li>
-                        <li>卡片标识：cardPurpose='memory'</li>
-                        <li>包含字段：fsrs、reviewHistory等</li>
+                        <li><strong>现在的记忆卡片</strong>：仍然是主要学习对象，使用 <code>cardPurpose='memory'</code>，由 FSRS 负责复习调度。</li>
+                        <li><strong>现在的测试题</strong>：主要通过 <code>uuid</code> 引用记忆体系中的选择题卡片来组织和调用，不再额外复制出一个独立的“测试题牌组”。</li>
+                        <li><strong>这样做的好处</strong>：避免内容重复、减少两套卡片数据不一致的问题，也更方便统一维护来源、编辑和同步。</li>
                       </ul>
                       
-                      <p><strong>考试牌组</strong>：</p>
-                      <ul>
-                        <li>用途：测试和练习</li>
-                        <li>使用EWMA算法，科学评估掌握度</li>
-                        <li>卡片标识：cardPurpose='test'</li>
-                        <li>包含字段：testStats（正确率、平均用时、掌握度等）</li>
-                      </ul>
+                      <h4>你可以这样理解</h4>
+                      <pre>旧方案（已弃用）：
+记忆牌组 → 派生一个独立考试牌组 → 保存测试题副本
+
+当前方案：
+记忆牌组中的选择题卡片
+        ↓
+考试学习流程通过 uuid 直接引用
+        ↓
+不再维护独立测试题牌组</pre>
                       
-                      <p><strong>一对一对应关系</strong>：</p>
-                      <p>每个记忆牌组可以有一个对应的考试牌组，命名格式为"牌组名 - 考试"。测试题生成时，会自动创建或关联到对应的考试牌组。</p>
+                      <h4>考试学习与记忆学习的关系</h4>
+                      <p>虽然不再使用独立测试题牌组，但“记忆学习”和“考试练习”仍然是两种不同的学习场景：</p>
+                      <ul>
+                        <li><strong>记忆学习</strong>：侧重长期记忆巩固，核心是 FSRS 间隔重复。</li>
+                        <li><strong>考试练习</strong>：侧重检索、判断和答题表现，核心是做题过程与掌握度评估。</li>
+                        <li><strong>底层联系</strong>：两者会围绕同一批知识内容协同工作，而不是各自维护一套重复数据。</li>
+                      </ul>
                       
                       <h4>EWMA算法：科学评估掌握度</h4>
                       <p><strong>什么是EWMA？</strong></p>
-                      <p>EWMA = Exponentially Weighted Moving Average（指数加权移动平均）</p>
-                      
-                      <p><strong>核心思想</strong>：近期的测试结果比早期结果更能反映当前掌握程度</p>
+                      <p>EWMA = Exponentially Weighted Moving Average（指数加权移动平均）。</p>
+                      <p><strong>核心思想</strong>：最近几次测试结果，比很久以前的结果更能代表你当前的真实掌握程度。</p>
                       
                       <p><strong>计算公式</strong>：</p>
                       <pre>R_t = α × result_t + (1-α) × R_{'{'}t-1{'}'}
@@ -2136,20 +2208,22 @@ tags: [学习]
   第8次：权重 13%
   ...（越早期权重越低）</pre>
                       
-                      <h4>测试题卡片的溯源</h4>
-                      <p>每张AI生成的测试题都保留完整的溯源信息：</p>
+                      <h4>测试题的溯源关系</h4>
+                      <p>AI生成的测试题会保留和原始学习内容之间的关联，方便追踪来源与后续维护：</p>
                       <ul>
-                        <li><strong>源卡片信息</strong>：sourceCardId、sourceCardContent</li>
-                        <li><strong>生成元数据</strong>：generationMethod、generationTimestamp、aiProvider、aiModel</li>
-                        <li><strong>继承的来源信息</strong>：sourceFile、sourceBlock、sourceRange</li>
+                        <li><strong>来源关联</strong>：通过 uuid 与对应的记忆卡片 / 选择题卡片建立引用关系</li>
+                        <li><strong>生成元数据</strong>：记录 generationMethod、generationTimestamp、aiProvider、aiModel 等信息</li>
+                        <li><strong>来源上下文</strong>：可继承 sourceFile、sourceBlock、sourceRange 等来源信息</li>
                       </ul>
                       
                       <h4>使用流程</h4>
-                      <pre>1. 选择源卡片（当前显示的卡片）
-2. 点击"AI助手" → "生成测试题"，选择生成功能
-3. 查看预览，选择要保存的题目
-4. 点击"收入到题库"
-5. 系统自动创建或关联对应的考试牌组</pre>
+                      <pre>1. 选择当前正在学习的记忆卡片
+2. 点击“AI助手” → “生成测试题”
+3. 预览生成结果，确认题目内容
+4. 点击“收入到题库”
+5. 系统将通过 uuid 建立与记忆内容的引用关系，用于后续考试学习</pre>
+                      
+                      <p class="tutorial-note">简而言之：现在的测试题不是“另存一份到独立牌组”，而是“围绕原有记忆内容建立引用式练习关系”。</p>
                     </div>
                   </div>
 
@@ -2184,10 +2258,10 @@ tags: [学习]
                       
                       <h4>拆分与测试题的区别</h4>
                       <ul>
-                        <li><strong>目标牌组</strong>：AI拆分→记忆牌组，测试题→考试牌组</li>
-                        <li><strong>卡片用途</strong>：AI拆分→记忆学习（cardPurpose='memory'），测试题→测试练习（cardPurpose='test'）</li>
-                        <li><strong>FSRS算法</strong>：AI拆分使用，测试题使用EWMA算法</li>
-                        <li><strong>父子关系</strong>：AI拆分建立父子关系，测试题仅记录源卡片</li>
+                        <li><strong>目标对象</strong>：AI拆分会生成新的记忆卡片；测试题生成则围绕原有记忆内容建立练习引用关系</li>
+                        <li><strong>学习用途</strong>：AI拆分用于记忆学习细化；测试题用于测试练习与掌握度评估</li>
+                        <li><strong>算法侧重</strong>：AI拆分后的记忆卡片继续使用FSRS；测试练习侧使用EWMA评估掌握度</li>
+                        <li><strong>结构关系</strong>：AI拆分建立父子卡片关系；测试题主要记录源卡片与题目之间的引用关系</li>
                       </ul>
                       
                       <h4>子卡片拆分防护</h4>
@@ -2239,7 +2313,7 @@ tags: [学习]
      ├─ AI测试题生成
      │   ├─ 选择生成类型
      │   ├─ 预览生成的题目
-     │   └─ 选择保存到考试牌组
+     │   └─ 建立与记忆内容的引用关系
      └─ AI拆分
          ├─ 选择拆分策略
          ├─ 预览子卡片
@@ -2263,7 +2337,7 @@ tags: [学习]
                       <ul>
                         <li><strong>首次使用</strong>：需要在设置中配置AI服务</li>
                         <li><strong>AI是辅助</strong>：保持人工审核和创作的主导地位</li>
-                        <li><strong>记忆与测试分离</strong>：记忆牌组使用FSRS，考试牌组使用EWMA</li>
+                        <li><strong>记忆与测试协同</strong>：记忆学习使用FSRS，测试练习侧使用EWMA评估掌握度</li>
                         <li><strong>溯源透明</strong>：所有AI生成内容都可追溯来源</li>
                         <li><strong>层级清晰</strong>：子卡片不可再拆，防止过度复杂化</li>
                       </ul>
@@ -3249,6 +3323,76 @@ D. 顺序学习算法
     position: relative;
   }
 
+  .deck-menu-content {
+    min-width: 240px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .deck-menu-empty {
+    padding: 12px 8px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .deck-menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-normal);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    margin-bottom: 4px;
+  }
+
+  .deck-menu-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .deck-menu-item:hover {
+    background: var(--background-modifier-hover);
+    border-color: color-mix(in srgb, var(--interactive-accent) 30%, transparent);
+  }
+
+  .deck-menu-item.selected {
+    background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--interactive-accent) 35%, transparent);
+  }
+
+  .deck-menu-item-main {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .deck-menu-indent {
+    display: block;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .deck-menu-check {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .deck-menu-item.selected .deck-menu-check {
+    color: var(--interactive-accent);
+  }
+
   .close-btn {
     background: none;
     border: none;
@@ -3643,6 +3787,7 @@ D. 顺序学习算法
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-normal);
+    flex-shrink: 0;
   }
 
   /* 搁置项特殊样式 - 保持与其他setting-item一致 */
@@ -3706,29 +3851,6 @@ D. 顺序学习算法
     box-shadow: 0 1px 3px color-mix(in srgb, var(--interactive-accent) 20%, transparent);
   }
 
-  .setting-select {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1.5px solid var(--background-modifier-border);
-    background: var(--background-primary);
-    color: var(--text-normal);
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .setting-select:hover {
-    border-color: var(--interactive-accent);
-    background: var(--background-modifier-hover);
-  }
-
-  .setting-select:focus {
-    outline: none;
-    border-color: var(--interactive-accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--interactive-accent) 15%, transparent);
-  }
-
   :global(.obsidian-dropdown-trigger.setting-select) {
     padding: 6px 10px;
     border-radius: 6px;
@@ -3738,6 +3860,8 @@ D. 顺序学习算法
     font-size: 0.8125rem;
     cursor: pointer;
     min-height: 0;
+    min-width: 120px;
+    margin-left: auto;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -4116,14 +4240,14 @@ D. 顺序学习算法
     align-items: center;
     gap: 10px;
     padding: 14px 16px;
-    background: color-mix(in srgb, var(--background-secondary) 15%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--background-modifier-border) 20%, transparent);
+    background: color-mix(in srgb, var(--interactive-accent) 38%, var(--background-primary));
+    border-bottom: 1px solid color-mix(in srgb, var(--interactive-accent) 28%, transparent);
   }
 
   .tutorial-section-title span {
     font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--text-normal);
+    font-weight: 700;
+    color: var(--text-on-accent, #ffffff);
     letter-spacing: 0.2px;
   }
 
@@ -4383,12 +4507,6 @@ D. 顺序学习算法
   .context-section.context-after {
     border-bottom: none;
     border-top: 1px dashed color-mix(in srgb, var(--background-modifier-border) 50%, transparent);
-  }
-
-  .context-line {
-    padding: 2px 0;
-    white-space: pre-wrap;
-    word-break: break-word;
   }
 
   /* 源块高亮 */

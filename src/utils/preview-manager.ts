@@ -47,7 +47,7 @@ export class PreviewManager {
   
   // 渲染状态
   private isRendering = false;
-  private renderQueue: Array<{ content: string; resolve: Function; reject: Function }> = [];
+  private renderQueue: Array<{ content: string; resolve: (value: any) => void; reject: (reason?: any) => void }> = [];
   private currentComponent: Component | null = null;
   private abortController: AbortController | null = null;
   

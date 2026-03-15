@@ -110,9 +110,7 @@ export class AnkiSettingsTab extends PluginSettingTab {
     const desc = containerEl.createEl("p", {
       text: "FSRS（Free Spaced Repetition Scheduler）是一个基于记忆模型的间隔重复算法，能够更精确地预测遗忘时间。更多高级设置请在插件主界面的设置标签页中配置。"
     });
-    desc.style.color = "var(--text-muted)";
-    desc.style.fontSize = "0.9em";
-    desc.style.marginBottom = "1rem";
+    desc.addClass('weave-settings-desc');
 
     new Setting(containerEl)
       .setName("目标记忆率")
@@ -186,9 +184,7 @@ export class AnkiSettingsTab extends PluginSettingTab {
     const personalDesc = containerEl.createEl("p", {
       text: "启用基于您学习数据的智能算法优化。系统会在收集足够数据后自动调整参数，提升记忆效率25-40%。包含回溯保护机制，确保优化安全可靠。"
     });
-    personalDesc.style.color = "var(--text-muted)";
-    personalDesc.style.fontSize = "0.9em";
-    personalDesc.style.marginBottom = "1rem";
+    personalDesc.addClass('weave-settings-desc');
 
     new Setting(containerEl)
       .setName("启用个性化优化")
@@ -309,8 +305,7 @@ export class AnkiSettingsTab extends PluginSettingTab {
         <a href="https://github.com/anki-obsidian-plugin/wiki" style="color: var(--text-accent);">使用文档</a>
       </p>
     `;
-    aboutEl.style.color = "var(--text-muted)";
-    aboutEl.style.fontSize = "0.9em";
+    aboutEl.addClass('weave-settings-desc');
   }
 
   // 数据管理相关方法已移除 - 将在新的数据管理服务中实现

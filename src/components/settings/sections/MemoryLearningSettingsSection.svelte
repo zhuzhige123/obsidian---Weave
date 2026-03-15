@@ -45,7 +45,7 @@
       await plugin.saveSettings();
 
 } catch (error) {
-      logger.error('保存设置失败:', error);
+      logger.error('Failed to save settings:', error);
 }
   }
 
@@ -168,7 +168,7 @@
       </div>
 
       <div class="row">
-        <label for="learningSteps">学习步骤（分钟）</label>
+        <label for="learningSteps">{t('settings.memoryLearning.learningSteps.label')}</label>
         <input
           id="learningSteps"
           type="text"
@@ -177,11 +177,11 @@
           class="modern-input"
           oninput={handleLearningStepsChange}
         />
-        <span class="learning-help-text">用空格分隔多个时间间隔</span>
+        <span class="learning-help-text">{t('settings.memoryLearning.learningSteps.helpText')}</span>
       </div>
 
       <div class="row">
-        <label for="graduatingInterval">毕业间隔（天）</label>
+        <label for="graduatingInterval">{t('settings.memoryLearning.graduatingInterval.label')}</label>
         <div class="slider-container">
           <input
             id="graduatingInterval"
@@ -193,12 +193,12 @@
             class="modern-slider"
             oninput={handleGraduatingIntervalChange}
           />
-          <span class="slider-value">{settings.graduatingInterval}天</span>
+          <span class="slider-value">{settings.graduatingInterval} {t('settings.memoryLearning.graduatingInterval.unit')}</span>
         </div>
       </div>
 
       <div class="row">
-        <label for="maxAdvanceDays">提前学习天数限制</label>
+        <label for="maxAdvanceDays">{t('settings.memoryLearning.maxAdvanceDays.label')}</label>
         <div class="slider-container">
           <input
             id="maxAdvanceDays"
@@ -210,7 +210,7 @@
             class="modern-slider"
             oninput={handleMaxAdvanceDaysChange}
           />
-          <span class="slider-value">{settings.maxAdvanceDays || 7}天</span>
+          <span class="slider-value">{settings.maxAdvanceDays || 7} {t('settings.memoryLearning.maxAdvanceDays.unit')}</span>
         </div>
       </div>
     </div>

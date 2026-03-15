@@ -94,7 +94,7 @@
       const linkText = blockId ? `${docName}#^${blockId}` : docName;
       
       // 使用 Obsidian 原生 API 跳转，自动处理文件查找和块定位
-      await plugin.app.workspace.openLinkText(linkText, contextPath, true);
+      await plugin.app.workspace.openLinkText(linkText, contextPath, 'tab');
       new Notice('已跳转到源文档');
     } catch (error) {
       logger.error('[QuestionBankCardInfoTab] 跳转到源文档失败:', error);

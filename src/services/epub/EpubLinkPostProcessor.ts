@@ -3,10 +3,6 @@ import { MarkdownPostProcessorContext } from 'obsidian';
 import { EpubLinkService } from './EpubLinkService';
 import { logger } from '../../utils/logger';
 
-export function registerEpubLinkPostProcessor(app: App): void {
-	// placeholder
-}
-
 export function createEpubLinkPostProcessor(app: App) {
 	return (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
 		const links = el.querySelectorAll('a');

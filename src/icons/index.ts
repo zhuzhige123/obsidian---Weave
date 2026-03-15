@@ -272,9 +272,7 @@ export function createSvgElement(iconName: string, size = "16"): HTMLElement {
   if (svg) {
     svg.setAttribute("width", size);
     svg.setAttribute("height", size);
-    svg.style.display = "inline-block";
-    svg.style.verticalAlign = "middle";
-    svg.style.fill = "currentColor";
+    svg.classList.add("weave-icon-inline");
   }
 
   return wrapper;

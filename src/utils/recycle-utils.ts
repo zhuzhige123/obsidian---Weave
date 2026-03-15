@@ -203,7 +203,7 @@ export async function recycleCard(
  * @param card - 卡片对象
  * @param improvements - 改进说明（可选）
  */
-export async function reactivateCard(card: Card, improvements?: string): Promise<void> {
+export function reactivateCard(card: Card, improvements?: string): void {
   if (!card) return;
 
   // 1. 移除回收标签

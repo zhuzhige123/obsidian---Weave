@@ -1,47 +1,130 @@
 import type { App } from 'obsidian';
-import type { EpubBook, Bookmark, Highlight, Note, ReadingPosition } from './types';
+import type { EpubBook, Bookmark, Highlight, Note, ReadingPosition, EpubReaderSettings } from './types';
+import { getReadableWeaveRoot, normalizeWeaveParentFolder } from '../../config/paths';
+import { DirectoryUtils } from '../../utils/directory-utils';
+import { logger } from '../../utils/logger';
 
 export class EpubStorageService {
 	private app: App;
 	private basePath: string;
+	private _progressDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+	private _pendingProgress: { bookId: string; position: ReadingPosition } | null = null;
+	private _booksCache: Record<string, EpubBook> | null = null;
+	private _booksWriteLock: Promise<void> = Promise.resolve();
+	private _bookStateWriteLocks = new Map<string, Promise<void>>();
 
 	constructor(app: App) {
 		this.app = app;
-		this.basePath = 'weave/epub-reading';
+		const plugin: any = (app as any)?.plugins?.getPlugin?.('weave');
+		const parentFolder = normalizeWeaveParentFolder(plugin?.settings?.weaveParentFolder);
+		this.basePath = `${getReadableWeaveRoot(parentFolder)}/epub-reading`;
 	}
 
 	async ensureDirectories(): Promise<void> {
-		const vault = this.app.vault;
-		const adapter = vault.adapter;
-
-		if (!(await adapter.exists(this.basePath))) {
-			await adapter.mkdir(this.basePath);
-		}
+		await DirectoryUtils.ensureDirRecursive(this.app.vault.adapter, this.basePath);
 	}
 
 	async loadBooks(): Promise<Record<string, EpubBook>> {
+		if (this._booksCache) return this._booksCache;
 		await this.ensureDirectories();
 		const booksPath = `${this.basePath}/books.json`;
 		const adapter = this.app.vault.adapter;
 
 		if (await adapter.exists(booksPath)) {
-			const content = await adapter.read(booksPath);
-			return JSON.parse(content);
+			try {
+				const content = await adapter.read(booksPath);
+				const parsed = JSON.parse(content) as Record<string, EpubBook>;
+				this._booksCache = parsed;
+				await this.hydrateBookStates(parsed);
+				return this._booksCache!;
+			} catch (e) {
+				logger.warn('[EpubStorageService] Failed to parse books.json:', e);
+				this._booksCache = {};
+				return this._booksCache;
+			}
 		}
 
-		return {};
+		this._booksCache = {};
+		return this._booksCache;
+	}
+
+	private async writeBooksWithLock(books: Record<string, EpubBook>): Promise<void> {
+		const doWrite = async () => {
+			await this.ensureDirectories();
+			const booksPath = `${this.basePath}/books.json`;
+			this._booksCache = books;
+			await this.app.vault.adapter.write(booksPath, JSON.stringify(books));
+		};
+		this._booksWriteLock = this._booksWriteLock.then(doWrite, doWrite);
+		await this._booksWriteLock;
+	}
+
+	private getBookStatePath(bookId: string): string {
+		return `${this.basePath}/${bookId}/state.json`;
+	}
+
+	private async readBookState(bookId: string): Promise<Pick<EpubBook, 'currentPosition' | 'readingStats'> | null> {
+		const statePath = this.getBookStatePath(bookId);
+		const adapter = this.app.vault.adapter;
+
+		if (!(await adapter.exists(statePath))) {
+			return null;
+		}
+
+		try {
+			const content = await adapter.read(statePath);
+			const parsed = JSON.parse(content);
+			if (!parsed || typeof parsed !== 'object') return null;
+			return {
+				currentPosition: parsed.currentPosition,
+				readingStats: parsed.readingStats,
+			};
+		} catch (error) {
+			logger.warn(`[EpubStorageService] Failed to read state for ${bookId}:`, error);
+			return null;
+		}
+	}
+
+	private async writeBookState(bookId: string, data: Pick<EpubBook, 'currentPosition' | 'readingStats'>): Promise<void> {
+		const previous = this._bookStateWriteLocks.get(bookId) || Promise.resolve();
+		const next = previous.then(async () => {
+			await this.ensureBookDirectory(bookId);
+			await this.app.vault.adapter.write(
+				this.getBookStatePath(bookId),
+				JSON.stringify(data),
+			);
+		}, async () => {
+			await this.ensureBookDirectory(bookId);
+			await this.app.vault.adapter.write(
+				this.getBookStatePath(bookId),
+				JSON.stringify(data),
+			);
+		});
+		this._bookStateWriteLocks.set(bookId, next);
+		await next;
+	}
+
+	private async hydrateBookStates(books: Record<string, EpubBook>): Promise<void> {
+		for (const book of Object.values(books)) {
+			const state = await this.readBookState(book.id);
+			if (!state) continue;
+			book.currentPosition = state.currentPosition ?? book.currentPosition;
+			book.readingStats = state.readingStats ?? book.readingStats;
+		}
 	}
 
 	async saveBooks(books: Record<string, EpubBook>): Promise<void> {
-		await this.ensureDirectories();
-		const booksPath = `${this.basePath}/books.json`;
-		await this.app.vault.adapter.write(booksPath, JSON.stringify(books));
+		await this.writeBooksWithLock(books);
 	}
 
 	async saveBook(book: EpubBook): Promise<void> {
 		const books = await this.loadBooks();
 		books[book.id] = book;
-		await this.saveBooks(books);
+		await this.writeBooksWithLock(books);
+		await this.writeBookState(book.id, {
+			currentPosition: book.currentPosition,
+			readingStats: book.readingStats,
+		});
 	}
 
 	async getBook(bookId: string): Promise<EpubBook | null> {
@@ -62,7 +145,7 @@ export class EpubStorageService {
 	async deleteBook(bookId: string): Promise<void> {
 		const books = await this.loadBooks();
 		delete books[bookId];
-		await this.saveBooks(books);
+		await this.writeBooksWithLock(books);
 
 		const bookDir = `${this.basePath}/${bookId}`;
 		const adapter = this.app.vault.adapter;
@@ -72,11 +155,50 @@ export class EpubStorageService {
 	}
 
 	async saveProgress(bookId: string, position: ReadingPosition): Promise<void> {
-		const book = await this.getBook(bookId);
-		if (book) {
-			book.currentPosition = position;
-			book.readingStats.lastReadTime = Date.now();
-			await this.saveBook(book);
+		this._pendingProgress = { bookId, position };
+		if (this._progressDebounceTimer) return;
+		this._progressDebounceTimer = setTimeout(async () => {
+			this._progressDebounceTimer = null;
+			const pending = this._pendingProgress;
+			if (!pending) return;
+			this._pendingProgress = null;
+			try {
+				const book = await this.getBook(pending.bookId);
+				if (book) {
+					book.currentPosition = pending.position;
+					book.readingStats.lastReadTime = Date.now();
+					await this.writeBookState(book.id, {
+						currentPosition: book.currentPosition,
+						readingStats: book.readingStats,
+					});
+				}
+			} catch (e) {
+				logger.warn('[EpubStorageService] saveProgress failed:', e);
+			}
+		}, 300);
+	}
+
+	async flushPendingProgress(): Promise<void> {
+		if (this._progressDebounceTimer) {
+			clearTimeout(this._progressDebounceTimer);
+			this._progressDebounceTimer = null;
+		}
+		const pending = this._pendingProgress;
+		if (pending) {
+			this._pendingProgress = null;
+			try {
+				const book = await this.getBook(pending.bookId);
+				if (book) {
+					book.currentPosition = pending.position;
+					book.readingStats.lastReadTime = Date.now();
+					await this.writeBookState(book.id, {
+						currentPosition: book.currentPosition,
+						readingStats: book.readingStats,
+					});
+				}
+			} catch (_e) {
+				logger.warn('[EpubStorageService] flushPendingProgress failed:', _e);
+			}
 		}
 	}
 
@@ -87,10 +209,7 @@ export class EpubStorageService {
 
 	private async ensureBookDirectory(bookId: string): Promise<void> {
 		const bookDir = `${this.basePath}/${bookId}`;
-		const adapter = this.app.vault.adapter;
-		if (!(await adapter.exists(bookDir))) {
-			await adapter.mkdir(bookDir);
-		}
+		await DirectoryUtils.ensureDirRecursive(this.app.vault.adapter, bookDir);
 	}
 
 	async loadBookmarks(bookId: string): Promise<Bookmark[]> {
@@ -99,8 +218,13 @@ export class EpubStorageService {
 		const adapter = this.app.vault.adapter;
 
 		if (await adapter.exists(bookmarksPath)) {
-			const content = await adapter.read(bookmarksPath);
-			return JSON.parse(content);
+			try {
+				const content = await adapter.read(bookmarksPath);
+				return JSON.parse(content);
+			} catch (e) {
+				logger.warn('[EpubStorageService] Failed to parse bookmarks.json:', e);
+				return [];
+			}
 		}
 
 		return [];
@@ -130,8 +254,13 @@ export class EpubStorageService {
 		const adapter = this.app.vault.adapter;
 
 		if (await adapter.exists(highlightsPath)) {
-			const content = await adapter.read(highlightsPath);
-			return JSON.parse(content);
+			try {
+				const content = await adapter.read(highlightsPath);
+				return JSON.parse(content);
+			} catch (e) {
+				logger.warn('[EpubStorageService] Failed to parse highlights.json:', e);
+				return [];
+			}
 		}
 
 		return [];
@@ -161,8 +290,13 @@ export class EpubStorageService {
 		const adapter = this.app.vault.adapter;
 
 		if (await adapter.exists(notesPath)) {
-			const content = await adapter.read(notesPath);
-			return JSON.parse(content);
+			try {
+				const content = await adapter.read(notesPath);
+				return JSON.parse(content);
+			} catch (e) {
+				logger.warn('[EpubStorageService] Failed to parse notes.json:', e);
+				return [];
+			}
 		}
 
 		return [];
@@ -213,6 +347,51 @@ export class EpubStorageService {
 		await this.saveCanvasBindings(bindings);
 	}
 
+	async loadExcerptSettings(): Promise<EpubExcerptSettings> {
+		await this.ensureDirectories();
+		const settingsPath = `${this.basePath}/excerpt-settings.json`;
+		const adapter = this.app.vault.adapter;
+
+		if (await adapter.exists(settingsPath)) {
+			try {
+				const content = await adapter.read(settingsPath);
+				return { ...DEFAULT_EXCERPT_SETTINGS, ...JSON.parse(content) };
+			} catch {
+				return { ...DEFAULT_EXCERPT_SETTINGS };
+			}
+		}
+		return { ...DEFAULT_EXCERPT_SETTINGS };
+	}
+
+	async saveExcerptSettings(settings: EpubExcerptSettings): Promise<void> {
+		await this.ensureDirectories();
+		const settingsPath = `${this.basePath}/excerpt-settings.json`;
+		await this.app.vault.adapter.write(settingsPath, JSON.stringify(settings));
+	}
+
+	async loadReaderSettings(): Promise<EpubReaderSettings> {
+		await this.ensureDirectories();
+		const settingsPath = `${this.basePath}/reader-settings.json`;
+		const adapter = this.app.vault.adapter;
+
+		if (await adapter.exists(settingsPath)) {
+			try {
+				const content = await adapter.read(settingsPath);
+				return { ...DEFAULT_READER_SETTINGS, ...JSON.parse(content) };
+			} catch {
+				return { ...DEFAULT_READER_SETTINGS };
+			}
+		}
+
+		return { ...DEFAULT_READER_SETTINGS };
+	}
+
+	async saveReaderSettings(settings: EpubReaderSettings): Promise<void> {
+		await this.ensureDirectories();
+		const settingsPath = `${this.basePath}/reader-settings.json`;
+		await this.app.vault.adapter.write(settingsPath, JSON.stringify(settings));
+	}
+
 	private async loadCanvasBindings(): Promise<Record<string, string>> {
 		await this.ensureDirectories();
 		const bindingsPath = `${this.basePath}/canvas-bindings.json`;
@@ -235,3 +414,18 @@ export class EpubStorageService {
 		await this.app.vault.adapter.write(bindingsPath, JSON.stringify(bindings));
 	}
 }
+
+export interface EpubExcerptSettings {
+	addCreationTime: boolean;
+}
+
+const DEFAULT_EXCERPT_SETTINGS: EpubExcerptSettings = {
+	addCreationTime: false
+};
+
+const DEFAULT_READER_SETTINGS: EpubReaderSettings = {
+	lineHeight: 1.618,
+	theme: 'default',
+	widthMode: 'standard',
+	layoutMode: 'paginated'
+};

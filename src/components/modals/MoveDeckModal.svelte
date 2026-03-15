@@ -110,6 +110,18 @@
     resetState();
   }
 
+  function handleOverlayClick(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      handleCancel();
+    }
+  }
+
+  function handleOverlayKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      handleCancel();
+    }
+  }
+
   // 重置状态
   function resetState() {
     selectedParentId = null;
@@ -147,8 +159,8 @@
 </script>
 
 {#if open}
-<div class="mdc-overlay" onclick={(e) => { if (e.currentTarget === e.target) handleCancel() }} role="button" tabindex="0">
-  <div class="mdc-modal" role="dialog" aria-labelledby="mdc-title">
+<div class="mdc-overlay" onclick={handleOverlayClick} onkeydown={handleOverlayKeydown} role="presentation" tabindex="-1">
+  <div class="mdc-modal" role="dialog" aria-modal="true" aria-labelledby="mdc-title">
     <header class="mdc-header">
       <h2 id="mdc-title">{t('modals.moveDeck.title')}</h2>
       <EnhancedButton variant="secondary" size="sm" onclick={handleCancel}>

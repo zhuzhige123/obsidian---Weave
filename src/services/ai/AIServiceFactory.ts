@@ -43,12 +43,13 @@ export class AIServiceFactory {
     
     //  使用自定义model或配置中的默认model
     const defaultModels: Partial<Record<AIProvider, string>> = {
-      openai: 'gpt-3.5-turbo',
-      zhipu: 'glm-4-plus',
+      openai: 'gpt-5-mini',
+      zhipu: 'glm-4-flash',
       deepseek: 'deepseek-chat',
-      gemini: 'gemini-pro',
-      anthropic: 'claude-3-5-sonnet-20241022',
-      siliconflow: 'Qwen/Qwen2.5-7B-Instruct'
+      gemini: 'gemini-2.5-flash',
+      anthropic: 'claude-3-7-sonnet-latest',
+      siliconflow: 'Qwen/Qwen3-32B',
+      xai: 'grok-3'
     };
     const modelToUse = customModel || providerConfig.model || defaultModels[provider];
 
@@ -101,7 +102,15 @@ export class AIServiceFactory {
         return new SiliconFlowService(
           providerConfig.apiKey,
           modelToUse,
-          customBaseUrl, // 🆕 传递自定义URL
+          customBaseUrl,
+          systemPromptConfig
+        );
+
+      case 'xai':
+        return new OpenAIService(
+          providerConfig.apiKey,
+          modelToUse,
+          customBaseUrl || 'https://api.x.ai/v1',
           systemPromptConfig
         );
 
@@ -120,7 +129,7 @@ export class AIServiceFactory {
       throw new Error('AI配置未初始化');
     }
 
-    return this.createService(aiConfig.defaultProvider, plugin);
+    return this.createService(aiConfig.defaultProvider || 'zhipu', plugin);
   }
 }
 

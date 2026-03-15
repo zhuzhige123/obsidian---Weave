@@ -9,7 +9,7 @@
 
   import { onMount, onDestroy } from 'svelte';
   import type { Snippet } from 'svelte';
-  import { MODAL_SIZE_PRESETS, MODAL_SIZE_LIMITS } from '../settings/constants/settings-constants';
+  import { getModalSizePresets, MODAL_SIZE_LIMITS } from '../settings/constants/settings-constants';
   import type { WeavePlugin } from '../../main';
 
   interface Props {
@@ -179,9 +179,10 @@
       };
     }
     
-    const presetKey = modalSettings.preset as keyof typeof MODAL_SIZE_PRESETS;
-    if (modalSettings.preset !== 'custom' && MODAL_SIZE_PRESETS[presetKey]) {
-      const preset = MODAL_SIZE_PRESETS[presetKey];
+    const sizePresets = getModalSizePresets();
+    const presetKey = modalSettings.preset as keyof ReturnType<typeof getModalSizePresets>;
+    if (modalSettings.preset !== 'custom' && sizePresets[presetKey]) {
+      const preset = sizePresets[presetKey];
       currentWidth = preset.width;
       currentHeight = preset.height;
     }

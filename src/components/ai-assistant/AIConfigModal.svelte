@@ -181,8 +181,8 @@
 
   // 彩色圆点标签页配置
   const tabDots: { id: TabType; name: string; colorStart: string; colorEnd: string }[] = [
-    { id: 'system-prompt', name: '系统提示词', colorStart: '#3b82f6', colorEnd: '#2563eb' },
-    { id: 'ai-config', name: '卡片生成设置', colorStart: '#8b5cf6', colorEnd: '#7c3aed' },
+    { id: 'system-prompt', name: '系统提示词', colorStart: '#ef4444', colorEnd: '#dc2626' },
+    { id: 'ai-config', name: '卡片生成设置', colorStart: '#3b82f6', colorEnd: '#2563eb' },
     { id: 'user-prompt', name: '用户提示词', colorStart: '#10b981', colorEnd: '#059669' }
   ];
 
@@ -502,7 +502,7 @@
             <span
               class="dot"
               class:active={activeTab === dot.id}
-              style="background: {dot.colorStart}"
+              style="background: linear-gradient(135deg, {dot.colorStart}, {dot.colorEnd})"
               onclick={() => activeTab = dot.id}
               title={dot.name}
             ></span>
@@ -1219,12 +1219,12 @@
     color: var(--text-normal);
   }
 
-  /* 彩色圆点（仿 BuildDeckModal 设计） */
+  /* 彩色圆点（复用主界面设计） */
   .mode-dots {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 14px;
     padding: 6px 12px;
     border-radius: 20px;
     border: none;
@@ -1233,12 +1233,17 @@
   }
 
   .dot {
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     opacity: 0.45;
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
+  }
+
+  .dot:hover {
+    transform: scale(1.25);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
   }
 
   .dot.active {

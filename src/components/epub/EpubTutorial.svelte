@@ -34,8 +34,14 @@
 </script>
 
 {#if visible}
-	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-	<div class="epub-tutorial-overlay" onclick={onClose}></div>
+	<div
+		class="epub-tutorial-overlay"
+		onclick={onClose}
+		onkeydown={(event) => event.key === 'Escape' && onClose()}
+		role="button"
+		tabindex="0"
+		aria-label="Close tutorial"
+	></div>
 
 	<div class="epub-tutorial-panel">
 		<div class="epub-tutorial-header">
@@ -89,13 +95,12 @@
 					<div class="epub-tut-section">
 						<div class="epub-tut-title">布局模式</div>
 						<div class="epub-tut-text">
-							<p>标题栏布局按钮可切换三种模式：</p>
+							<p>标题栏布局按钮可切换两种模式：</p>
 							<ul>
-								<li><strong>滚动模式</strong> <span class="epub-tut-icon" use:icon={'scroll-text'}></span> - 连续滚动阅读（默认）</li>
-								<li><strong>翻页模式</strong> <span class="epub-tut-icon" use:icon={'file-text'}></span> - 单页翻页，底部有翻页按钮</li>
+								<li><strong>翻页模式</strong> <span class="epub-tut-icon" use:icon={'file-text'}></span> - 单页翻页（默认）</li>
 								<li><strong>双栏模式</strong> <span class="epub-tut-icon" use:icon={'book-open'}></span> - 双栏翻页，模拟实体书</li>
 							</ul>
-							<p>翻页/双栏模式下可用 <strong>左右方向键</strong> 翻页。</p>
+							<p>可用 <strong>左右方向键</strong> 翻页。</p>
 						</div>
 					</div>
 
@@ -104,13 +109,10 @@
 					<div class="epub-tut-section">
 						<div class="epub-tut-title">显示设置</div>
 						<div class="epub-tut-text">
-							<p>点击标题栏 <span class="epub-tut-icon" use:icon={'a-large-small'}></span> 按钮打开显示设置：</p>
 							<ul>
-								<li><strong>护眼模式</strong> - 切换暖色调纸张背景</li>
-								<li><strong>字号调节</strong> - 12px ~ 32px 范围调节</li>
-								<li><strong>字体切换</strong> - Serif（衬线）/ Sans（无衬线）</li>
+								<li><strong>护眼模式</strong> <span class="epub-tut-icon" use:icon={'sun'}></span> - 切换暖色调纸张背景</li>
+								<li><strong>宽度模式</strong> <span class="epub-tut-icon" use:icon={'align-center'}></span> - 标准/全宽切换</li>
 							</ul>
-							<p>宽度按钮 <span class="epub-tut-icon" use:icon={'align-center'}></span> 可切换标准/全宽模式。</p>
 						</div>
 					</div>
 

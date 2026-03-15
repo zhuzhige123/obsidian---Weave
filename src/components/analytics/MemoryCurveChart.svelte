@@ -579,7 +579,7 @@
     background: rgba(255, 193, 7, 0.1);
     border: 1px solid rgba(255, 193, 7, 0.3);
     border-radius: 8px;
-    font-family: monospace;
+    font-family: var(--font-monospace, monospace);
     font-size: 12px;
     color: var(--weave-text-secondary);
   }

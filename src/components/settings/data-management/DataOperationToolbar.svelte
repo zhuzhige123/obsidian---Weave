@@ -110,7 +110,7 @@
 <div class="data-operation-toolbar" class:disabled>
   <!-- 工具栏标题 -->
   <div class="toolbar-header">
-    <h3 class="section-title with-accent-bar accent-green">数据管理操作</h3>
+    <h3 class="section-title with-accent-bar accent-green">{t('dataManagement.title')}</h3>
   </div>
 
   <!-- 操作按钮网格 -->
@@ -147,7 +147,7 @@
   {#if operationInProgress}
     <div class="status-indicator">
       <div class="status-text">
-        正在执行: {operations.find(op => op.id === operationInProgress)?.label}
+        {operations.find(op => op.id === operationInProgress)?.label}...
       </div>
     </div>
   {/if}

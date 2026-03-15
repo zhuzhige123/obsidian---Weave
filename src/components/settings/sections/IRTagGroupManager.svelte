@@ -12,6 +12,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Notice, Menu } from 'obsidian';
+  import { tr as trStore } from '../../../utils/i18n';
   import type WeavePlugin from '../../../main';
   import type { IRTagGroup, IRTagGroupProfile } from '../../../types/ir-types';
   import { DEFAULT_TAG_GROUP_PROFILE } from '../../../types/ir-types';
@@ -21,6 +22,8 @@
   import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
   import { IRTagGroupService } from '../../../services/incremental-reading/IRTagGroupService';
   import { IRStorageService } from '../../../services/incremental-reading/IRStorageService';
+
+  let t = $derived($trStore);
 
   interface Props {
     plugin: WeavePlugin;
@@ -124,14 +127,14 @@
   // 删除标签组
   async function handleDelete(group: IRTagGroup) {
     if (group.id === 'default') {
-      new Notice('不能删除默认标签组');
+      new Notice(t('irTagGroup.cannotDeleteDefault'));
       return;
     }
 
     const confirmed = await showObsidianConfirm(
       plugin.app,
-      `确定要删除标签组「${group.name}」吗？\n该组下的文档将回归默认组。`,
-      { title: '确认删除' }
+      t('irTagGroup.deleteConfirm', { name: group.name }),
+      { title: t('common.confirmDelete') }
     );
     
     if (!confirmed) return;
@@ -149,9 +152,9 @@
       });
       hasInitialized = false;
       await loadData();
-      new Notice(`已删除标签组「${group.name}」`);
+      new Notice(t('irTagGroup.deleted', { name: group.name }));
     } catch (error) {
-      new Notice('删除失败');
+      new Notice(t('irTagGroup.deleteFailed'));
     }
   }
 
@@ -166,7 +169,7 @@
       if (!editingGroup) {
         await service.getProfile(group.id);
       }
-      new Notice(editingGroup ? `已更新标签组「${group.name}」` : `已创建标签组「${group.name}」`);
+      new Notice(editingGroup ? t('irTagGroup.updated', { name: group.name }) : t('irTagGroup.created', { name: group.name }));
 
       showEditor = false;
       editingGroup = null;
@@ -175,7 +178,7 @@
       hasInitialized = false;
       await loadData();
     } catch (error) {
-      new Notice('保存失败: ' + (error as Error).message);
+      new Notice(t('irTagGroup.saveFailed') + (error as Error).message);
     }
   }
 
@@ -222,14 +225,14 @@
   <!-- 头部 -->
   <div class="manager-header">
     <div class="header-info">
-      <div class="header-title">材料类型标签组</div>
+      <div class="header-title">{t('irTagGroup.managerTitle')}</div>
       <p class="header-desc">
-        按标签对阅读材料分组，每组可学习独立的调度节奏参数
+        {t('irTagGroup.managerDesc')}
       </p>
     </div>
     <button class="create-btn" onclick={handleCreate}>
       <EnhancedIcon name="plus" size={16} />
-      <span>新建标签组</span>
+      <span>{t('irTagGroup.createBtn')}</span>
     </button>
   </div>
 
@@ -237,38 +240,30 @@
   {#if isLoading}
     <div class="loading-state">
       <EnhancedIcon name="loader" size={24} />
-      <span>加载中...</span>
+      <span>{t('irTagGroup.loading')}</span>
     </div>
   {:else if loadError}
     <div class="error-state">
       <EnhancedIcon name="alert-circle" size={24} />
-      <span>加载失败: {loadError}</span>
+      <span>{t('irTagGroup.loadFailed')}{loadError}</span>
       <button class="retry-btn" onclick={() => { hasInitialized = false; loadData(); }}>
-        重试
+        {t('irTagGroup.retryBtn')}
       </button>
     </div>
   {:else if tagGroups.length === 0}
-    <div class="empty-state">
-      <EnhancedIcon name="inbox" size={40} />
-      <h4>还没有自定义标签组</h4>
-      <p>创建标签组来为不同类型的阅读材料定制调度节奏</p>
-      <button class="empty-create-btn" onclick={handleCreate}>
-        <EnhancedIcon name="plus" size={16} />
-        创建第一个标签组
-      </button>
-    </div>
+    <!-- empty: no custom tag groups -->
   {:else}
     <div class="tag-group-table-container">
       <table class="tag-group-table">
         <thead>
           <tr>
-            <th class="col-name">名称</th>
-            <th class="col-tags">标签</th>
-            <th class="col-docs">文档数</th>
-            <th class="col-factor">间隔因子</th>
-            <th class="col-samples">样本量</th>
-            <th class="col-priority">优先级</th>
-            <th class="col-actions">操作</th>
+            <th class="col-name">{t('irTagGroup.colName')}</th>
+            <th class="col-tags">{t('irTagGroup.colTags')}</th>
+            <th class="col-docs">{t('irTagGroup.colDocs')}</th>
+            <th class="col-factor">{t('irTagGroup.colFactor')}</th>
+            <th class="col-samples">{t('irTagGroup.colSamples')}</th>
+            <th class="col-priority">{t('irTagGroup.colPriority')}</th>
+            <th class="col-actions">{t('irTagGroup.colActions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -309,7 +304,7 @@
     </div>
 
     <!-- 默认组提示 -->
-    <div class="default-group-hint">未匹配任何标签组的文档将使用默认组参数</div>
+    <div class="default-group-hint">{t('irTagGroup.defaultGroupHint')}</div>
   {/if}
 </div>
 
@@ -424,48 +419,6 @@
   .retry-btn:hover {
     background: var(--background-secondary);
     border-color: var(--interactive-accent);
-  }
-
-  /* 空状态 */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 32px 20px;
-    text-align: center;
-    color: var(--text-muted);
-  }
-
-  .empty-state h4 {
-    margin: 12px 0 6px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-normal);
-  }
-
-  .empty-state p {
-    margin: 0 0 16px;
-    font-size: 0.85rem;
-  }
-
-  .empty-create-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border: 1px dashed var(--background-modifier-border);
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-
-  .empty-create-btn:hover {
-    border-color: var(--interactive-accent);
-    color: var(--interactive-accent);
-    background: var(--background-primary);
   }
 
   /* 表格容器 */

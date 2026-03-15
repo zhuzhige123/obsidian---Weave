@@ -144,8 +144,7 @@
     align-items: center;
   }
 
-  input,
-  select {
+  input {
     width: 100%;
     padding: 0.5rem;
     border: 1px solid var(--background-modifier-border);
@@ -156,14 +155,12 @@
     transition: border-color 0.2s ease;
   }
 
-  input:focus,
-  select:focus {
+  input:focus {
     outline: none;
     border-color: var(--interactive-accent);
   }
 
-  input:disabled,
-  select:disabled {
+  input:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }

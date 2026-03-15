@@ -8,7 +8,7 @@ import { logger } from '../../utils/logger';
  */
 
 import type { Plugin } from 'obsidian';
-import { getV2Paths } from '../../config/paths';
+import { getPluginPaths, getV2Paths } from '../../config/paths';
 
 export class StoragePathManager {
   private plugin: Plugin;
@@ -48,8 +48,7 @@ export class StoragePathManager {
    * @returns 完整路径
    */
   getBackupPath(subPath?: string): string {
-    const configDir = this.plugin.app.vault.configDir;
-    const baseFolder = `${configDir}/plugins/weave/backups`;
+    const baseFolder = getPluginPaths(this.plugin.app).backups;
     return subPath ? `${baseFolder}/${subPath}` : baseFolder;
   }
   
@@ -100,31 +99,8 @@ export class StoragePathManager {
    * @returns 完整路径
    */
   getCachePath(subPath?: string): string {
-    const pluginDir = this.plugin.manifest.dir;  // .obsidian/plugins/weave
-    const cacheFolder = `${pluginDir}/cache`;
+    const cacheFolder = getPluginPaths(this.plugin.app).cache.root;
     return subPath ? `${cacheFolder}/${subPath}` : cacheFolder;
-  }
-  
-  /**
-   * 获取临时文件夹路径（插件目录，不同步）
-   * @param subPath 子路径（可选）
-   * @returns 完整路径
-   */
-  getTempPath(subPath?: string): string {
-    const pluginDir = this.plugin.manifest.dir;
-    const tempFolder = `${pluginDir}/temp`;
-    return subPath ? `${tempFolder}/${subPath}` : tempFolder;
-  }
-  
-  /**
-   * 获取日志文件夹路径（插件目录，不同步）
-   * @param subPath 子路径（可选）
-   * @returns 完整路径
-   */
-  getLogPath(subPath?: string): string {
-    const pluginDir = this.plugin.manifest.dir;
-    const logFolder = `${pluginDir}/logs`;
-    return subPath ? `${logFolder}/${subPath}` : logFolder;
   }
   
   /**
@@ -132,8 +108,7 @@ export class StoragePathManager {
    * @returns 插件目录绝对路径
    */
   getPluginDirPath(): string {
-    const configDir = this.plugin.app.vault.configDir;  // .obsidian
-    return `${configDir}/plugins/${this.plugin.manifest.id}`;
+    return getPluginPaths(this.plugin.app).root;
   }
   
   /**
@@ -190,8 +165,6 @@ export class StoragePathManager {
     const folders = [
       this.getCachePath(),                 // cache/
       this.getCachePath('card-snapshots'), // cache/card-snapshots/
-      this.getTempPath(),                  // temp/
-      this.getLogPath(),                   // logs/
     ];
     
     for (const folder of folders) {

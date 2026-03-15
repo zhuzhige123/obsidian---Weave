@@ -1,10 +1,12 @@
 <script lang="ts">
-  interface Props { variant?: 'default' | 'success' | 'warning' | 'error'; }
-  let { variant = 'default' }: Props = $props();
+  import type { Snippet } from 'svelte';
+
+  interface Props { variant?: 'default' | 'success' | 'warning' | 'error'; children?: Snippet; }
+  let { variant = 'default', children }: Props = $props();
 </script>
 
 <span class="cursor-badge {variant}">
-  <slot />
+  {@render children?.()}
 </span>
 
 <style>

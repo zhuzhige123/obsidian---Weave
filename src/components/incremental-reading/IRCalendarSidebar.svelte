@@ -11,17 +11,20 @@
   import { IRStorageService } from '../../services/incremental-reading/IRStorageService';
   import { IRChunkScheduleAdapter } from '../../services/incremental-reading/IRChunkScheduleAdapter';
   import { IRPdfBookmarkTaskService, isPdfBookmarkTaskId } from '../../services/incremental-reading/IRPdfBookmarkTaskService';
+  import { IREpubBookmarkTaskService, isEpubBookmarkTaskId } from '../../services/incremental-reading/IREpubBookmarkTaskService';
   import { IRTagGroupService } from '../../services/incremental-reading/IRTagGroupService';
   import { calculatePriorityEWMA, calculateNextInterval, calculateNextRepDate, calculatePsi } from '../../services/incremental-reading/IRCoreAlgorithmsV4';
   import ObsidianIcon from '../ui/ObsidianIcon.svelte';
   import FloatingMenu from '../ui/FloatingMenu.svelte';
   import IRPrioritySlider from './IRPrioritySlider.svelte';
   import MaterialImportModal from './MaterialImportModal.svelte';
+  import AddReadingPointModal from './AddReadingPointModal.svelte';
   import IRBlockInfoModal from './IRBlockInfoModal.svelte';
   import IRReviewReminderModal from './IRReviewReminderModal.svelte';
   import type { BatchImportResult } from '../../services/incremental-reading/ReadingMaterialManager';
   import { logger } from '../../utils/logger';
   import { showDeleteConfirm, showObsidianConfirm, showObsidianInput } from '../../utils/obsidian-confirm';
+  import { VIEW_TYPE_EPUB } from '../../views/EpubView';
 
   interface Props {
     plugin: AnkiObsidianPlugin;
@@ -82,6 +85,7 @@
   let irStorage = $state<IRStorageService | null>(null);
   let chunkScheduleAdapter = $state<IRChunkScheduleAdapter | null>(null);
   let pdfBookmarkTaskService = $state<IRPdfBookmarkTaskService | null>(null);
+  let epubBookmarkTaskService = $state<IREpubBookmarkTaskService | null>(null);
 
   let schedulingMenuAnchor = $state<HTMLElement | null>(null);
   let schedulingMenuOpen = $state(false);
@@ -109,6 +113,12 @@
   // 导入模态窗状态
   let showImportModal = $state(false);
 
+  // 新增阅读点弹窗状态
+  let showAddReadingPointModal = $state(false);
+  let arpDeckId = $state('');
+  let arpPdfPath = $state('');
+  let arpParentTitle = $state('');
+
   // 连续阅读模式
   let continuousReadingEnabled = $state(false);
   // 显示调度时间
@@ -135,10 +145,15 @@
 
       const doneItems: ScheduleItem[] = [];
       const unresolvedPdfIds: string[] = [];
+      const unresolvedEpubIds: string[] = [];
 
       for (const id of doneIds) {
         if (isPdfBookmarkTaskId(id)) {
           unresolvedPdfIds.push(id);
+          continue;
+        }
+        if (isEpubBookmarkTaskId(id)) {
+          unresolvedEpubIds.push(id);
           continue;
         }
 
@@ -188,6 +203,28 @@
           }
         } catch (e) {
           logger.warn('[IRCalendarSidebar] PDF 书签任务恢复失败:', e);
+        }
+      }
+
+      if (unresolvedEpubIds.length > 0) {
+        try {
+          const epubService = await getEpubBookmarkTaskService();
+          for (const eid of unresolvedEpubIds) {
+            const task = await epubService.getTask(eid);
+            if (!task) continue;
+            doneItems.push({
+              id: eid,
+              title: String(task.title || '').trim() || 'EPUB',
+              sourceFile: task.epubFilePath,
+              priority: Number(task.priorityUi ?? task.priorityEff ?? 5),
+              intervalDays: Number(task.intervalDays ?? 1),
+              scheduleStatus: String(task.status || 'new'),
+              nextRepDate: Number(task.nextRepDate || 0),
+              nextReviewDate: task.nextRepDate ? new Date(task.nextRepDate) : null,
+            });
+          }
+        } catch (e) {
+          logger.warn('[IRCalendarSidebar] EPUB 书签任务恢复失败:', e);
         }
       }
 
@@ -362,6 +399,14 @@
     return pdfBookmarkTaskService;
   }
 
+  async function getEpubBookmarkTaskService(): Promise<IREpubBookmarkTaskService> {
+    if (!epubBookmarkTaskService) {
+      epubBookmarkTaskService = new IREpubBookmarkTaskService(plugin.app);
+    }
+    await epubBookmarkTaskService.initialize();
+    return epubBookmarkTaskService;
+  }
+
   function getNextUnprocessedMaterial(currentId: string): ScheduleItem | null {
     const list = selectedMaterials;
     if (!list || list.length === 0) return null;
@@ -394,6 +439,42 @@
           detail: { blockId: material.id } 
         });
         window.dispatchEvent(event);
+        return;
+      }
+
+      // EPUB: reuse existing tab or open new, then navigate
+      if (isEpubBookmarkTaskId(material.id)) {
+        try {
+          const epubService = await getEpubBookmarkTaskService();
+          const task = await epubService.getTask(material.id);
+          if (task) {
+            const navDetail: any = { filePath: task.epubFilePath };
+            if (task.resumeCfi) {
+              navDetail.cfi = task.resumeCfi;
+            } else if (task.tocHref) {
+              navDetail.href = task.tocHref;
+            }
+
+            const existingLeaf = plugin.app.workspace.getLeavesOfType(VIEW_TYPE_EPUB)
+              .find(leaf => {
+                try {
+                  const state = (leaf.view as any)?.getState?.();
+                  return state?.filePath === task.epubFilePath || state?.file === task.epubFilePath;
+                } catch { return false; }
+              });
+
+            if (existingLeaf) {
+              plugin.app.workspace.setActiveLeaf(existingLeaf, { focus: true });
+              window.dispatchEvent(new CustomEvent('Weave:epub-navigate', { detail: navDetail }));
+            } else {
+              (window as any).__weaveEpubPendingNav = navDetail;
+              const ctxPath = plugin.app.workspace.getActiveFile()?.path ?? '';
+              await plugin.app.workspace.openLinkText(task.epubFilePath, ctxPath, false);
+            }
+          }
+        } catch (e) {
+          logger.warn('[IRCalendarSidebar] EPUB 导航失败:', e);
+        }
         return;
       }
 
@@ -511,6 +592,10 @@
       if (isPdfBookmarkTaskId(materialId)) {
         const pdfService = await getPdfBookmarkTaskService();
         const task = await pdfService.getTask(materialId);
+        tagGroup = task?.meta?.tagGroup || 'default';
+      } else if (isEpubBookmarkTaskId(materialId)) {
+        const epubService = await getEpubBookmarkTaskService();
+        const task = await epubService.getTask(materialId);
         tagGroup = task?.meta?.tagGroup || 'default';
       } else {
         const storage = await getStorage();
@@ -640,6 +725,13 @@
         const lastInteraction = (task as any)?.stats?.lastInteraction || (task as any)?.updatedAt || 0;
         const eff = calculatePriorityEWMA(ui, oldEff, halfLifeDays, lastInteraction > 0 ? lastInteraction : undefined);
         await pdfService.updateTask(target.id, { priorityUi: ui, priorityEff: eff });
+      } else if (isEpubBookmarkTaskId(target.id)) {
+        const epubService = await getEpubBookmarkTaskService();
+        const task = await epubService.getTask(target.id);
+        const oldEff = (task as any)?.priorityEff ?? (task as any)?.priorityUi ?? target.priority ?? 5;
+        const lastInteraction = (task as any)?.stats?.lastInteraction || (task as any)?.updatedAt || 0;
+        const eff = calculatePriorityEWMA(ui, oldEff, halfLifeDays, lastInteraction > 0 ? lastInteraction : undefined);
+        await epubService.updateTask(target.id, { priorityUi: ui, priorityEff: eff });
       } else {
         const storage = await getStorage();
         const chunk = await storage.getChunkData(target.id);
@@ -664,6 +756,9 @@
       if (isPdfBookmarkTaskId(material.id)) {
         const pdfService = await getPdfBookmarkTaskService();
         await pdfService.updateTask(material.id, { status: 'suspended' });
+      } else if (isEpubBookmarkTaskId(material.id)) {
+        const epubService = await getEpubBookmarkTaskService();
+        await epubService.updateTask(material.id, { status: 'suspended' });
       } else {
         const adapter = await getChunkScheduleAdapter();
         await adapter.updateChunkSchedule(material.id, { scheduleStatus: 'suspended' as any });
@@ -683,6 +778,9 @@
       if (isPdfBookmarkTaskId(material.id)) {
         const pdfService = await getPdfBookmarkTaskService();
         await pdfService.updateTask(material.id, { status: 'done' });
+      } else if (isEpubBookmarkTaskId(material.id)) {
+        const epubService = await getEpubBookmarkTaskService();
+        await epubService.updateTask(material.id, { status: 'done' });
       } else {
         const adapter = await getChunkScheduleAdapter();
         await adapter.updateChunkSchedule(material.id, { scheduleStatus: 'done' as any });
@@ -702,6 +800,9 @@
       if (isPdfBookmarkTaskId(material.id)) {
         const pdfService = await getPdfBookmarkTaskService();
         await pdfService.updateTask(material.id, { status: 'removed' as any });
+      } else if (isEpubBookmarkTaskId(material.id)) {
+        const epubService = await getEpubBookmarkTaskService();
+        await epubService.updateTask(material.id, { status: 'removed' as any });
       } else {
         const adapter = await getChunkScheduleAdapter();
         await adapter.updateChunkSchedule(material.id, { scheduleStatus: 'removed' as any });
@@ -721,6 +822,9 @@
       if (isPdfBookmarkTaskId(material.id)) {
         const pdfService = await getPdfBookmarkTaskService();
         await pdfService.deleteTask(material.id);
+      } else if (isEpubBookmarkTaskId(material.id)) {
+        const epubService = await getEpubBookmarkTaskService();
+        await epubService.deleteTask(material.id);
       } else {
         const storage = await getStorage();
         await storage.deleteChunkData(material.id);
@@ -746,6 +850,7 @@
 
       const allGroups = await service.getAllGroups();
       const isPdf = isPdfBookmarkTaskId(material.id);
+      const isEpub = isEpubBookmarkTaskId(material.id);
       const storage = await getStorage();
 
       // 获取当前标签组
@@ -753,6 +858,12 @@
       if (isPdf) {
         const pdfService = await getPdfBookmarkTaskService();
         const task = await pdfService.getTask(material.id);
+        if (task?.meta?.tagGroup) {
+          currentGroupId = task.meta.tagGroup;
+        }
+      } else if (isEpub) {
+        const epubService = await getEpubBookmarkTaskService();
+        const task = await epubService.getTask(material.id);
         if (task?.meta?.tagGroup) {
           currentGroupId = task.meta.tagGroup;
         }
@@ -772,30 +883,31 @@
             .setDisabled(group.id === currentGroupId)
             .onClick(async () => {
               try {
-                if (isPdf) {
-                  // PDF 书签：需要输入「我确认」
-                  const pdfService = await getPdfBookmarkTaskService();
-                  const task = await pdfService.getTask(material.id);
-                  const pdfPath = task?.pdfPath || '';
-                  const pdfName = pdfPath.split('/').pop() || 'PDF';
+                if (isPdf || isEpub) {
+                  // PDF/EPUB 书签：需要输入「我确认」
+                  const bookService = isPdf ? await getPdfBookmarkTaskService() : await getEpubBookmarkTaskService();
+                  const task = await bookService.getTask(material.id);
+                  const bookPath = isPdf ? (task as any)?.pdfPath || '' : (task as any)?.epubFilePath || '';
+                  const pdfName = bookPath.split('/').pop() || (isPdf ? 'PDF' : 'EPUB');
 
                   const inputVal = await showObsidianInput(
                     plugin.app,
-                    `切换「${pdfName}」的所有书签到标签组「${group.name}」，将影响该 PDF 下全部书签的调度参数。\n\n请输入「我确认」以继续：`,
+                    `切换「${pdfName}」的所有书签到标签组「${group.name}」，将影响该文档下全部书签的调度参数。\n\n请输入「我确认」以继续：`,
                     '',
-                    { title: '切换 PDF 标签组', placeholder: '我确认', confirmText: '切换' }
+                    { title: '切换标签组', placeholder: '我确认', confirmText: '切换' }
                   );
                   if (inputVal?.trim() !== '我确认') {
                     if (inputVal !== null) new Notice('输入不匹配，已取消');
                     return;
                   }
 
-                  // 批量更新同一 PDF 下所有书签
-                  const allTasks = await pdfService.getAllTasks();
+                  // 批量更新同一文档下所有书签
+                  const allTasks = await bookService.getAllTasks();
                   let updatedCount = 0;
                   for (const t of allTasks) {
-                    if (t.pdfPath === pdfPath) {
-                      await pdfService.updateTask(t.id, {
+                    const tPath = isPdf ? (t as any).pdfPath : (t as any).epubFilePath;
+                    if (tPath === bookPath) {
+                      await bookService.updateTask(t.id, {
                         meta: { ...t.meta, tagGroup: group.id }
                       } as any);
                       updatedCount++;
@@ -803,8 +915,8 @@
                   }
 
                   // 同步 documentMapCache
-                  if (pdfPath) {
-                    await service.updateDocumentGroupManual(pdfPath, group.id);
+                  if (bookPath) {
+                    await service.updateDocumentGroupManual(bookPath, group.id);
                   }
 
                   new Notice(`已将「${pdfName}」的 ${updatedCount} 个书签切换到标签组「${group.name}」`);
@@ -872,16 +984,18 @@
     try {
       let blockInfoTarget: any;
 
-      if (isPdfBookmarkTaskId(material.id)) {
-        const pdfService = await getPdfBookmarkTaskService();
-        const task = await pdfService.getTask(material.id);
+      if (isPdfBookmarkTaskId(material.id) || isEpubBookmarkTaskId(material.id)) {
+        const isPdf = isPdfBookmarkTaskId(material.id);
+        const bookService = isPdf ? await getPdfBookmarkTaskService() : await getEpubBookmarkTaskService();
+        const task = await bookService.getTask(material.id);
         if (!task) {
-          new Notice('PDF 书签任务不存在');
+          new Notice(isPdf ? 'PDF 书签任务不存在' : 'EPUB 书签任务不存在');
           return;
         }
+        const filePath = isPdf ? (task as any).pdfPath : (task as any).epubFilePath;
         blockInfoTarget = {
           id: task.id,
-          filePath: task.pdfPath ?? material.sourceFile ?? '',
+          filePath: filePath ?? material.sourceFile ?? '',
           state: task.status ?? 'new',
           priority: Math.round(task.priorityUi ?? task.priorityEff ?? material.priority ?? 5),
           priorityUi: task.priorityUi ?? material.priority ?? 5,
@@ -970,6 +1084,12 @@
           nextRepDate: reviewDateTime.getTime(),
           status: 'queued'
         });
+      } else if (isEpubBookmarkTaskId(material.id)) {
+        const epubService = await getEpubBookmarkTaskService();
+        await epubService.updateTask(material.id, {
+          nextRepDate: reviewDateTime.getTime(),
+          status: 'queued'
+        });
       } else {
         const adapter = await getChunkScheduleAdapter();
         await adapter.updateChunkSchedule(material.id, {
@@ -1027,34 +1147,30 @@
     const sourceFile = material.sourceFile;
     if (!sourceFile) return [];
 
-    const todayKey = formatDateKey(selectedDate);
-    const todayIds = new Set((materialsByDate.get(todayKey) || []).map(m => m.id));
-
+    const collectedIds = new Set<string>([material.id]);
     const siblings: ScheduleItem[] = [];
 
-    // 收集所有日期中同源的 items
+    // 收集所有日期中同源的 items（不排除当天项，以便形成完整目录结构）
     for (const [_dateKey, items] of materialsByDate) {
       for (const item of items) {
-        if (item.id === material.id) continue;
+        if (collectedIds.has(item.id)) continue;
         if (item.sourceFile !== sourceFile) continue;
-        if (todayIds.has(item.id)) continue;
+        collectedIds.add(item.id);
         siblings.push(item);
       }
     }
 
-    // 也查找未出现在 materialsByDate 中的同源 PDF 书签任务（done/suspended 状态已过滤掉的除外）
-    if (isPdfBookmarkTaskId(material.id)) {
+    // 查找同源 PDF 书签任务（无论当前项是否为 PDF 书签，只要 sourceFile 是 PDF 就查找）
+    if (sourceFile.toLowerCase().endsWith('.pdf')) {
       try {
         const pdfService = await getPdfBookmarkTaskService();
         const allTasks = await pdfService.getAllTasks();
-        const existingIds = new Set(siblings.map(s => s.id));
         for (const task of allTasks) {
-          if (task.id === material.id) continue;
+          if (collectedIds.has(task.id)) continue;
           if (task.pdfPath !== sourceFile) continue;
-          if (existingIds.has(task.id)) continue;
-          if (todayIds.has(task.id)) continue;
           const status = String(task.status || 'new');
           if (status === 'done' || status === 'removed') continue;
+          collectedIds.add(task.id);
           siblings.push({
             id: task.id,
             title: String(task.title || '').trim() || 'PDF',
@@ -1070,6 +1186,29 @@
         }
       } catch (e) {
         logger.warn('[IRCalendarSidebar] 查找同源 PDF 书签失败:', e);
+      }
+    } else if (isEpubBookmarkTaskId(material.id) || sourceFile.toLowerCase().endsWith('.epub')) {
+      try {
+        const epubService = await getEpubBookmarkTaskService();
+        const allTasks = await epubService.getTasksByEpub(sourceFile);
+        for (const task of allTasks) {
+          if (collectedIds.has(task.id)) continue;
+          const status = String(task.status || 'new');
+          if (status === 'done' || status === 'removed') continue;
+          collectedIds.add(task.id);
+          siblings.push({
+            id: task.id,
+            title: String(task.title || '').trim() || 'EPUB',
+            sourceFile: task.epubFilePath,
+            priority: Number(task.priorityUi ?? task.priorityEff ?? 5),
+            intervalDays: Number(task.intervalDays ?? 1),
+            scheduleStatus: status,
+            nextRepDate: Number(task.nextRepDate || 0),
+            nextReviewDate: task.nextRepDate ? new Date(task.nextRepDate) : null,
+          });
+        }
+      } catch (e) {
+        logger.warn('[IRCalendarSidebar] 查找同源 EPUB 书签失败:', e);
       }
     }
 
@@ -1204,6 +1343,20 @@
           });
       });
 
+      // 仅对 PDF 项显示「新增阅读点」
+      if (material.sourceFile?.toLowerCase().endsWith('.pdf')) {
+        menu.addSeparator();
+
+        menu.addItem((item) => {
+          item
+            .setTitle('新增阅读点')
+            .setIcon('bookmark-plus')
+            .onClick(() => {
+              void openAddReadingPointModal(material);
+            });
+        });
+      }
+
       menu.addSeparator();
 
       menu.addItem((item) => {
@@ -1251,6 +1404,47 @@
     if (diffDays === 0) return '今天';
     if (diffDays === 1) return '明天';
     return `${diffDays}天后`;
+  }
+
+  async function openAddReadingPointModal(material: ScheduleItem): Promise<void> {
+    try {
+      let resolvedDeckId = '';
+
+      if (isPdfBookmarkTaskId(material.id)) {
+        const pdfService = await getPdfBookmarkTaskService();
+        const task = await pdfService.getTask(material.id);
+        resolvedDeckId = task?.deckId || '';
+      }
+
+      if (!resolvedDeckId) {
+        // 尝试从 irDecks 中找到包含此 sourceFile 的牌组
+        for (const deck of irDecks) {
+          const blocks = Object.values(await (await getStorage()).getAllBlocks());
+          const match = blocks.find((b: any) => b.sourcePath === material.sourceFile && b.deckId === deck.id);
+          if (match) {
+            resolvedDeckId = deck.id;
+            break;
+          }
+        }
+      }
+
+      if (!resolvedDeckId && irDecks.length > 0) {
+        resolvedDeckId = irDecks[0].id;
+      }
+
+      if (!resolvedDeckId) {
+        new Notice('未找到可用的增量阅读牌组');
+        return;
+      }
+
+      arpDeckId = resolvedDeckId;
+      arpPdfPath = material.sourceFile;
+      arpParentTitle = material.displayName || material.title || 'PDF';
+      showAddReadingPointModal = true;
+    } catch (error) {
+      logger.error('[IRCalendarSidebar] 打开新增阅读点弹窗失败:', error);
+      new Notice('操作失败');
+    }
   }
 
   function handleMaterialContextMenu(event: MouseEvent, anchor: HTMLElement, material: ScheduleItem) {
@@ -1378,6 +1572,14 @@
           status: updates.scheduleStatus ?? undefined
         });
         await pdfService.recordTaskInteraction(target.id, 0, {});
+      } else if (isEpubBookmarkTaskId(target.id)) {
+        const epubService = await getEpubBookmarkTaskService();
+        await epubService.updateTask(target.id, {
+          intervalDays: updates.intervalDays,
+          nextRepDate: updates.nextRepDate,
+          status: updates.scheduleStatus ?? undefined
+        });
+        await epubService.recordTaskInteraction(target.id, 0, {});
       } else {
         const adapter = await getChunkScheduleAdapter();
         await adapter.updateChunkSchedule(target.id, updates);
@@ -1540,6 +1742,43 @@
         logger.warn('[IRCalendarSidebar] 加载 PDF 书签任务失败:', e);
       }
 
+      try {
+        const epubService = await getEpubBookmarkTaskService();
+        const epubTasks = await epubService.getAllTasks();
+        for (const task of epubTasks) {
+          const status = String(task.status || 'new');
+          if (status === 'done' || status === 'suspended' || status === 'removed') continue;
+
+          let dateKey: string;
+          let nextReviewDate: Date | null = null;
+          const nextRepDate = Number(task.nextRepDate || 0);
+          if (nextRepDate > 0) {
+            nextReviewDate = new Date(nextRepDate);
+            dateKey = formatDateKey(nextReviewDate);
+          } else {
+            dateKey = formatDateKey(now);
+          }
+
+          const item: ScheduleItem = {
+            id: task.id,
+            title: String(task.title || '').trim() || 'EPUB',
+            sourceFile: task.epubFilePath,
+            priority: Number(task.priorityUi ?? task.priorityEff ?? 5),
+            intervalDays: Number(task.intervalDays ?? 1),
+            scheduleStatus: status,
+            nextRepDate,
+            nextReviewDate
+          };
+
+          if (!byDate.has(dateKey)) {
+            byDate.set(dateKey, []);
+          }
+          byDate.get(dateKey)!.push(item);
+        }
+      } catch (e) {
+        logger.warn('[IRCalendarSidebar] 加载 EPUB 书签任务失败:', e);
+      }
+
       materialsByDate = byDate;
 
       logger.debug('[IRCalendarSidebar] 数据加载完成:', {
@@ -1561,9 +1800,25 @@
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const handleDataUpdate = () => {
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        loadData();
+      debounceTimer = setTimeout(async () => {
+        const previouslyExpanded = new Set(expandedMaterialIds);
+        siblingCache = new Map();
+        await loadData();
         loadCalendarProgress();
+
+        // 重新加载已展开项的同源书签
+        if (previouslyExpanded.size > 0) {
+          const todayKey = formatDateKey(selectedDate);
+          const todayItems = materialsByDate.get(todayKey) || [];
+          for (const item of todayItems) {
+            if (previouslyExpanded.has(item.id)) {
+              const siblings = await getSiblingMaterials(item);
+              const next = new Map(siblingCache);
+              next.set(item.id, siblings);
+              siblingCache = next;
+            }
+          }
+        }
       }, 100);
     };
     window.addEventListener('Weave:ir-data-updated', handleDataUpdate);
@@ -1785,6 +2040,18 @@
   onClose={() => showImportModal = false}
   onImportComplete={handleImportComplete}
 />
+
+<!-- 新增阅读点弹窗 -->
+{#if showAddReadingPointModal}
+  <AddReadingPointModal
+    {plugin}
+    deckId={arpDeckId}
+    pdfPath={arpPdfPath}
+    parentTitle={arpParentTitle}
+    onClose={() => { showAddReadingPointModal = false; }}
+    onCreated={() => { showAddReadingPointModal = false; }}
+  />
+{/if}
 
 <style>
   .ir-calendar-sidebar {

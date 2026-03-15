@@ -77,6 +77,12 @@
   let debounceTimer: ReturnType<typeof setTimeout>;
   let isFocused = $state(false);
 
+  $effect(() => {
+    if (autofocus && inputRef && !disabled) {
+      inputRef.focus();
+    }
+  });
+
   // 计算 CSS 类
   let searchBarClasses = $derived.by(() => {
     const classes = [
@@ -125,12 +131,6 @@
     if (event.key === 'Enter') {
       event.preventDefault();
       handleSearchClick();
-    } else if (event.key === 'Escape') {
-      if (value) {
-        handleClear();
-      } else {
-        inputRef?.blur();
-      }
     }
   }
 
@@ -168,7 +168,6 @@
     class="weave-search-bar__input"
     {placeholder}
     {disabled}
-    {autofocus}
     maxlength={maxLength}
     value={value}
     oninput={handleInput}

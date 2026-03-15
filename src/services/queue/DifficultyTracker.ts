@@ -26,7 +26,7 @@ import { logger } from '../../utils/logger';
 
 export class DifficultyTracker {
   private config: DifficultyTrackingConfig;
-  private eventListeners: Map<string, Function[]> = new Map();
+  private eventListeners: Map<string, ((...args: any[]) => void)[]> = new Map();
   
   constructor(config: DifficultyTrackingConfig) {
     this.config = config;
@@ -351,14 +351,14 @@ export class DifficultyTracker {
   // 事件系统
   // ============================================
   
-  on(event: string, callback: Function): void {
+  on(event: string, callback: (...args: any[]) => void): void {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, []);
     }
     this.eventListeners.get(event)!.push(callback);
   }
   
-  off(event: string, callback: Function): void {
+  off(event: string, callback: (...args: any[]) => void): void {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
       const index = listeners.indexOf(callback);

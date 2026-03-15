@@ -64,14 +64,26 @@
     resetState();
   }
 
+  function handleOverlayClick(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      handleCancel();
+    }
+  }
+
+  function handleOverlayKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      handleCancel();
+    }
+  }
+
   $effect(() => {
     if (!open) resetState();
   });
 </script>
 
 {#if open}
-<div class="bdc-overlay" onclick={(e) => { if (e.currentTarget === e.target) handleCancel() }} role="button" tabindex="0">
-  <div class="bdc-modal" class:mobile={isMobile} role="dialog" aria-labelledby="bdc-title">
+<div class="bdc-overlay" onclick={handleOverlayClick} onkeydown={handleOverlayKeydown} role="presentation" tabindex="-1">
+  <div class="bdc-modal" class:mobile={isMobile} role="dialog" aria-modal="true" aria-labelledby="bdc-title">
     <!-- 标题栏 - 使用多彩侧边颜色条 -->
     <header class="bdc-header">
       <h2 id="bdc-title" class="bdc-title with-accent-bar accent-cyan">

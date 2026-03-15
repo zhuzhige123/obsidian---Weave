@@ -23,7 +23,7 @@ export class UUIDStorageImpl implements IUUIDStorage {
   /**
    * 保存UUID记录
    */
-  async saveRecord(record: UUIDRecord): Promise<void> {
+  saveRecord(record: UUIDRecord): Promise<void> {
     logger.debug(`[UUIDStorageImpl] 💾 保存UUID记录: ${record.uuid} -> ${record.cardId}`);
     
     this.records.set(record.uuid, record);
@@ -36,34 +36,35 @@ export class UUIDStorageImpl implements IUUIDStorage {
     this.filePathIndex.get(record.sourceFile)?.add(record.uuid);
 
     // 持久化到存储
-    await this.persistToStorage();
+    this.persistToStorage();
     
     logger.debug(`[UUIDStorageImpl] ✅ UUID记录已保存并持久化: ${record.uuid}`);
     logger.debug(`[UUIDStorageImpl] 📊 当前记录总数: ${this.records.size}`);
+    return Promise.resolve();
   }
 
   /**
    * 根据UUID获取记录
    */
-  async getRecordByUUID(uuid: string): Promise<UUIDRecord | null> {
-    return this.records.get(uuid) || null;
+  getRecordByUUID(uuid: string): Promise<UUIDRecord | null> {
+    return Promise.resolve(this.records.get(uuid) || null);
   }
 
   /**
    * 根据卡片ID获取记录
    */
-  async getRecordByCardId(cardId: string): Promise<UUIDRecord | null> {
+  getRecordByCardId(cardId: string): Promise<UUIDRecord | null> {
     const uuid = this.cardIdIndex.get(cardId);
-    if (!uuid) return null;
-    return this.records.get(uuid) || null;
+    if (!uuid) return Promise.resolve(null);
+    return Promise.resolve(this.records.get(uuid) || null);
   }
 
   /**
    * 删除记录
    */
-  async deleteRecord(uuid: string): Promise<void> {
+  deleteRecord(uuid: string): Promise<void> {
     const record = this.records.get(uuid);
-    if (!record) return;
+    if (!record) return Promise.resolve();
 
     // 清理索引
     this.cardIdIndex.delete(record.cardId);
@@ -77,24 +78,25 @@ export class UUIDStorageImpl implements IUUIDStorage {
     }
 
     this.records.delete(uuid);
-    await this.persistToStorage();
+    this.persistToStorage();
+    return Promise.resolve();
   }
 
   /**
    * 检查UUID是否存在
    */
-  async uuidExists(uuid: string): Promise<boolean> {
+  uuidExists(uuid: string): Promise<boolean> {
     const exists = this.records.has(uuid);
     logger.debug(`[UUIDStorageImpl] 🔍 查询UUID: ${uuid} - ${exists ? '✅ 存在' : '❌ 不存在'} (总记录数: ${this.records.size})`);
-    return exists;
+    return Promise.resolve(exists);
   }
 
   /**
    * 获取文件的所有UUID
    */
-  async getFileUUIDs(filePath: string): Promise<UUIDRecord[]> {
+  getFileUUIDs(filePath: string): Promise<UUIDRecord[]> {
     const uuids = this.filePathIndex.get(filePath);
-    if (!uuids) return [];
+    if (!uuids) return Promise.resolve([]);
 
     const records: UUIDRecord[] = [];
     for (const uuid of uuids) {
@@ -102,13 +104,13 @@ export class UUIDStorageImpl implements IUUIDStorage {
       if (record) records.push(record);
     }
 
-    return records;
+    return Promise.resolve(records);
   }
 
   /**
    * 从存储加载数据
    */
-  private async loadFromStorage(): Promise<void> {
+  private loadFromStorage(): void {
     try {
       const data = vaultStorage.getItem('weave-uuid-records');
       if (!data) return;
@@ -141,7 +143,7 @@ export class UUIDStorageImpl implements IUUIDStorage {
   /**
    * 持久化到存储
    */
-  private async persistToStorage(): Promise<void> {
+  private persistToStorage(): void {
     try {
       const records = Array.from(this.records.values());
       vaultStorage.setItem('weave-uuid-records', JSON.stringify(records));
@@ -153,11 +155,12 @@ export class UUIDStorageImpl implements IUUIDStorage {
   /**
    * 清空所有记录
    */
-  async clear(): Promise<void> {
+  clear(): Promise<void> {
     this.records.clear();
     this.cardIdIndex.clear();
     this.filePathIndex.clear();
-    await this.persistToStorage();
+    this.persistToStorage();
+    return Promise.resolve();
   }
 
   /**

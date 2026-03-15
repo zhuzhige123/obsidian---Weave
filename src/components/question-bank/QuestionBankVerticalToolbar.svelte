@@ -272,7 +272,7 @@
       return;
     }
     
-    plugin.app.workspace.openLinkText(linkText, contextPath, true);
+    plugin.app.workspace.openLinkText(linkText, contextPath, 'tab');
     showMultiInfoMenu = false;
   }
 
@@ -311,7 +311,7 @@
       }
       
       // 使用 Obsidian 原生 API 跳转
-      await plugin.app.workspace.openLinkText(linkText, contextPath, true);
+      await plugin.app.workspace.openLinkText(linkText, contextPath, 'tab');
       showMultiInfoMenu = false;
     } catch (error) {
       new Notice(t('toolbar.blockJumpFailed'));
@@ -640,7 +640,7 @@
               </div>
             {/if}
 
-            <!-- 🆕 查看题目数据结构（调试） -->
+            <!-- 查看题目数据结构（调试） -->
             {#if onOpenCardDebug}
               <div class="info-section card-debug-section">
                 <button 
@@ -1490,7 +1490,7 @@ E) 定期重构代码 &#123;✓&#125;
     box-shadow: 0 2px 6px color-mix(in srgb, var(--interactive-accent) 30%, transparent);
   }
 
-  /* 🆕 查看数据结构按钮（调试） */
+  /* 查看数据结构按钮（调试） */
   .card-debug-section {
     margin-top: 8px;
     padding-top: 8px;
@@ -1572,91 +1572,6 @@ E) 定期重构代码 &#123;✓&#125;
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-normal);
-  }
-
-  /* 按钮显示模式选项 */
-  .compact-mode-options {
-    display: flex;
-    gap: 10px;
-  }
-
-  .compact-mode-option {
-    flex: 1;
-    position: relative;
-    cursor: pointer;
-  }
-
-  .compact-mode-option input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .option-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 16px 10px;
-    background: var(--background-primary);
-    border: 1.5px solid var(--background-modifier-border);
-    border-radius: 10px;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  .compact-mode-option:hover .option-content {
-    background: var(--background-modifier-hover);
-    border-color: var(--interactive-accent);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  .compact-mode-option.active .option-content {
-    background: linear-gradient(135deg, var(--interactive-accent) 0%, color-mix(in srgb, var(--interactive-accent) 85%, black) 100%);
-    border-color: var(--interactive-accent);
-    color: var(--text-on-accent);
-    box-shadow: 0 4px 16px color-mix(in srgb, var(--interactive-accent) 30%, transparent);
-  }
-
-  .compact-mode-option.active .option-content :global(svg) {
-    color: var(--text-on-accent);
-  }
-
-  .option-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-align: center;
-    letter-spacing: 0.3px;
-  }
-
-  /* 下拉选择框样式 */
-  .setting-select {
-    padding: 8px 32px 8px 12px;
-    background: var(--background-primary);
-    border: 1px solid color-mix(in srgb, var(--background-modifier-border) 60%, transparent);
-    border-radius: 6px;
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: var(--text-normal);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-  }
-
-  .setting-select:hover {
-    background: var(--background-modifier-hover);
-    border-color: var(--interactive-accent);
-  }
-
-  .setting-select:focus {
-    outline: none;
-    border-color: var(--interactive-accent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 15%, transparent);
   }
 
   :global(.obsidian-dropdown-trigger.setting-select) {

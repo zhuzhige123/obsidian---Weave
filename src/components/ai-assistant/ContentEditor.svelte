@@ -186,9 +186,9 @@
   .content-editor-container {
     display: flex;
     flex-direction: column;
-    flex: 1 1 auto;  /* 🔧 允许扩展填充所有可用空间 */
-    min-height: 200px;  /* 🔧 防止折叠为一行 */
-    height: 100%;  /* 🔧 确保填满父容器 */
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
     background: var(--background-primary);
     border: 1px solid rgba(128, 128, 128, 0.3);
     border-radius: 8px;
@@ -202,6 +202,7 @@
     padding: 12px 16px;
     background: var(--background-secondary);
     border-bottom: 1px solid var(--background-modifier-border);
+    flex-shrink: 0;
   }
 
   .file-meta {
@@ -250,22 +251,21 @@
     color: var(--text-normal);
   }
 
-  /* Obsidian原生编辑器包装器 */
   .obsidian-editor-wrapper {
-    flex: 1 1 auto;  /* 🔧 允许扩展填充所有可用空间 */
-    min-height: 200px; /* 最小高度 */
-    height: 100%;  /* 🔧 填满父容器 */
-    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
   }
 
-  /* Obsidian编辑器内部样式调整 */
   .obsidian-editor-wrapper :global(.markdown-source-view) {
     padding: 16px;
     height: 100%;
+    min-height: 100%;
   }
 
   .obsidian-editor-wrapper :global(.cm-editor) {
-    height: 100%;  /* 🔧 确保编辑器填满容器 */
+    height: 100%;
     min-height: 100%;
   }
 
@@ -274,6 +274,8 @@
   }
   
   .obsidian-editor-wrapper :global(.cm-scroller) {
+    height: 100%;
+    overflow: auto;
     font-family: var(--font-monospace);
     font-size: 0.9em;
     line-height: 1.6;

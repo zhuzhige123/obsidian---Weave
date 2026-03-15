@@ -241,7 +241,7 @@ describe('CacheManager', () => {
     
     cache.set('a', 1);
     
-    const _samCache = manager.getCache<string, number>('test', { maxSize: 10 });
+    const sameCache = manager.getCache<string, number>('test', { maxSize: 10 });
     expect(sameCache.get('a')).toBe(1);
   });
 

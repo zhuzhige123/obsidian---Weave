@@ -86,6 +86,10 @@ export interface ReadingMaterial {
   resumeLink?: string;
   resumeUpdatedAt?: string;
   
+  // ===== 层级关系 =====
+  /** 父材料UUID（用于阅读点书签的层级嵌套） */
+  parentMaterialId?: string;
+  
   // ===== 优先级与调度 =====
   /** 优先级 (0-100) */
   priority: number;

@@ -1,4 +1,5 @@
 export { EpubReaderService } from './EpubReaderService';
+export type { HighlightClickInfo, NavigateAndHighlightOptions, FlashStyle } from './EpubReaderService';
 export { EpubStorageService } from './EpubStorageService';
 export { EpubAnnotationService } from './EpubAnnotationService';
 export { EpubBacklinkHighlightService } from './EpubBacklinkHighlightService';

@@ -4,6 +4,7 @@
   import type { StudySession } from '../../data/study-types';
   import type { WeavePlugin } from '../../main';
   import EnhancedIcon from '../ui/EnhancedIcon.svelte';
+  import { tr } from '../../utils/i18n';
   
   interface DeckStats {
     newCards: number;
@@ -21,6 +22,8 @@
   }
   
   let { deckTree, deckStats, studySessions, plugin, onStartStudy }: Props = $props();
+
+  let t = $derived($tr);
   
   // 扁平化牌组树
   function flattenDeckTree(nodes: DeckTreeNode[]): Deck[] {
@@ -59,7 +62,7 @@
   
   // 计算本周数据（最近7天）
   const weekDays = $derived(() => {
-    const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    const days = t('decks.timeline.weekDays') as unknown as string[];
     const result = [];
     const now = new Date();
     
@@ -145,7 +148,7 @@
     return {
       completed,
       newCards: newCardsSet.size,
-      studyTime: `${studyTimeHours} 小时`,
+      studyTime: t('decks.timeline.studyTimeHours', { n: studyTimeHours }),
       streak,
       completionRate
     };
@@ -180,7 +183,7 @@
       <div class="column-header">
         <h2 class="column-title">
           <EnhancedIcon name="calendar" size={20} />
-          今天
+          {t('decks.timeline.today')}
         </h2>
       </div>
       
@@ -188,7 +191,7 @@
         <div class="section urgent">
           <h3 class="section-title">
             <EnhancedIcon name="alert-circle" size={16} />
-            紧急 ({urgentDecks.length})
+            {t('decks.timeline.urgent')} ({urgentDecks.length})
           </h3>
           <div class="deck-list">
             {#each urgentDecks as deck}
@@ -198,7 +201,7 @@
               >
                 <span class="item-icon">{#if deck.icon}{deck.icon}{:else}<EnhancedIcon name="folder" size={16} />{/if}</span>
                 <span class="item-name">{deck.name}</span>
-                <span class="item-count">{getTotalDue(deck.id)} 张</span>
+                <span class="item-count">{getTotalDue(deck.id)} {t('decks.timeline.cards')}</span>
               </button>
             {/each}
           </div>
@@ -209,7 +212,7 @@
         <div class="section normal">
           <h3 class="section-title">
             <EnhancedIcon name="file-text" size={16} />
-            常规 ({normalDecks.length})
+            {t('decks.timeline.normal')} ({normalDecks.length})
           </h3>
           <div class="deck-list">
             {#each normalDecks as deck}
@@ -219,7 +222,7 @@
               >
                 <span class="item-icon">{#if deck.icon}{deck.icon}{:else}<EnhancedIcon name="folder" size={16} />{/if}</span>
                 <span class="item-name">{deck.name}</span>
-                <span class="item-count">{getTotalDue(deck.id)} 张</span>
+                <span class="item-count">{getTotalDue(deck.id)} {t('decks.timeline.cards')}</span>
               </button>
             {/each}
           </div>
@@ -230,7 +233,7 @@
         <div class="section completed">
           <h3 class="section-title">
             <EnhancedIcon name="check-circle" size={16} />
-            已完成 ({completedDecks.length})
+            {t('decks.timeline.completed')} ({completedDecks.length})
           </h3>
         </div>
       {/if}
@@ -241,7 +244,7 @@
         disabled={todayTotal === 0}
       >
         <EnhancedIcon name="play" size={16} />
-        开始今日学习 ({todayTotal})
+        {t('decks.timeline.startTodayStudy')} ({todayTotal})
       </button>
     </div>
     
@@ -250,7 +253,7 @@
       <div class="column-header">
         <h2 class="column-title">
           <EnhancedIcon name="calendar" size={20} />
-          本周
+          {t('decks.timeline.thisWeek')}
         </h2>
       </div>
       
@@ -264,7 +267,7 @@
                 style="width: {(day.count / maxCount) * 100}%"
               ></div>
             </div>
-            <span class="day-count">{day.count} 张</span>
+            <span class="day-count">{day.count} {t('decks.timeline.cards')}</span>
           </div>
         {/each}
       </div>
@@ -275,7 +278,7 @@
       <div class="column-header">
         <h2 class="column-title">
           <EnhancedIcon name="bar-chart-2" size={20} />
-          本月
+          {t('decks.timeline.thisMonth')}
         </h2>
       </div>
       
@@ -283,37 +286,37 @@
         <div class="stat-box">
           <div class="stat-icon">[S]</div>
           <div class="stat-value">{monthStats().completed}</div>
-          <div class="stat-label">本月完成</div>
+          <div class="stat-label">{t('decks.timeline.monthCompleted')}</div>
         </div>
         <div class="stat-box">
           <div class="stat-icon">[+]</div>
           <div class="stat-value">{monthStats().newCards}</div>
-          <div class="stat-label">本月新增</div>
+          <div class="stat-label">{t('decks.timeline.monthNew')}</div>
         </div>
         <div class="stat-box">
           <div class="stat-icon">[T]</div>
           <div class="stat-value">{monthStats().studyTime}</div>
-          <div class="stat-label">学习时长</div>
+          <div class="stat-label">{t('decks.timeline.studyDuration')}</div>
         </div>
       </div>
       
       <div class="achievements">
         <h3 class="section-title">
           <EnhancedIcon name="award" size={16} />
-          本月成就
+          {t('decks.timeline.monthAchievements')}
         </h3>
         <div class="achievement-list">
           <div class="achievement-item">
             <span class="achievement-icon"><EnhancedIcon name="fire" size={24} color="#f97316" /></span>
             <div class="achievement-content">
-              <div class="achievement-title">连续学习</div>
-              <div class="achievement-value">{monthStats().streak} 天</div>
+              <div class="achievement-title">{t('decks.timeline.streak')}</div>
+              <div class="achievement-value">{t('decks.timeline.streakDays', { n: String(monthStats().streak) })}</div>
             </div>
           </div>
           <div class="achievement-item">
             <span class="achievement-icon"><EnhancedIcon name="bullseye" size={24} color="var(--interactive-accent)" /></span>
             <div class="achievement-content">
-              <div class="achievement-title">完成率</div>
+              <div class="achievement-title">{t('decks.timeline.completionRate')}</div>
               <div class="achievement-value">{monthStats().completionRate}%</div>
             </div>
           </div>

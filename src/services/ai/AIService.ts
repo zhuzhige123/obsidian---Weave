@@ -200,7 +200,7 @@ export abstract class AIService implements IAIService {
    * 生成卡片ID
    */
   protected generateCardId(): string {
-    return `ai-card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `ai-card-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
@@ -249,6 +249,41 @@ export abstract class AIService implements IAIService {
       success: false,
       error: errorMessage
     };
+  }
+
+  /**
+   * 分类连接测试错误，返回用户可理解的错误信息
+   * 子类在 testConnection catch 中调用后 throw
+   */
+  protected classifyConnectionError(error: any): Error {
+    const status = error?.status;
+    const msg = (error?.message || '').toLowerCase();
+
+    if (status === 401 || status === 403 || msg.includes('unauthorized') || msg.includes('invalid api key') || msg.includes('authentication')) {
+      return new Error('API\u5bc6\u94a5\u65e0\u6548\u6216\u5df2\u8fc7\u671f\uff0c\u8bf7\u68c0\u67e5\u5bc6\u94a5\u662f\u5426\u6b63\u786e');
+    }
+
+    if (status === 404 || msg.includes('not found')) {
+      return new Error('API\u5730\u5740\u9519\u8bef\u6216\u670d\u52a1\u4e0d\u53ef\u8fbe\uff0c\u8bf7\u68c0\u67e5\u81ea\u5b9a\u4e49URL\u662f\u5426\u6b63\u786e');
+    }
+
+    if (status === 429 || msg.includes('rate limit') || msg.includes('quota') || msg.includes('too many')) {
+      return new Error('\u8bf7\u6c42\u9891\u7387\u8d85\u9650\u6216\u914d\u989d\u4e0d\u8db3\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u6216\u68c0\u67e5\u8d26\u6237\u4f59\u989d');
+    }
+
+    if (status >= 500 || msg.includes('internal server') || msg.includes('overloaded') || msg.includes('529')) {
+      return new Error('\u670d\u52a1\u7aef\u9519\u8bef\uff0cAI\u670d\u52a1\u6682\u65f6\u4e0d\u53ef\u7528\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5');
+    }
+
+    if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('econnaborted')) {
+      return new Error('\u8fde\u63a5\u8d85\u65f6\uff0c\u8bf7\u68c0\u67e5\u7f51\u7edc\u8fde\u63a5\u6216\u589e\u52a0\u8d85\u65f6\u65f6\u95f4');
+    }
+
+    if (msg.includes('econnrefused') || msg.includes('enotfound') || msg.includes('network') || msg.includes('fetch failed')) {
+      return new Error('\u65e0\u6cd5\u8fde\u63a5\u5230\u670d\u52a1\u5668\uff0c\u8bf7\u68c0\u67e5\u7f51\u7edc\u8fde\u63a5\u548cAPI\u5730\u5740');
+    }
+
+    return new Error(error?.message || '\u8fde\u63a5\u5931\u8d25\uff0c\u8bf7\u68c0\u67e5\u914d\u7f6e');
   }
 }
 

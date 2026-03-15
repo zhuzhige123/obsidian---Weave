@@ -81,6 +81,67 @@
   background: var(--text-muted);
 }
 
+/* ===== 渲染进度遮罩 ===== */
+.weave-rendering-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  pointer-events: all;
+  background: var(--background-primary);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.weave-rendering-progress-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+  z-index: 11;
+}
+
+.weave-rendering-progress-bar {
+  height: 100%;
+  background: var(--interactive-accent);
+  transition: width 0.3s ease;
+  border-radius: 0 2px 2px 0;
+}
+
+.weave-rendering-progress-bar--indeterminate {
+  width: 30%;
+  animation: weave-progress-indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes weave-progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+.weave-rendering-info {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: var(--weave-space-sm);
+  color: var(--weave-text-secondary);
+  font-size: var(--weave-font-size-sm);
+  z-index: 12;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.weave-rendering-info .weave-spinner-small {
+  flex-shrink: 0;
+}
+
 /* ===== 性能优化CSS ===== */
 .weave-grid-performance-optimized {
   contain: layout style paint;

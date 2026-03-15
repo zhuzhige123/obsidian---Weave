@@ -15,6 +15,8 @@
    * - 移除移动端特殊样式，桌面端和移动端使用相同的 16px 圆点
    * - 通过扩大触控区域（::before 伪元素）确保移动端可点击性
    */
+  import { tr } from '../../utils/i18n';
+
   export type DeckFilter = 'memory' | 'reading' | 'question-bank' | 'incremental-reading' | 'parent' | 'child' | 'all';
 
   interface Props {
@@ -24,30 +26,33 @@
 
   let { selectedFilter, onSelect }: Props = $props();
 
-  // 🆕 v0.10 - 三个模式选项（顺序：增量摘录、记忆牌组、考试牌组）
-  const filters: Array<{ id: DeckFilter; name: string; icon: string; colorStart: string; colorEnd: string }> = [
+  let t = $derived($tr);
+
+  const filterDefs: Array<{ id: DeckFilter; nameKey: string; icon: string; colorStart: string; colorEnd: string }> = [
     {
       id: 'incremental-reading',
-      name: '增量阅读',
+      nameKey: 'decks.categoryFilter.incrementalReading',
       icon: '📖',
       colorStart: '#ef4444',
       colorEnd: '#dc2626'
     },
     {
       id: 'memory',
-      name: '记忆牌组',
+      nameKey: 'decks.categoryFilter.memory',
       icon: '📚',
       colorStart: '#3b82f6',
       colorEnd: '#2563eb'
     },
     {
       id: 'question-bank',
-      name: '考试牌组 🔒',
+      nameKey: 'decks.categoryFilter.questionBank',
       icon: '📝',
       colorStart: '#10b981',
       colorEnd: '#059669'
     }
   ];
+
+  const filters = $derived(filterDefs.map(f => ({ ...f, name: t(f.nameKey) })));
 
   function getGradientStyle(filter: typeof filters[0]): string {
     return `background: linear-gradient(135deg, ${filter.colorStart}, ${filter.colorEnd})`;

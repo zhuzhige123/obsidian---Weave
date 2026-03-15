@@ -13,7 +13,7 @@
   let { remainingTime, isPaused = false, isTimeWarning = false }: Props = $props();
 
   // 计算当前显示的数字
-  const digits = $derived(() => {
+  const digits = $derived.by(() => {
     const minutes = Math.floor(remainingTime / 60);
     const seconds = remainingTime % 60;
     
@@ -68,7 +68,7 @@
 
   // 监听数字变化并触发动画
   $effect(() => {
-    const d = digits();
+    const d = digits;
     
     // 首次渲染时只初始化，不触发动画
     if (isFirstRender) {
@@ -111,12 +111,12 @@
   <!-- 分钟 -->
   <div class="flip-digit" id="flip-min-tens">
     <div class="digit-card">
-      <div class="digit-current" data-old-value="0">{digits().minTens}</div>
+      <div class="digit-current" data-old-value="0">{digits.minTens}</div>
     </div>
   </div>
   <div class="flip-digit" id="flip-min-ones">
     <div class="digit-card">
-      <div class="digit-current" data-old-value="5">{digits().minOnes}</div>
+      <div class="digit-current" data-old-value="5">{digits.minOnes}</div>
     </div>
   </div>
 
@@ -126,12 +126,12 @@
   <!-- 秒 -->
   <div class="flip-digit" id="flip-sec-tens">
     <div class="digit-card">
-      <div class="digit-current" data-old-value="0">{digits().secTens}</div>
+      <div class="digit-current" data-old-value="0">{digits.secTens}</div>
     </div>
   </div>
   <div class="flip-digit" id="flip-sec-ones">
     <div class="digit-card">
-      <div class="digit-current" data-old-value="0">{digits().secOnes}</div>
+      <div class="digit-current" data-old-value="0">{digits.secOnes}</div>
     </div>
   </div>
 </div>

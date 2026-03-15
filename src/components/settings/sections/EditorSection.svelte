@@ -4,7 +4,7 @@
   import { 
     CSS_CLASSES, 
     LINK_STYLE_OPTIONS, 
-    LINK_PATH_OPTIONS,
+    getLinkPathOptions,
     DEFAULT_SETTINGS 
   } from '../constants/settings-constants';
   import ObsidianDropdown from "../../ui/ObsidianDropdown.svelte";
@@ -48,11 +48,8 @@
     label: option.label
   }));
 
-  // 链接路径选项
-  const linkPathOptions = LINK_PATH_OPTIONS.map(option => ({
-    id: option.id,
-    label: option.label
-  }));
+  // 链接路径选项 (i18n-aware)
+  let linkPathOptions = $derived(getLinkPathOptions());
 
   // 处理复选框变化
   function handleCheckboxChange(key: keyof EditorSettings, event: Event) {

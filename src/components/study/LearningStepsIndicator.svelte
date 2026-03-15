@@ -10,12 +10,15 @@
  */
 
 import type { LearningStepsData } from '../../types/queue-optimization-types';
+import { tr } from '../../utils/i18n';
 
 interface Props {
   steps: LearningStepsData;
 }
 
 let { steps }: Props = $props();
+
+let t = $derived($tr);
 
 // 当前步骤索引
 const currentStepIndex = $derived(steps.currentStep);
@@ -24,13 +27,13 @@ const currentStepIndex = $derived(steps.currentStep);
 const stepText = $derived(`${currentStepIndex + 1}/${steps.steps.length}`);
 
 // 当前步骤的时间（如 "1分"，简洁版本）
-const currentTime = $derived(`${steps.steps[currentStepIndex]}分`);
+const currentTime = $derived(t('study.learningSteps.minutes', { n: String(steps.steps[currentStepIndex]) }));
 
 // 下一步骤的时间（用于Tooltip）
 const nextStepTime = $derived(
   currentStepIndex + 1 < steps.steps.length 
-    ? `${steps.steps[currentStepIndex + 1]}分` 
-    : '完成'
+    ? t('study.learningSteps.minutes', { n: String(steps.steps[currentStepIndex + 1]) })
+    : t('study.learningSteps.completed')
 );
 
 // 是否显示警告（失败次数过多）
@@ -72,21 +75,21 @@ $effect(() => {
   {#if isHovered}
     <div class="badge-tooltip">
       <div class="tooltip-row">
-        <span class="tooltip-label">当前步骤</span>
-        <span class="tooltip-value">第{currentStepIndex + 1}步</span>
+        <span class="tooltip-label">{t('study.learningSteps.currentStep')}</span>
+        <span class="tooltip-value">{t('study.learningSteps.stepN', { n: String(currentStepIndex + 1) })}</span>
       </div>
       <div class="tooltip-row">
-        <span class="tooltip-label">下次出现</span>
-        <span class="tooltip-value">{currentTime}钟后</span>
+        <span class="tooltip-label">{t('study.learningSteps.nextAppear')}</span>
+        <span class="tooltip-value">{t('study.learningSteps.minutesLater', { n: String(steps.steps[currentStepIndex]) })}</span>
       </div>
       <div class="tooltip-row">
-        <span class="tooltip-label">下一步骤</span>
+        <span class="tooltip-label">{t('study.learningSteps.nextStep')}</span>
         <span class="tooltip-value">{nextStepTime}</span>
       </div>
       {#if showWarning}
         <div class="tooltip-row warning">
-          <span class="tooltip-label">已重复</span>
-          <span class="tooltip-value">{steps.failureCount}次</span>
+          <span class="tooltip-label">{t('study.learningSteps.repeated')}</span>
+          <span class="tooltip-value">{t('study.learningSteps.repeatedTimes', { n: String(steps.failureCount) })}</span>
         </div>
       {/if}
     </div>

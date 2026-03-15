@@ -7,6 +7,8 @@
 <script lang="ts">
   import type { IRTagGroup, IRTagGroupProfile, IRProfileHistoryPoint } from '../../../types/ir-types';
   import EnhancedIcon from '../../ui/EnhancedIcon.svelte';
+  import { tr } from '../../../utils/i18n';
+  let t = $derived($tr);
 
   interface Props {
     group: IRTagGroup;
@@ -95,18 +97,22 @@
   let hoveredPoint = $state<{ x: number; y: number; data: IRProfileHistoryPoint } | null>(null);
 
   // 点击背景关闭
-  function handleOverlayClick(e: MouseEvent) {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+  function handleOverlayClick() {
+    onClose();
   }
 </script>
 
-<div class="stats-overlay" onclick={handleOverlayClick}>
-  <div class="stats-dialog" onclick={(e) => e.stopPropagation()}>
+<div class="stats-overlay">
+  <button
+    type="button"
+    class="stats-backdrop"
+    aria-label={t('common.close')}
+    onclick={handleOverlayClick}
+  ></button>
+  <div class="stats-dialog" role="dialog" aria-modal="true" tabindex="-1">
     <!-- 头部 -->
     <div class="dialog-header">
-      <h3>参数学习统计</h3>
+      <h3>{t('irTagGroup.stats.title')}</h3>
       <button class="close-btn" onclick={onClose}>
         <EnhancedIcon name="x" size={20} />
       </button>
@@ -132,26 +138,26 @@
       <!-- 参数概览（列表形式） -->
       <div class="info-grid">
         <div class="info-row">
-          <span class="info-label">间隔因子</span>
+          <span class="info-label">{t('irTagGroup.stats.intervalFactor')}</span>
           <span class="info-value highlight">{profile.intervalFactorBase.toFixed(3)}</span>
         </div>
         <div class="info-row">
-          <span class="info-label">冷启动乘子</span>
+          <span class="info-label">{t('irTagGroup.stats.coldStartMultiplier')}</span>
           <span class="info-value">{profile.initialIntervalMultiplier.toFixed(2)}</span>
         </div>
         <div class="info-row">
-          <span class="info-label">学习样本量</span>
+          <span class="info-label">{t('irTagGroup.stats.sampleCount')}</span>
           <span class="info-value">{profile.sampleCount}</span>
         </div>
         <div class="info-row">
-          <span class="info-label">最后更新</span>
+          <span class="info-label">{t('irTagGroup.stats.lastUpdated')}</span>
           <span class="info-value">{formatDateTime(profile.updatedAt)}</span>
         </div>
       </div>
 
       <!-- 图表区域 -->
       <div class="chart-section">
-        <div class="section-title">变化趋势</div>
+        <div class="section-title">{t('irTagGroup.stats.trendTitle')}</div>
         
         {#if hasHistory}
           <div class="chart-wrapper">
@@ -237,8 +243,8 @@
           </div>
         {:else}
           <div class="empty-chart">
-            <span class="empty-text">暂无历史数据</span>
-            <span class="empty-hint">参数学习后将在此展示变化趋势</span>
+            <span class="empty-text">{t('irTagGroup.stats.noHistory')}</span>
+            <span class="empty-hint">{t('irTagGroup.stats.noHistoryHint')}</span>
           </div>
         {/if}
       </div>
@@ -247,18 +253,17 @@
       <div class="note-block">
         <div class="note-title">
           <EnhancedIcon name="info" size={14} />
-          <span>参数说明</span>
+          <span>{t('irTagGroup.stats.paramNoteTitle')}</span>
         </div>
         <div class="note-text">
-          间隔因子决定复习间隔的增长速度。值越大，间隔增长越快。
-          系统会根据阅读反馈自动调整此参数以适应该类型材料。
+          {t('irTagGroup.stats.paramNoteContent')}
         </div>
       </div>
     </div>
 
     <!-- 底部 -->
     <div class="dialog-footer">
-      <button class="btn primary" onclick={onClose}>关闭</button>
+      <button class="btn primary" onclick={onClose}>{t('irTagGroup.stats.closeBtn')}</button>
     </div>
   </div>
 </div>
@@ -273,6 +278,15 @@
     justify-content: center;
     z-index: var(--layer-modal);
     padding: 20px;
+  }
+
+  .stats-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: default;
   }
 
   .stats-dialog {

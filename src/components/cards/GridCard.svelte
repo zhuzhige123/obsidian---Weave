@@ -480,7 +480,7 @@
     background: var(--background-secondary);
     padding: 2px 8px;
     border-radius: var(--weave-radius-sm);
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-monospace, 'Courier New', monospace);
     z-index: 2;
   }
 

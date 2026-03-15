@@ -33,25 +33,12 @@ describe('MediaFileHandler', () => {
         'audio.mp3': 'weave/memory/media/decks/test-deck-id/audio.mp3'
       };
 
-      // 模拟getObsidianResourcePath返回正确的资源路径
-      mockPlugin.app.vault.getAbstractFileByPath.mockImplementation((path: string) => {
-        const matchedKey = Object.keys(savedFiles).find(key => savedFiles[key] === path);
-        if (matchedKey && savedFiles[matchedKey]) {
-          return { path }; // 模拟TFile对象
-        }
-        return null;
-      });
-
-      mockPlugin.app.vault.getResourcePath.mockImplementation((file: { path: string }) => {
-        return `app://obsidian.md/${file.path}`;
-      });
-
       const content = '<img src="image.jpg" alt="test"> <audio src="audio.mp3"></audio>';
       const result = mediaHandler.convertMediaReferences(content, savedFiles);
 
-      expect(result).toContain('app://obsidian.md/weave/memory/media/decks/test-deck-id/image.jpg');
-      expect(result).toContain('app://obsidian.md/weave/memory/media/decks/test-deck-id/audio.mp3');
-      expect(result).not.toContain('[['); // 不应该包含双重路径
+      expect(result).toContain('![[weave/memory/media/decks/test-deck-id/image.jpg|test]]');
+      expect(result).toContain('![[weave/memory/media/decks/test-deck-id/audio.mp3]]');
+      expect(result).not.toContain('app://obsidian.md/');
     });
 
     it('应该正确转换Markdown图片引用', () => {
@@ -62,7 +49,7 @@ describe('MediaFileHandler', () => {
       const content = '![示例图片](diagram.png)';
       const result = mediaHandler.convertMediaReferences(content, savedFiles);
 
-      expect(result).toBe('![示例图片]([[weave/memory/media/decks/test-deck-id/diagram.png]])');
+      expect(result).toBe('![[weave/memory/media/decks/test-deck-id/diagram.png|示例图片]]');
     });
 
     it('应该处理复杂的HTML内容', () => {
@@ -79,7 +66,7 @@ describe('MediaFileHandler', () => {
       `;
 
       const result = mediaHandler.convertMediaReferences(content, savedFiles);
-      expect(result).toContain('app://obsidian.md/weave/memory/media/decks/test-deck-id/complex_image.jpg');
+      expect(result).toContain('![[weave/memory/media/decks/test-deck-id/complex_image.jpg|复杂图片]]');
     });
 
     it('应该处理没有匹配文件的情况', () => {
@@ -91,7 +78,7 @@ describe('MediaFileHandler', () => {
       const result = mediaHandler.convertMediaReferences(content, savedFiles);
 
       expect(result).toContain('nonexistent.jpg'); // 不存在的文件保持原样
-      expect(result).toContain('app://obsidian.md/weave/memory/media/decks/test-deck-id/existing.jpg');
+      expect(result).toContain('![[weave/memory/media/decks/test-deck-id/existing.jpg]]');
     });
 
     it('应该修复重复路径问题', () => {
@@ -104,7 +91,7 @@ describe('MediaFileHandler', () => {
       const result = mediaHandler.convertMediaReferences(content, savedFiles);
 
       // 结果应该是干净的路径，不应该有重复或嵌套的[[]]
-      expect(result).toContain('app://obsidian.md/weave/memory/media/decks/memunr70y48vdku9dv/9dbf35ab82620e32159414b58a7f71bcfd6d11b5.jpg@1192w.webp');
+      expect(result).toContain('![[weave/memory/media/decks/memunr70y48vdku9dv/9dbf35ab82620e32159414b58a7f71bcfd6d11b5.jpg@1192w.webp]]');
       expect(result).not.toContain('[[weave/memory/media/decks/memunr70y48vdku9dv/[[');
       expect(result).not.toContain(']]]]');
     });
@@ -115,7 +102,7 @@ describe('MediaFileHandler', () => {
       // 通过反射访问私有方法进行测试
       const sanitizeFilename = (mediaHandler as any).sanitizeFilename.bind(mediaHandler);
 
-      expect(sanitizeFilename('file<>name.jpg')).toBe('file__name.jpg');
+      expect(sanitizeFilename('file<>name.jpg')).toBe('file_name.jpg');
       expect(sanitizeFilename('file with spaces.png')).toBe('file_with_spaces.png');
       expect(sanitizeFilename('file:with|special*chars.gif')).toBe('file_with_special_chars.gif');
       expect(sanitizeFilename('___multiple___underscores___.txt')).toBe('multiple_underscores.txt');

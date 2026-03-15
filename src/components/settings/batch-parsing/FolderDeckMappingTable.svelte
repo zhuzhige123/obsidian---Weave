@@ -9,7 +9,7 @@
   import type { Deck } from '../../../data/types';
   import { FolderSuggest } from '../../../utils/FolderSuggest';
   import { FileSuggest } from '../../../utils/FileSuggest';
-  import { tr } from '../../../utils/i18n';
+  import { tr as trStore } from '../../../utils/i18n';
 import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
   import BatchScanStats from './BatchScanStats.svelte';
   import RegexPresetManager from './RegexPresetManager.svelte';
@@ -25,7 +25,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
   }
 
   let { mappings = [], decks = [], app, plugin, onMappingsChange }: Props = $props();
-  let t = $derived($tr);
+  let t = $derived($trStore);
 
   // 为每个映射行创建 Suggest 实例的映射表
   let folderSuggests = $state<Map<string, FolderSuggest>>(new Map());
@@ -38,7 +38,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
   let regexPresets = $state<RegexParsingConfig[]>([]);
 
   function generatePresetId(): string {
-    return `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `custom-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 
   function normalizePresetIds(presets: RegexParsingConfig[]): { presets: RegexParsingConfig[]; changed: boolean } {
@@ -165,7 +165,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
     if (plugin?.settings?.simplifiedParsing) {
       plugin.settings.simplifiedParsing.regexPresets = normalized.presets;
       await plugin.saveSettings();
-      new Notice('正则预设已保存');
+      new Notice(t('dataManagement.batchScan.regexPresetSaved'));
     }
 
     migrateMappingPresetRefs(normalized.presets);
@@ -175,7 +175,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
    * 生成简单的UUID
    */
   function generateId(): string {
-    return `mapping-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `mapping-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
@@ -231,7 +231,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
     fileSuggests.delete(id);
     
     onMappingsChange(mappings.filter(m => m.id !== id));
-    new Notice('已删除映射');
+    new Notice(t('dataManagement.batchScan.deletedMapping'));
   }
 
   /**
@@ -246,32 +246,31 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
     const mappingType = mapping.type || 'folder';
     
     if (!mappingPath) {
-      new Notice(`请先选择${mappingType === 'file' ? '文件' : '文件夹'}`);
+      new Notice(t('dataManagement.batchScan.selectFileFirst', { type: mappingType === 'file' ? t('dataManagement.batchScan.typeFile') : t('dataManagement.batchScan.typeFolder') }));
       return;
     }
     
     if (!mapping.targetDeckId) {
-      new Notice('请先选择目标牌组');
+      new Notice(t('dataManagement.batchScan.selectDeckFirst'));
       return;
     }
     
     //  确认对话框
-    const typeLabel = mappingType === 'file' ? '文件' : '文件夹';
-    const confirmMessage = `确认要解析${typeLabel}"${mappingPath}"中的卡片到牌组"${mapping.targetDeckName}"吗？\n\n这将执行实际的卡片解析和保存操作。`;
+    const typeLabel = mappingType === 'file' ? t('dataManagement.batchScan.typeFile') : t('dataManagement.batchScan.typeFolder');
+    const confirmMessage = t('dataManagement.batchScan.confirmScanMessage', { type: typeLabel, path: mappingPath, deck: mapping.targetDeckName });
     
-    //  使用 Obsidian Modal 代替 confirm()，避免焦点劫持问题
-    const confirmed = await showObsidianConfirm(app, confirmMessage, { title: '确认扫描' });
+    const confirmed = await showObsidianConfirm(app, confirmMessage, { title: t('dataManagement.batchScan.confirmScanTitle') });
     if (!confirmed) {
-      new Notice('已取消操作');
+      new Notice(t('dataManagement.batchScan.cancelled'));
       return;
     }
     
-    new Notice(`开始解析${typeLabel}: ${mappingPath}`);
+    new Notice(t('dataManagement.batchScan.startParsing', { type: typeLabel, path: mappingPath }));
     
     try {
       const batchManager = plugin?.batchParsingManager;
       if (!batchManager) {
-        throw new Error('批量解析服务未初始化');
+        throw new Error(t('dataManagement.batchScan.batchServiceNotInit'));
       }
       
       // 调用扫描方法（现在返回 parsedCards）
@@ -282,7 +281,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
       
       // 保存卡片到数据库
       if (result.parsedCards && result.parsedCards.length > 0) {
-        new Notice(`开始保存 ${result.parsedCards.length} 张卡片...`);
+        new Notice(t('dataManagement.batchScan.savingCards', { count: result.parsedCards.length }));
         
         try {
           // 调用插件的统一保存流程
@@ -295,20 +294,20 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
           });
           
           // 显示成功结果
-          new Notice(`成功保存 ${result.totalCards} 张卡片到牌组“${mapping.targetDeckName}”！`);
+          new Notice(t('dataManagement.batchScan.saveSuccess', { count: result.totalCards, deck: mapping.targetDeckName }));
         } catch (saveError: unknown) {
           const saveErrorMessage = saveError instanceof Error ? saveError.message : String(saveError);
           logger.error('[FolderDeckMappingTable] 保存卡片失败:', saveError);
-          new Notice(`保存卡片失败: ${saveErrorMessage}`);
+          new Notice(t('dataManagement.batchScan.saveFailed', { error: saveErrorMessage }));
         }
       } else {
         // 未找到卡片
-        new Notice(`扫描完成，未找到符合条件的卡片。\n请检查文件中是否包含有效的 <-> 卡片分隔符。`);
+        new Notice(t('dataManagement.batchScan.noCardsFound'));
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('[FolderDeckMappingTable] 扫描失败:', error);
-      new Notice(`扫描失败: ${errorMessage}`);
+      new Notice(t('dataManagement.batchScan.scanFailed', { error: errorMessage }));
     }
   }
 
@@ -321,7 +320,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
     // 开始扫描
     menu.addItem((item) => {
       item
-        .setTitle('开始扫描')
+        .setTitle(t('dataManagement.batchScan.startScan'))
         .setIcon('refresh-cw')
         .setDisabled(!mapping.folderPath || !mapping.targetDeckId)
         .onClick(() => startScanMapping(mapping));
@@ -332,7 +331,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
     // 删除映射
     menu.addItem((item) => {
       item
-        .setTitle('删除映射')
+        .setTitle(t('dataManagement.batchScan.deleteMapping'))
         .setIcon('trash')
         .onClick(() => removeMapping(mapping.id));
     });
@@ -377,7 +376,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
    */
   function openDeckDropdown(mapping: FolderDeckMapping, event: MouseEvent) {
     if (!decks || decks.length === 0) {
-      new Notice('暂无可用牌组，请先在“牌组学习”界面创建牌组');
+      new Notice(t('dataManagement.batchScan.noDecksAvailable'));
       return;
     }
     
@@ -450,15 +449,15 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
       <table class="mapping-table">
         <thead>
           <tr>
-            <th>类型</th>
-            <th>路径</th>
-            <th>文件模式</th>
-            <th>正则配置</th>
-            <th>目标牌组</th>
-            <th>子文件夹</th>
-            <th>卡片数量</th>
-            <th>启用</th>
-            <th>操作</th>
+            <th>{t('dataManagement.batchScan.tableHeaders.type')}</th>
+            <th>{t('dataManagement.batchScan.tableHeaders.path')}</th>
+            <th>{t('dataManagement.batchScan.tableHeaders.fileMode')}</th>
+            <th>{t('dataManagement.batchScan.tableHeaders.regexConfig')}</th>
+            <th>{t('dataManagement.batchScan.tableHeaders.targetDeck')}</th>
+            <th>{t('dataManagement.batchScan.tableHeaders.subfolders')}</th>
+            <th>{t('dataManagement.batchScan.tableHeaders.cardCount')}</th>
+            <th>{t('dataManagement.batchScan.tableHeaders.enabled')}</th>
+            <th>{t('dataManagement.batchScan.tableHeaders.actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -472,7 +471,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
                   class="type-toggle-btn"
                   class:is-file={mappingType === 'file'}
                   onclick={() => toggleMappingType(mapping)}
-                  title={mappingType === 'file' ? '文件（点击切换到文件夹）' : '文件夹（点击切换到文件）'}
+                  title={mappingType === 'file' ? t('dataManagement.batchScan.fileTooltip') : t('dataManagement.batchScan.folderTooltip')}
                 >
                   {#if mappingType === 'file'}
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -500,17 +499,16 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
                       type="text"
                       class="folder-input"
                       value={mappingPath}
-                      title={mappingPath || "选择或输入文件路径..."}
+                      title={mappingPath || t('dataManagement.batchScan.selectFilePath')}
                       oninput={(e) => {
                         const newPath = e.currentTarget.value;
                         updateMapping(mapping.id, { 
                           path: newPath,
-                          folderPath: newPath  // 向后兼容
+                          folderPath: newPath
                         });
-                        // 更新title以显示完整路径
-                        e.currentTarget.title = newPath || "选择或输入文件路径...";
+                        e.currentTarget.title = newPath || t('dataManagement.batchScan.selectFilePath');
                       }}
-                      placeholder="选择或输入文件路径..."
+                      placeholder={t('dataManagement.batchScan.selectFilePath')}
                       use:initFileSuggest={mapping.id}
                     />
                   {:else}
@@ -522,17 +520,16 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
                       type="text"
                       class="folder-input"
                       value={mappingPath}
-                      title={mappingPath || "选择或输入文件夹路径..."}
+                      title={mappingPath || t('dataManagement.batchScan.selectFolderPath')}
                       oninput={(e) => {
                         const newPath = e.currentTarget.value;
                         updateMapping(mapping.id, { 
                           path: newPath,
-                          folderPath: newPath  // 向后兼容
+                          folderPath: newPath
                         });
-                        // 更新title以显示完整路径
-                        e.currentTarget.title = newPath || "选择或输入文件夹路径...";
+                        e.currentTarget.title = newPath || t('dataManagement.batchScan.selectFolderPath');
                       }}
-                      placeholder="选择或输入文件夹路径..."
+                      placeholder={t('dataManagement.batchScan.selectFolderPath')}
                       use:initFolderSuggest={mapping.id}
                     />
                   {/if}
@@ -543,8 +540,8 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
               <td class="file-mode-cell">
                 <ObsidianDropdown
                   options={[
-                    { id: 'single-card', label: '单文件单卡片' },
-                    { id: 'multi-cards', label: '单文件多卡片' }
+                    { id: 'single-card', label: t('dataManagement.batchScan.singleFileCard') },
+                    { id: 'multi-cards', label: t('dataManagement.batchScan.multiFileCards') }
                   ]}
                   value={(mapping as any).fileMode || 'single-card'}
                   onchange={(value) => {
@@ -611,7 +608,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
                   })()}
                   <ObsidianDropdown
                     options={[
-                      { id: '', label: regexPresets.length === 0 ? '暂无预设（请先创建）' : '选择预设...' },
+                      { id: '', label: regexPresets.length === 0 ? t('dataManagement.batchScan.noPresets') : t('dataManagement.batchScan.selectPreset') },
                       ...regexPresets.map(preset => ({ id: preset.id || preset.name, label: preset.name }))
                     ]}
                     value={selectedPresetId}
@@ -650,7 +647,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
                   class="deck-selector-btn"
                   class:empty={!mapping.targetDeckId}
                   onclick={(e) => openDeckDropdown(mapping, e)}
-                  title={mapping.targetDeckName || '点击选择牌组'}
+                  title={mapping.targetDeckName || t('dataManagement.batchScan.selectDeck')}
                 >
                   {#if mapping.targetDeckId && mapping.targetDeckName}
                     <svg class="deck-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -659,7 +656,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
                     </svg>
                     <span class="deck-name">{mapping.targetDeckName}</span>
                   {:else}
-                    <span class="placeholder">选择牌组...</span>
+                    <span class="placeholder">{t('dataManagement.batchScan.selectDeck')}</span>
                   {/if}
                   <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
@@ -678,7 +675,7 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
                         includeSubfolders: e.currentTarget.checked 
                       })}
                     />
-                    <span>{mapping.includeSubfolders ? '包含' : '排除'}</span>
+                    <span>{mapping.includeSubfolders ? t('dataManagement.batchScan.include') : t('dataManagement.batchScan.exclude')}</span>
                   </label>
                 {:else}
                   <span class="na-text">—</span>
@@ -688,9 +685,9 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
               <!-- 卡片数量统计 -->
               <td class="card-count-cell">
                 {#if mapping.fileCount !== undefined}
-                  <span class="card-count">{mapping.fileCount} 张</span>
+                  <span class="card-count">{mapping.fileCount} {t('dataManagement.batchScan.cardUnit')}</span>
                 {:else}
-                  <span class="card-count-placeholder">未统计</span>
+                  <span class="card-count-placeholder">{t('dataManagement.batchScan.notCounted')}</span>
                 {/if}
               </td>
               
@@ -713,8 +710,8 @@ import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
                 <button 
                   class="menu-btn"
                   onclick={(e) => showActionsMenu(mapping, e)}
-                  aria-label="操作菜单"
-                  title="更多操作"
+                  aria-label={t('dataManagement.batchScan.actionsMenu')}
+                  title={t('dataManagement.batchScan.moreActions')}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="1"></circle>

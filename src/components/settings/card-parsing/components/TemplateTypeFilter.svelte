@@ -1,116 +1,69 @@
-<!--
-  模板来源筛选器组件
-  职责：提供模板的来源筛选（Weave/Anki）
--->
 <script lang="ts">
+  import { tr } from '../../../../utils/i18n';
+
+  let t = $derived($tr);
+
   interface Props {
     sourceFilter: 'all' | 'weave' | 'anki';
     onSourceFilterChange: (filter: 'all' | 'weave' | 'anki') => void;
   }
 
-  let { 
-    sourceFilter, 
-    onSourceFilterChange 
-  }: Props = $props();
+  let { sourceFilter, onSourceFilterChange }: Props = $props();
 </script>
 
-<!-- 模板来源筛选器 -->
-<div class="template-source-filter">
-  <div class="filter-label">模板来源筛选：</div>
-  <div class="filter-buttons">
-    <button
-      class="filter-btn"
-      class:active={sourceFilter === 'all'}
-      onclick={() => onSourceFilterChange('all')}
-    >
-      全部来源
-    </button>
-    <button
-      class="filter-btn weave"
-      class:active={sourceFilter === 'weave'}
-      onclick={() => onSourceFilterChange('weave')}
-    >
-      🔵 Weave模板
-    </button>
-    <button
-      class="filter-btn anki"
-      class:active={sourceFilter === 'anki'}
-      onclick={() => onSourceFilterChange('anki')}
-    >
-      🟢 外部Anki模板
-    </button>
-  </div>
+<div class="template-type-filter">
+  <button
+    class="filter-btn"
+    class:active={sourceFilter === 'all'}
+    onclick={() => onSourceFilterChange('all')}
+  >
+    {t('dataManagement.templateMgmt.filterAll') ?? 'All'}
+  </button>
+  <button
+    class="filter-btn"
+    class:active={sourceFilter === 'weave'}
+    onclick={() => onSourceFilterChange('weave')}
+  >
+    Weave
+  </button>
+  <button
+    class="filter-btn"
+    class:active={sourceFilter === 'anki'}
+    onclick={() => onSourceFilterChange('anki')}
+  >
+    Anki
+  </button>
 </div>
 
 <style>
-  /* 模板来源筛选器容器 */
-  .template-source-filter {
+  .template-type-filter {
     display: flex;
-    align-items: center;
-    gap: var(--weave-space-md);
-    margin-bottom: var(--weave-space-lg);
-    padding: var(--weave-space-md);
+    gap: 4px;
+    padding: 4px;
     background: var(--background-secondary);
-    border-radius: var(--weave-radius-md);
-    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    width: fit-content;
   }
 
-  /* 筛选标签 */
-  .filter-label {
-    font-weight: 500;
-    color: var(--text-normal);
-    white-space: nowrap;
-    font-size: 0.9rem;
-  }
-
-  /* 按钮组容器 */
-  .filter-buttons {
-    display: flex;
-    gap: var(--weave-space-xs);
-    flex-wrap: wrap;
-  }
-
-  /* 筛选按钮样式 */
   .filter-btn {
-    padding: var(--weave-space-xs) var(--weave-space-sm);
-    background: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: var(--weave-radius-sm);
+    padding: 6px 14px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 13px;
     color: var(--text-muted);
-    font-size: 0.9rem;
-    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
+    transition: all 0.15s ease;
   }
 
   .filter-btn:hover {
-    background: var(--background-modifier-hover);
     color: var(--text-normal);
-    border-color: var(--interactive-accent);
   }
 
   .filter-btn.active {
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
-    border-color: var(--interactive-accent);
-    font-weight: 600;
-  }
-
-  /* 响应式设计：窄屏幕下垂直布局 */
-  @media (max-width: 768px) {
-    .template-source-filter {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: var(--weave-space-sm);
-    }
-
-    .filter-buttons {
-      width: 100%;
-    }
-
-    .filter-btn {
-      flex: 1;
-    }
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   }
 </style>

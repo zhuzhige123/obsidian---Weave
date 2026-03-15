@@ -2,6 +2,7 @@ import type { App } from 'obsidian';
 import { Notice } from 'obsidian';
 import { generateUUID } from '../../utils/helpers';
 import { EpubLinkService } from './EpubLinkService';
+import { logger } from '../../utils/logger';
 import type {
 	CanvasData,
 	CanvasNode,
@@ -88,7 +89,7 @@ export class EpubCanvasService {
 			const content = await adapter.read(this.canvasPath);
 			return JSON.parse(content) as CanvasData;
 		} catch (e) {
-			console.warn('[EpubCanvasService] Failed to read canvas:', e);
+			logger.warn('[EpubCanvasService] Failed to read canvas:', e);
 			return { nodes: [], edges: [] };
 		}
 	}
@@ -104,7 +105,8 @@ export class EpubCanvasService {
 		filePath: string,
 		chapterIndex?: number,
 		chapterTitle?: string,
-		color?: string
+		color?: string,
+		timestamp?: string
 	): Promise<CanvasNode | null> {
 		if (!this.canvasPath) return null;
 
@@ -112,7 +114,7 @@ export class EpubCanvasService {
 			const data = await this.readCanvas();
 
 			const noteContent = this.linkService.buildQuoteBlock(
-				filePath, cfiRange, text, chapterIndex, color, chapterTitle
+				filePath, cfiRange, text, chapterIndex, color, chapterTitle, timestamp
 			);
 
 			const nodeId = this.generateNodeId();
@@ -154,7 +156,7 @@ export class EpubCanvasService {
 
 			return node;
 		} catch (e) {
-			console.error('[EpubCanvasService] Failed to add excerpt node:', e);
+			logger.error('[EpubCanvasService] Failed to add excerpt node:', e);
 			new Notice('Failed to add node to canvas');
 			return null;
 		}
@@ -204,7 +206,7 @@ export class EpubCanvasService {
 
 			return node;
 		} catch (e) {
-			console.error('[EpubCanvasService] Failed to add raw text node:', e);
+			logger.error('[EpubCanvasService] Failed to add raw text node:', e);
 			new Notice('Failed to add node to canvas');
 			return null;
 		}
@@ -325,7 +327,7 @@ export class EpubCanvasService {
 				return;
 			}
 		} catch (e) {
-			console.warn('[EpubCanvasService] Failed to read canvas selection:', e);
+			logger.warn('[EpubCanvasService] Failed to read canvas selection:', e);
 		}
 	}
 

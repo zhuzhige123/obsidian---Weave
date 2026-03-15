@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setIcon } from 'obsidian';
+	import { setIcon, Notice } from 'obsidian';
 	import type { App } from 'obsidian';
 	import { onMount } from 'svelte';
 	import { logger } from '../../utils/logger';
@@ -16,9 +16,10 @@
 		canvasMode?: boolean;
 		onInsertToNote?: (text: string, cfiRange: string, color?: string) => void;
 		onAutoInsert?: (text: string, cfiRange: string, color?: string) => void;
+		onExtractToCard?: (text: string, cfiRange: string) => void;
 	}
 
-	let { app, readerService, annotationService, book, renditionVersion = 0, autoInsert = false, canvasMode = false, onInsertToNote, onAutoInsert }: Props = $props();
+	let { app, readerService, annotationService, book, renditionVersion = 0, autoInsert = false, canvasMode = false, onInsertToNote, onAutoInsert, onExtractToCard }: Props = $props();
 
 	let toolbarEl: HTMLDivElement;
 	let isVisible = $state(false);
@@ -54,9 +55,9 @@
 				currentCfiRange
 			);
 
-			await readerService.applyHighlights([{ cfiRange: currentCfiRange, color }]);
+			readerService.addHighlight({ cfiRange: currentCfiRange, color });
 		} catch (e) {
-			console.warn('Failed to save highlight:', e);
+			logger.warn('[SelectionToolbar] Failed to save highlight:', e);
 		}
 
 		onAutoInsert?.(selectedText, currentCfiRange, color);
@@ -64,13 +65,20 @@
 	}
 
 	function handleAction(action: string) {
-		logger.debug('Action:', action, 'text:', selectedText);
+		new Notice(`${action}: \u5c1a\u672a\u5b9e\u73b0`);
 		clearAndHide();
 	}
 
 	function handleInsertToNote() {
 		if (selectedText && currentCfiRange) {
 			onInsertToNote?.(selectedText, currentCfiRange);
+		}
+		clearAndHide();
+	}
+
+	function handleExtractToCard() {
+		if (selectedText && currentCfiRange) {
+			onExtractToCard?.(selectedText, currentCfiRange);
 		}
 		clearAndHide();
 	}
@@ -96,7 +104,7 @@
 	function showToolbar(rect: DOMRect, containerEl: HTMLElement) {
 		const containerRect = containerEl.getBoundingClientRect();
 		const toolbarWidth = 280;
-		const toolbarHeight = 50;
+		const toolbarHeight = 68;
 
 		let top = rect.top - containerRect.top - toolbarHeight - 10;
 		let left = rect.left - containerRect.left + (rect.width / 2);
@@ -153,7 +161,7 @@
 
 				showToolbar(adjustedRect, viewportEl);
 			} catch (e) {
-				console.warn('SelectionToolbar: failed to show', e);
+				logger.warn('[SelectionToolbar] Failed to show:', e);
 			}
 		});
 
@@ -162,7 +170,7 @@
 		});
 	}
 
-	function handleClickOutside(e: MouseEvent) {
+	function handleClickOutside(e: Event) {
 		if (isVisible && toolbarEl && !toolbarEl.contains(e.target as Node)) {
 			isVisible = false;
 		}
@@ -178,8 +186,10 @@
 
 	onMount(() => {
 		document.addEventListener('mousedown', handleClickOutside);
+		document.addEventListener('touchstart', handleClickOutside);
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
+			document.removeEventListener('touchstart', handleClickOutside);
 		};
 	});
 </script>
@@ -190,41 +200,36 @@
 	style="top: {posTop}px; left: {posLeft}px;"
 	bind:this={toolbarEl}
 >
-	<div class="toolbar-group colors">
-		<button class="color-btn yellow" onclick={() => handleHighlight('yellow')} title="Highlight"></button>
-		<button class="color-btn green" onclick={() => handleHighlight('green')} title="Important"></button>
-		<button class="color-btn blue" onclick={() => handleHighlight('blue')} title="Thought"></button>
-		<button class="color-btn pink" onclick={() => handleHighlight('pink')} title="Question"></button>
+	<div class="toolbar-row colors-row">
+		<button class="color-btn yellow" onclick={() => handleHighlight('yellow')} aria-label="黄色高亮"></button>
+		<button class="color-btn green" onclick={() => handleHighlight('green')} aria-label="绿色高亮"></button>
+		<button class="color-btn blue" onclick={() => handleHighlight('blue')} aria-label="蓝色高亮"></button>
+		<button class="color-btn pink" onclick={() => handleHighlight('pink')} aria-label="粉色高亮"></button>
 	</div>
 
-	<div class="divider"></div>
+	<div class="toolbar-row actions-row">
+		<button class="action-item" onclick={handleInsertToNote}>
+			<span class="action-icon" use:icon={autoInsert ? 'clipboard-paste' : 'clipboard-copy'}></span>
+			<span class="action-label">{autoInsert ? '插入' : '复制'}</span>
+		</button>
+		<button class="action-item" onclick={handleSearch}>
+			<span class="action-icon" use:icon={'search'}></span>
+			<span class="action-label">搜索</span>
+		</button>
 
-	<div class="toolbar-group actions">
-		<button class="action-btn" onclick={() => handleAction('underline')} title="Underline">
-			<span use:icon={'underline'}></span>
-		</button>
-		<button class="action-btn" onclick={() => handleAction('note')} title="Note">
-			<span use:icon={'pencil'}></span>
-		</button>
-		<button class="action-btn" onclick={handleInsertToNote} title={autoInsert ? 'Insert to note' : 'Copy to clipboard'}>
-			<span use:icon={autoInsert ? 'clipboard-paste' : 'clipboard-copy'}></span>
-		</button>
-		<button class="action-btn" onclick={handleSearch} title="Search in vault">
-			<span use:icon={'search'}></span>
-		</button>
-	</div>
+		<div class="row-divider"></div>
 
-	<div class="divider"></div>
-
-	<div class="toolbar-group weave">
-		<button class="action-btn special" onclick={() => handleAction('cloze')} title="Cloze card">
-			<span use:icon={'brackets'}></span>
+		<button class="action-item accent" onclick={() => handleAction('cloze')}>
+			<span class="action-icon" use:icon={'brackets'}></span>
+			<span class="action-label">Cloze</span>
 		</button>
-		<button class="action-btn special" onclick={() => handleAction('extract')} title="Extract card">
-			<span use:icon={'scissors'}></span>
+		<button class="action-item accent" onclick={handleExtractToCard}>
+			<span class="action-icon" use:icon={'scissors'}></span>
+			<span class="action-label">摘录</span>
 		</button>
-		<button class="action-btn ai" onclick={() => handleAction('ai-explain')} title="AI Explain">
-			<span use:icon={'sparkles'}></span>
+		<button class="action-item ai" onclick={() => handleAction('ai-explain')}>
+			<span class="action-icon" use:icon={'sparkles'}></span>
+			<span class="action-label">AI</span>
 		</button>
 	</div>
 

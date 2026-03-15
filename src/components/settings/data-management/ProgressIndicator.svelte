@@ -6,6 +6,9 @@
   import type { OperationProgress, OperationType } from '../../../types/data-management-types';
   import { formatDuration, formatEstimatedTime, formatOperationType } from '../../../utils/format-utils';
   import { createEventDispatcher } from 'svelte';
+  import { tr } from '../../../utils/i18n';
+
+  let t = $derived($tr);
 
   interface Props {
     progress: OperationProgress | null;
@@ -69,7 +72,7 @@
 
   // 格式化剩余时间
   let remainingTimeText = $derived(
-    progress?.estimatedTimeRemaining ? formatEstimatedTime(progress.estimatedTimeRemaining) : '计算中...'
+    progress?.estimatedTimeRemaining ? formatEstimatedTime(progress.estimatedTimeRemaining) : t('dataManagement.progress.calculating')
   );
 
   // 获取进度条颜色
@@ -119,7 +122,7 @@
         <button 
           class="cancel-button"
           onclick={handleCancel}
-          title="取消操作"
+          title={t('dataManagement.progress.cancelOperation')}
         >
           <span class="cancel-icon">✕</span>
         </button>
@@ -141,20 +144,20 @@
     <div class="progress-details">
       <!-- 处理计数 -->
       <div class="detail-item">
-        <span class="detail-label">进度:</span>
+        <span class="detail-label">{t('dataManagement.progress.progressLabel')}</span>
         <span class="detail-value">{countText}</span>
       </div>
 
       <!-- 已用时间 -->
       <div class="detail-item">
-        <span class="detail-label">已用时间:</span>
+        <span class="detail-label">{t('dataManagement.progress.elapsedTime')}</span>
         <span class="detail-value">{elapsedTimeText}</span>
       </div>
 
       <!-- 剩余时间 -->
       {#if progress.estimatedTimeRemaining !== undefined}
         <div class="detail-item">
-          <span class="detail-label">剩余时间:</span>
+          <span class="detail-label">{t('dataManagement.progress.remainingTime')}</span>
           <span class="detail-value">{remainingTimeText}</span>
         </div>
       {/if}

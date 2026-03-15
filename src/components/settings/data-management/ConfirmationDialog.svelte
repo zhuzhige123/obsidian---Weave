@@ -6,7 +6,9 @@
   import { logger } from '../../../utils/logger';
 
   import type { SecurityLevel } from '../../../types/data-management-types';
-  import { createEventDispatcher } from 'svelte';
+  import { tr } from '../../../utils/i18n';
+
+  let t = $derived($tr);
 
   interface Props {
     isOpen: boolean;
@@ -28,20 +30,19 @@
     title,
     message,
     securityLevel,
-    confirmText = '确认',
-    cancelText = '取消',
+    confirmText,
+    cancelText,
     requireTextConfirmation = false,
-    confirmationPhrase = '确认操作',
+    confirmationPhrase,
     details = [],
     warningItems = [],
     onConfirm,
     onCancel
   }: Props = $props();
 
-  const dispatch = createEventDispatcher<{
-    confirm: void;
-    cancel: void;
-  }>();
+  let resolvedConfirmText = $derived(confirmText ?? t('dataManagement.confirmDialog.confirm'));
+  let resolvedCancelText = $derived(cancelText ?? t('dataManagement.confirmDialog.cancel'));
+  let resolvedConfirmationPhrase = $derived(confirmationPhrase ?? t('dataManagement.confirmDialog.confirmPhrase'));
 
   // 文本确认输入
   let textConfirmationInput = $state('');
@@ -75,7 +76,7 @@
   // 检查是否可以确认
   let canConfirm = $derived(() => {
     if (requireTextConfirmation) {
-      return textConfirmationInput.trim() === confirmationPhrase;
+      return textConfirmationInput.trim() === resolvedConfirmationPhrase;
     }
     return true;
   });
@@ -91,7 +92,6 @@
         await onConfirm();
       }
       
-      dispatch('confirm');
       closeDialog();
     } catch (error) {
       logger.error('确认操作失败:', error);
@@ -108,7 +108,6 @@
       onCancel();
     }
     
-    dispatch('cancel');
     closeDialog();
   }
 
@@ -129,10 +128,8 @@
   }
 
   // 点击遮罩关闭
-  function handleOverlayClick(event: MouseEvent) {
-    if (event.target === event.currentTarget) {
-      handleCancel();
-    }
+  function handleOverlayClick() {
+    handleCancel();
   }
 </script>
 
@@ -140,24 +137,30 @@
 
 <!-- 确认对话框 -->
 {#if isOpen}
-  <div
-    class="confirmation-overlay"
-    onclick={handleOverlayClick}
-    role="dialog"
-    aria-modal="true"
-    tabindex="-1"
-  >
-    <div class="confirmation-dialog" style="--security-color: {currentConfig.color}; --security-bg: {currentConfig.bgColor}; --security-border: {currentConfig.borderColor}">
+  <div class="confirmation-overlay">
+    <button
+      type="button"
+      class="confirmation-backdrop"
+      aria-label={t('common.close')}
+      onclick={handleOverlayClick}
+    ></button>
+    <div
+      class="confirmation-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirmation-dialog-title"
+      style="--security-color: {currentConfig.color}; --security-bg: {currentConfig.bgColor}; --security-border: {currentConfig.borderColor}"
+    >
       <!-- 对话框头部 -->
       <div class="dialog-header">
         {#if currentConfig.icon}
           <div class="header-icon">{currentConfig.icon}</div>
         {/if}
         <div class="header-content">
-          <h2 class="dialog-title">{title}</h2>
+          <h2 id="confirmation-dialog-title" class="dialog-title">{title}</h2>
           <div class="security-badge security-{securityLevel}">
-            {securityLevel === 'safe' ? '安全操作' : 
-             securityLevel === 'caution' ? '谨慎操作' : '危险操作'}
+            {securityLevel === 'safe' ? t('dataManagement.confirmDialog.securityLevels.safe') : 
+             securityLevel === 'caution' ? t('dataManagement.confirmDialog.securityLevels.caution') : t('dataManagement.confirmDialog.securityLevels.danger')}
           </div>
         </div>
       </div>
@@ -172,7 +175,7 @@
         <!-- 详细信息 -->
         {#if details.length > 0}
           <div class="details-section">
-            <h4>操作详情:</h4>
+            <h4>{t('dataManagement.confirmDialog.operationDetails')}</h4>
             <ul class="details-list">
               {#each details as detail}
                 <li>{detail}</li>
@@ -184,7 +187,7 @@
         <!-- 警告项目 -->
         {#if warningItems.length > 0}
           <div class="warning-section">
-            <h4>注意事项:</h4>
+            <h4>{t('dataManagement.confirmDialog.warnings')}</h4>
             <ul class="warning-list">
               {#each warningItems as warning}
                 <li>{warning}</li>
@@ -197,20 +200,20 @@
         {#if requireTextConfirmation}
           <div class="text-confirmation">
             <label for="confirmation-input" class="confirmation-label">
-              请输入 "<strong>{confirmationPhrase}</strong>" 以确认操作:
+              {t('dataManagement.confirmDialog.typeToConfirm', { phrase: '' })}<strong>{resolvedConfirmationPhrase}</strong>:
             </label>
             <input
               id="confirmation-input"
               type="text"
               bind:value={textConfirmationInput}
-              placeholder={confirmationPhrase}
+              placeholder={resolvedConfirmationPhrase}
               class="confirmation-input"
               class:valid={canConfirm()}
               disabled={isProcessing}
               autocomplete="off"
             />
             {#if textConfirmationInput && !canConfirm()}
-              <div class="input-error">输入的文本不匹配</div>
+              <div class="input-error">{t('dataManagement.confirmDialog.inputMismatch')}</div>
             {/if}
           </div>
         {/if}
@@ -223,7 +226,7 @@
           onclick={handleCancel}
           disabled={isProcessing}
         >
-          {cancelText}
+          {resolvedCancelText}
         </button>
 
         <button
@@ -233,9 +236,9 @@
         >
           {#if isProcessing}
             <div class="button-spinner"></div>
-            处理中...
+            {t('dataManagement.confirmDialog.processing')}
           {:else}
-            {confirmText}
+            {resolvedConfirmText}
           {/if}
         </button>
       </div>
@@ -244,7 +247,7 @@
       {#if isProcessing}
         <div class="processing-overlay">
           <div class="processing-spinner"></div>
-          <div class="processing-text">正在处理操作...</div>
+          <div class="processing-text">{t('dataManagement.confirmDialog.processingOverlay')}</div>
         </div>
       {/if}
     </div>
@@ -265,6 +268,15 @@
     justify-content: center;
     z-index: var(--weave-z-overlay);
     padding: 1rem;
+  }
+
+  .confirmation-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: default;
   }
 
   .confirmation-dialog {

@@ -52,8 +52,7 @@ export class DeepSeekService extends OpenAIService {
 
       return response.status === 200;
     } catch (error) {
-      logger.error('DeepSeek connection test failed:', error);
-      return false;
+      throw this.classifyConnectionError(error);
     }
   }
 

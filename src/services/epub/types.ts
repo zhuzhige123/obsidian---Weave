@@ -70,15 +70,12 @@ export interface TocItem {
 }
 
 export type EpubTheme = 'default' | 'sepia';
-export type EpubFontFamily = 'serif' | 'sans';
 export type EpubWidthMode = 'standard' | 'full';
-export type EpubLayoutMode = 'scroll' | 'paginated' | 'double';
+export type EpubLayoutMode = 'paginated' | 'double';
 
 export interface EpubReaderSettings {
-	fontSize: number;
 	lineHeight: number;
 	theme: EpubTheme;
-	fontFamily: EpubFontFamily;
 	widthMode: EpubWidthMode;
 	layoutMode: EpubLayoutMode;
 }

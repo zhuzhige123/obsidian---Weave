@@ -234,8 +234,8 @@
   }
 
   .icon-button {
-    width: 2rem;
-    height: 2rem;
+    width: 2.25rem;
+    height: 2.25rem;
     padding: 0;
     border: 1px solid var(--background-modifier-border);
     border-radius: 4px;
@@ -295,7 +295,7 @@
 
   .stat-item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     padding: 0.75rem;
     background: var(--weave-secondary-bg, var(--background-primary));
     border: 1px solid var(--background-modifier-border);
@@ -315,21 +315,24 @@
   .stat-content {
     flex: 1;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .stat-label {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     color: var(--text-muted);
-    margin-bottom: 0.25rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
   }
 
   .stat-value {
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-normal);
     word-break: break-all;
+    text-align: right;
   }
 
   .folder-path {

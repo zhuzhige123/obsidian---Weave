@@ -38,7 +38,7 @@ export interface CardManagementViewPreferences {
   /** 网格布局模式 */
   gridLayout: 'fixed' | 'masonry';
   /** 网格卡片显示属性 */
-  gridCardAttribute: 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified';
+  gridCardAttribute: 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified' | 'accuracy' | 'question_type' | 'ir_state' | 'ir_priority';
   /** 看板布局模式 */
   kanbanLayoutMode: 'compact' | 'comfortable' | 'spacious';
   /** 表格视图模式 */

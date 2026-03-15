@@ -3,11 +3,13 @@
 
   import type WeavePlugin from "../../../main";
   import { DEFAULT_AI_CONFIG, DEFAULT_API_URLS } from "../constants/settings-constants";
-  import { AI_PROVIDER_LABELS, AI_MODEL_OPTIONS } from "../constants/settings-constants";
+  import { AI_PROVIDER_LABELS, AI_MODEL_OPTIONS, AI_PROVIDER_CAPABILITIES } from "../constants/settings-constants";
   import type { AIProvider } from "../constants/settings-constants";
   import ObsidianIcon from "../../ui/ObsidianIcon.svelte";
   import ObsidianDropdown from "../../ui/ObsidianDropdown.svelte";
   import { Menu, Notice } from 'obsidian';
+  import { CustomApiUrlModal } from '../components/CustomApiUrlModal';
+  import { AIServiceFactory } from '../../../services/ai/AIServiceFactory';
   
   //  导入国际化
   import { tr } from '../../../utils/i18n';
@@ -83,11 +85,6 @@
   let modalProvider = $state<AIProvider | null>(null);
   let modalCustomModelName = $state('');
 
-  // 🆕 自定义URL浮窗状态
-  let showCustomUrlModal = $state(false);
-  let urlModalProvider = $state<AIProvider | null>(null);
-  let customUrl = $state('');
-
   // 保存配置的防抖函数
   let saveTimeout: NodeJS.Timeout | null = null;
   
@@ -102,9 +99,14 @@
     }, 500);
   }
 
-  // 监听配置变化并自动保存
+  // 监听配置变化并自动保存（跳过首次初始化）
+  let initialized = false;
   $effect(() => {
     if (aiConfig) {
+      if (!initialized) {
+        initialized = true;
+        return;
+      }
       saveSettings();
     }
   });
@@ -114,30 +116,41 @@
     showApiKey[provider] = !showApiKey[provider];
   }
 
-  // 测试API连接
+  // 测试API连接（真实调用API）
   async function testConnection(provider: AIProvider) {
     testingProvider = provider;
     testResults[provider] = null;
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       const config = aiConfig.apiKeys[provider];
       if (!config?.apiKey) {
         throw new Error(t('aiConfig.apiKeys.testFailed'));
       }
 
-      testResults[provider] = {
-        success: true,
-        message: t('aiConfig.apiKeys.testSuccess')
-      };
+      // 先保存当前配置，确保 Factory 能读取到最新的 apiKey/model/baseUrl
+      plugin.settings.aiConfig = aiConfig;
+      await plugin.saveSettings();
 
-      config.verified = true;
-      config.lastVerified = new Date().toISOString();
+      const service = AIServiceFactory.createService(
+        provider as import('../../../types/ai-types').AIProvider,
+        plugin
+      );
+      const success = await service.testConnection();
+
+      if (success) {
+        testResults[provider] = {
+          success: true,
+          message: t('aiConfig.apiKeys.testSuccess')
+        };
+        config.verified = true;
+        config.lastVerified = new Date().toISOString();
+      } else {
+        throw new Error(t('aiConfig.apiKeys.testFailed'));
+      }
     } catch (error) {
       testResults[provider] = {
         success: false,
-        message: error instanceof Error ? error.message : '连接失败'
+        message: error instanceof Error ? error.message : t('aiConfig.apiKeys.testFailed')
       };
 
       const config = aiConfig.apiKeys[provider];
@@ -162,7 +175,7 @@
     // 🆕 自定义API地址
     menu.addItem((item) => {
       item
-        .setTitle(hasCustomUrl ? '修改API地址' : '自定义API地址')
+        .setTitle(hasCustomUrl ? t('aiConfig.apiKeys.menu.editApiUrl') : t('aiConfig.apiKeys.menu.customApiUrl'))
         .setIcon('link')
         .onClick(() => {
           openCustomUrlModal(provider);
@@ -173,7 +186,7 @@
     if (hasCustomUrl) {
       menu.addItem((item) => {
         item
-          .setTitle('重置为默认地址')
+          .setTitle(t('aiConfig.apiKeys.menu.resetApiUrl'))
           .setIcon('rotate-ccw')
           .onClick(async () => {
             await resetToDefaultUrl(provider);
@@ -187,7 +200,7 @@
     // 新增自定义AI模型
     menu.addItem((item) => {
       item
-        .setTitle('新增自定义AI模型')
+        .setTitle(t('aiConfig.apiKeys.menu.addCustomModel'))
         .setIcon('plus')
         .onClick(() => {
           openCustomModelModal(provider);
@@ -214,21 +227,21 @@
   // 验证自定义模型名称
   function validateCustomModel(provider: AIProvider, modelName: string): { valid: boolean; message: string } {
     if (!modelName.trim()) {
-      return { valid: false, message: '模型名称不能为空' };
+      return { valid: false, message: t('aiConfig.apiKeys.customModel.emptyError') };
     }
 
     // 基本格式验证
     const modelNameRegex = /^[a-zA-Z0-9\-._/]+$/;
     if (!modelNameRegex.test(modelName)) {
-      return { valid: false, message: '模型名称包含无效字符，只允许字母、数字、连字符、点和斜杠' };
+      return { valid: false, message: t('aiConfig.apiKeys.customModel.invalidCharsError') };
     }
 
     // 长度检查
     if (modelName.length > 100) {
-      return { valid: false, message: '模型名称过长，最多100个字符' };
+      return { valid: false, message: t('aiConfig.apiKeys.customModel.tooLongError') };
     }
 
-    return { valid: true, message: '模型名称格式正确' };
+    return { valid: true, message: t('aiConfig.apiKeys.customModel.validMessage') };
   }
 
   // 保存自定义模型
@@ -237,7 +250,7 @@
     
     const validation = validateCustomModel(modalProvider, modalCustomModelName);
     if (!validation.valid) {
-      logger.error('模型名称验证失败:', validation.message);
+      logger.error('Model name validation failed:', validation.message);
       return;
     }
 
@@ -248,79 +261,33 @@
     }
 
     // 保存设置
+    plugin.settings.aiConfig = aiConfig;
     await plugin.saveSettings();
     
     closeCustomModelModal();
   }
 
-  // 🆕 打开自定义URL弹窗
+  // 打开自定义URL弹窗（使用Obsidian原生Modal）
   function openCustomUrlModal(provider: AIProvider) {
-    urlModalProvider = provider;
-    const currentUrl = aiConfig.apiKeys[provider].baseUrl;
-    customUrl = currentUrl || DEFAULT_API_URLS[provider] || '';
-    showCustomUrlModal = true;
-  }
-
-  // 🆕 关闭自定义URL弹窗
-  function closeCustomUrlModal() {
-    showCustomUrlModal = false;
-    urlModalProvider = null;
-    customUrl = '';
-  }
-
-  // 🆕 URL验证函数
-  function validateUrl(url: string): { valid: boolean; message: string } {
-    if (!url.trim()) {
-      return { valid: false, message: 'URL不能为空' };
-    }
-    
-    try {
-      const urlObj = new URL(url);
-      
-      // 必须是http或https协议
-      if (!['http:', 'https:'].includes(urlObj.protocol)) {
-        return { valid: false, message: '只支持HTTP或HTTPS协议' };
+    const currentUrl = aiConfig.apiKeys[provider].baseUrl || DEFAULT_API_URLS[provider] || '';
+    const modal = new CustomApiUrlModal(
+      plugin.app,
+      provider,
+      currentUrl,
+      async (url: string) => {
+        const config = aiConfig.apiKeys[provider];
+        if (config) {
+          config.baseUrl = url;
+          config.verified = false;
+        }
+        await plugin.saveSettings();
+        new Notice(t('aiConfig.notices.apiUrlUpdated', { provider: AI_PROVIDER_LABELS[provider] }), 2000);
       }
-      
-      // 不允许包含查询参数或hash
-      if (urlObj.search || urlObj.hash) {
-        return { valid: false, message: '基础URL不应包含查询参数或锚点' };
-      }
-      
-      return { valid: true, message: 'URL格式正确' };
-    } catch (error) {
-      return { valid: false, message: '无效的URL格式' };
-    }
+    );
+    modal.open();
   }
 
-  // 🆕 保存自定义URL
-  async function saveCustomUrl() {
-    if (!urlModalProvider || !customUrl.trim()) return;
-    
-    const validation = validateUrl(customUrl);
-    if (!validation.valid) {
-      new Notice(`${validation.message}`, 3000);
-      return;
-    }
-    
-    // 清理URL（移除末尾的斜杠）
-    const cleanedUrl = customUrl.trim().replace(/\/+$/, '');
-    
-    // 更新配置
-    const config = aiConfig.apiKeys[urlModalProvider];
-    if (config) {
-      config.baseUrl = cleanedUrl;
-      config.verified = false; // 重置验证状态，需要重新测试
-    }
-    
-    // 保存设置
-    await plugin.saveSettings();
-    
-    new Notice(`${AI_PROVIDER_LABELS[urlModalProvider]} API地址已更新`, 2000);
-    closeCustomUrlModal();
-  }
-
-  // 🆕 重置为默认URL
+  // 重置为默认URL
   async function resetToDefaultUrl(provider: AIProvider) {
     const config = aiConfig.apiKeys[provider];
     if (config) {
@@ -329,12 +296,28 @@
     }
     
     await plugin.saveSettings();
-    new Notice(`${AI_PROVIDER_LABELS[provider]} 已重置为默认地址`, 2000);
+    new Notice(t('aiConfig.notices.apiUrlReset', { provider: AI_PROVIDER_LABELS[provider] }), 2000);
   }
 
   // 获取提供商的模型选项
   function getModelOptions(provider: AIProvider) {
-    return AI_MODEL_OPTIONS[provider] || [];
+    const staticOptions: Array<{ id: string; label: string; description?: string }> =
+      (AI_MODEL_OPTIONS[provider] || []).map((opt) => ({
+        id: opt.id,
+        label: opt.label,
+        description: opt.description
+      }));
+    const configuredModel = aiConfig.apiKeys?.[provider]?.model?.trim();
+
+    if (configuredModel && !staticOptions.some((opt) => opt.id === configuredModel)) {
+      staticOptions.unshift({
+        id: configuredModel,
+        label: configuredModel,
+        description: t('aiConfig.apiKeys.customHint')
+      });
+    }
+
+    return staticOptions;
   }
 
   // 所有提供商列表
@@ -358,6 +341,7 @@
           {#if isVerified}
             <span class="badge badge-success">{t('aiConfig.apiKeys.verified')}</span>
           {/if}
+          <!-- provider description removed for cleaner UI -->
         </h4>
         <button 
           type="button"
@@ -401,7 +385,7 @@
               <input
                 type={showApiKey[provider] ? 'text' : 'password'}
                 bind:value={config.apiKey}
-                placeholder="sk-..."
+                placeholder={AI_PROVIDER_CAPABILITIES[provider].keyPlaceholder}
                 class="text-input"
               />
               <button
@@ -477,149 +461,53 @@
 
 <!-- 自定义模型浮窗 -->
 {#if showCustomModelModal && modalProvider}
-  <div 
-    class="modal-overlay" 
-    onclick={(e) => {
-      // 只有点击背景时才关闭
-      if (e.target === e.currentTarget) {
-        closeCustomModelModal();
-      }
-    }}
-    role="dialog"
-    aria-modal="true"
-    tabindex="-1"
-  >
-    <div class="custom-model-modal" aria-labelledby="custom-model-title">
-      <div class="modal-header">
-        <h3 id="custom-model-title">新增自定义AI模型</h3>
-        <button class="btn-close" onclick={closeCustomModelModal}>
-          <ObsidianIcon name="x" size={16} />
-        </button>
+  <div class="custom-model-modal" role="dialog" aria-modal="true" aria-labelledby="custom-model-title">
+    <div class="modal-header">
+      <h3 id="custom-model-title">{t('aiConfig.apiKeys.customModel.title')}</h3>
+      <button class="btn-close" onclick={closeCustomModelModal}>
+        <ObsidianIcon name="x" size={16} />
+      </button>
+    </div>
+    
+    <div class="custom-modal-body">
+      <div class="provider-info">
+        <span class="provider-name">{AI_PROVIDER_LABELS[modalProvider]}</span>
       </div>
       
-      <div class="custom-modal-body">
-        <div class="provider-info">
-          <span class="provider-name">{AI_PROVIDER_LABELS[modalProvider]}</span>
-        </div>
+      <div class="input-group">
+        <label for="custom-model-input">{t('aiConfig.apiKeys.customModel.nameLabel')}</label>
+        <input
+          id="custom-model-input"
+          type="text"
+          bind:value={modalCustomModelName}
+          placeholder={t('aiConfig.apiKeys.customModel.namePlaceholder')}
+          class="text-input"
+        />
         
-        <div class="input-group">
-          <label for="custom-model-input">模型名称</label>
-          <input
-            id="custom-model-input"
-            type="text"
-            bind:value={modalCustomModelName}
-            placeholder="输入自定义模型名称 (如: gpt-4o-2024-05-13)"
-            class="text-input"
-          />
-          
-          {#if modalCustomModelName}
-            {@const validation = validateCustomModel(modalProvider, modalCustomModelName)}
-            <small class="input-hint" class:error={!validation.valid}>
-              {validation.message}
-            </small>
-          {/if}
-        </div>
+        {#if modalCustomModelName}
+          {@const validation = validateCustomModel(modalProvider, modalCustomModelName)}
+          <small class="input-hint" class:error={!validation.valid}>
+            {validation.message}
+          </small>
+        {/if}
       </div>
-      
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick={closeCustomModelModal}>
-          取消
-        </button>
-        <button 
-          class="btn btn-primary" 
-          onclick={saveCustomModel}
-          disabled={!modalCustomModelName.trim() || !validateCustomModel(modalProvider, modalCustomModelName).valid}
-        >
-          保存
-        </button>
-      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick={closeCustomModelModal}>
+        {t('aiConfig.apiKeys.customModel.cancel')}
+      </button>
+      <button 
+        class="btn btn-primary" 
+        onclick={saveCustomModel}
+        disabled={!modalCustomModelName.trim() || !validateCustomModel(modalProvider, modalCustomModelName).valid}
+      >
+        {t('aiConfig.apiKeys.customModel.save')}
+      </button>
     </div>
   </div>
 {/if}
 
-<!-- 🆕 自定义API地址弹窗 -->
-{#if showCustomUrlModal && urlModalProvider}
-  <div 
-    class="modal-overlay" 
-    onclick={(e) => {
-      // 只有点击背景时才关闭
-      if (e.target === e.currentTarget) {
-        closeCustomUrlModal();
-      }
-    }}
-    role="dialog"
-    aria-modal="true"
-    tabindex="-1"
-  >
-    <div class="custom-url-modal" aria-labelledby="custom-url-title">
-      <div class="modal-header">
-        <h3 id="custom-url-title">自定义 {AI_PROVIDER_LABELS[urlModalProvider]} API地址</h3>
-        <button class="btn-close" onclick={closeCustomUrlModal}>
-          <ObsidianIcon name="x" size={16} />
-        </button>
-      </div>
-      
-      <div class="custom-modal-body">
-        <div class="input-group">
-          <label for="custom-url-input">API基础地址</label>
-          <input
-            id="custom-url-input"
-            type="text"
-            bind:value={customUrl}
-            placeholder={`默认: ${DEFAULT_API_URLS[urlModalProvider] || '官方地址'}`}
-            class="text-input url-input"
-            onkeydown={(e) => {
-              if (e.key === 'Enter') {
-                saveCustomUrl();
-              }
-            }}
-          />
-          <small class="url-hint">
-            <ObsidianIcon name="info" size={14} />
-            输入完整的API基础地址，例如：<code>https://api.example.com/v1</code>
-          </small>
-        </div>
-        
-        <div class="url-examples">
-          <h4>常用中转示例</h4>
-          <div class="example-list">
-            <div class="example-item">
-              <span class="example-label">Cloudflare Worker:</span>
-              <code class="example-url">https://your-worker.workers.dev</code>
-            </div>
-            <div class="example-item">
-              <span class="example-label">Vercel代理:</span>
-              <code class="example-url">https://your-project.vercel.app</code>
-            </div>
-            <div class="example-item">
-              <span class="example-label">自建代理:</span>
-              <code class="example-url">https://proxy.example.com/api</code>
-            </div>
-          </div>
-        </div>
-        
-        <div class="url-notes">
-          <h4>注意事项</h4>
-          <ul>
-            <li>确保中转服务与官方API接口兼容</li>
-            <li>自定义地址后需要重新测试连接</li>
-            <li>某些功能可能因中转服务限制而不可用</li>
-            <li>请勿使用不可信的第三方服务，以保护API密钥安全</li>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick={closeCustomUrlModal}>
-          取消
-        </button>
-        <button class="btn btn-primary" onclick={saveCustomUrl}>
-          保存
-        </button>
-      </div>
-    </div>
-  </div>
-{/if}
 
 <style>
   /* 未使用的CSS选择器已清理 */
@@ -776,39 +664,29 @@
 
   /* Toggle Switch */
 
-  /* 自定义模型浮窗样式 */
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.75); /* 🔧 增加不透明度从0.5到0.75 */
-    backdrop-filter: blur(4px); /* 🆕 添加背景模糊效果 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: var(--weave-z-overlay);
-  }
-
   .custom-model-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
     border-radius: 12px;
     width: 90%;
     max-width: 480px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); /* 🔧 增强阴影从0.3到0.5 */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: var(--layer-modal, 50);
     animation: modalSlideIn 0.2s ease-out;
   }
 
   @keyframes modalSlideIn {
     from {
       opacity: 0;
-      transform: translateY(-20px) scale(0.95);
+      transform: translate(-50%, -55%) scale(0.95);
     }
     to {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translate(-50%, -50%) scale(1);
     }
   }
 
@@ -932,108 +810,4 @@
     border-color: var(--interactive-accent);
   }
 
-  /* 🆕 自定义URL弹窗样式 */
-  .custom-url-modal {
-    background: var(--background-primary); /* 🔧 确保背景不透明 */
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 12px;
-    max-width: 600px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); /* 🔧 增强阴影 */
-    animation: modalSlideIn 0.2s ease-out;
-  }
-
-  .url-input {
-    font-family: var(--font-monospace);
-    font-size: 0.9rem;
-  }
-
-  .url-hint {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-    padding: 0.75rem;
-    background: var(--background-secondary);
-    border-radius: 6px;
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    line-height: 1.5;
-  }
-
-  .url-hint code {
-    background: var(--background-modifier-border);
-    padding: 0.125rem 0.375rem;
-    border-radius: 3px;
-    font-family: var(--font-monospace);
-    font-size: 0.85em;
-  }
-
-  .url-examples {
-    margin-top: 2rem;
-  }
-
-  .url-examples h4 {
-    margin: 0 0 1rem 0;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-normal);
-  }
-
-  .example-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .example-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.75rem;
-    background: var(--background-secondary);
-    border: 1px solid var(--background-modifier-border); /* 🆕 添加边框增强对比 */
-    border-radius: 6px;
-  }
-
-  .example-label {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-  }
-
-  .example-url {
-    font-family: var(--font-monospace);
-    font-size: 0.85rem;
-    color: var(--text-accent);
-  }
-
-  .url-notes {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    background: rgba(239, 68, 68, 0.2); /* 🔧 增加不透明度从0.15到0.2 */
-    border: 1px solid rgba(239, 68, 68, 0.3); /* 🆕 添加边框 */
-    border-left: 3px solid var(--text-error);
-    border-radius: 6px;
-  }
-
-  .url-notes h4 {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-error);
-  }
-
-  .url-notes ul {
-    margin: 0;
-    padding-left: 1.25rem;
-  }
-
-  .url-notes li {
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    line-height: 1.5;
-  }
 </style>

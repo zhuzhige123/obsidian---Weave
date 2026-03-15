@@ -6,6 +6,8 @@
 	import { setIcon, TFile, Menu } from 'obsidian';
 	import type { App } from 'obsidian';
 	import ePub from 'epubjs';
+	import { getPreferredEpubLeaf } from '../../utils/epub-leaf-utils';
+	import { logger } from '../../utils/logger';
 	import { VIEW_TYPE_EPUB } from '../../views/EpubView';
 
 	interface EpubFileInfo {
@@ -85,19 +87,31 @@
 		loadingCovers = false;
 	}
 
+	function handleBookKeydown(event: KeyboardEvent, path: string) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			void switchBook(path);
+		}
+	}
+
 	function formatSize(bytes: number): string {
 		if (bytes < 1024) return `${bytes} B`;
 		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
 		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 	}
 
-	function switchBook(filePath: string) {
-		onSwitchBook?.(filePath);
+	async function switchBook(filePath: string) {
+		if (onSwitchBook) {
+			await Promise.resolve(onSwitchBook(filePath));
+		} else {
+			await openBookInNewTab(filePath);
+		}
+		onClose();
 	}
 
 	async function openBookInNewTab(filePath: string) {
 		try {
-			const leaf = app.workspace.getLeaf('tab');
+			const leaf = getPreferredEpubLeaf(app, filePath);
 			if (!leaf) return;
 			await leaf.setViewState({
 				type: VIEW_TYPE_EPUB,
@@ -106,7 +120,7 @@
 			});
 			app.workspace.revealLeaf(leaf);
 		} catch (error) {
-			console.error('Failed to open EPUB:', error);
+			logger.error('[BookshelfView] Failed to open EPUB:', error);
 		}
 	}
 
@@ -114,7 +128,7 @@
 		e.preventDefault();
 		const menu = new Menu();
 		menu.addItem((item) => {
-			item.setTitle('Open in new tab')
+			item.setTitle('在新标签页打开')
 				.setIcon('external-link')
 				.onClick(() => openBookInNewTab(filePath));
 		});
@@ -142,12 +156,12 @@
 </script>
 
 <div class="epub-bookshelf-header">
-	<h3>Bookshelf</h3>
+	<h3>书架</h3>
 	<div style="display: flex; gap: 4px;">
 		<button
 			class="epub-icon-btn"
 			style="width:28px;height:28px;"
-			title={searching ? 'Close search' : 'Search'}
+			title={searching ? '关闭搜索' : '搜索'}
 			onclick={() => { searching = !searching; if (!searching) searchQuery = ''; }}
 		>
 			<span use:icon={searching ? 'x' : 'search'}></span>
@@ -159,7 +173,7 @@
 	<div class="epub-bookshelf-search">
 		<input
 			type="text"
-			placeholder="Search books..."
+			placeholder="搜索书籍..."
 			bind:value={searchQuery}
 		/>
 	</div>
@@ -169,18 +183,20 @@
 	{#if filteredFiles.length === 0}
 		<div class="epub-placeholder">
 			{#if epubFiles.length === 0}
-				No EPUB files found in this vault.
+				未在此仓库中找到 EPUB 文件。
 			{:else}
-				No results for "{searchQuery}"
+				未找到“{searchQuery}”的结果
 			{/if}
 		</div>
 	{:else}
 		{#each filteredFiles as file (file.path)}
-			<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 			<div
 				class="epub-book-item"
-				onclick={() => switchBook(file.path)}
+				onclick={() => void switchBook(file.path)}
 				oncontextmenu={(e) => handleContextMenu(e, file.path, file.name)}
+				onkeydown={(event) => handleBookKeydown(event, file.path)}
+				role="button"
+				tabindex="0"
 			>
 				{#if covers.get(file.path)}
 					<img src={covers.get(file.path)} alt="" class="book-thumb" />

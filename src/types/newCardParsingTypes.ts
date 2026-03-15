@@ -559,7 +559,7 @@ export function createDefaultFolderDeckMapping(
   targetDeckName: string
 ): FolderDeckMapping {
   return {
-    id: `mapping-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `mapping-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
     type: 'folder',
     path,
     targetDeckId,

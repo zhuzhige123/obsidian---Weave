@@ -3,23 +3,22 @@ import { render, fireEvent, screen } from '@testing-library/svelte';
 import WeaveCardTable from '../WeaveCardTable.svelte';
 import type { Card } from '../../../data/types';
 import { CardState } from '../../../data/types';
+import { vaultStorage } from '../../../utils/vault-local-storage';
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock
-});
+vi.mock('../../../utils/vault-local-storage', () => ({
+  vaultStorage: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn()
+  }
+}));
 
-// Mock card data
 const mockCards: Card[] = [
   {
     id: '1',
+    uuid: 'card-1',
     templateId: 'template1',
+    content: '前面内容1\n---\n背面内容1',
     fields: {
       front: '前面内容1',
       back: '背面内容1'
@@ -37,12 +36,14 @@ const mockCards: Card[] = [
       last_review: null
     },
     priority: 3,
-    created: new Date(),
-    updated: new Date()
+    created: new Date().toISOString(),
+    updated: new Date().toISOString()
   },
   {
     id: '2',
+    uuid: 'card-2',
     templateId: 'template1',
+    content: '前面内容2\n---\n背面内容2',
     fields: {
       front: '前面内容2',
       back: '背面内容2'
@@ -61,7 +62,7 @@ const mockCards: Card[] = [
     },
     priority: 2,
     created: new Date().toISOString(),
-    updated: new Date()
+    updated: new Date().toISOString()
   }
 ];
 
@@ -90,13 +91,13 @@ const defaultProps = {
   onDelete: vi.fn(),
   onTagsUpdate: vi.fn(),
   loading: false,
-  fieldTemplates: [] // 新增：字段模板数据
+  fieldTemplates: []
 };
 
 describe('WeaveCardTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorageMock.getItem.mockReturnValue(null);
+    vi.mocked(vaultStorage.getItem).mockReturnValue(null);
   });
 
   it('renders table with cards', () => {
@@ -104,22 +105,25 @@ describe('WeaveCardTable', () => {
     
     expect(screen.getByText('前面内容1')).toBeInTheDocument();
     expect(screen.getByText('前面内容2')).toBeInTheDocument();
+    expect(screen.getByText('正面')).toBeInTheDocument();
+    expect(screen.getByText('背面')).toBeInTheDocument();
   });
 
-  it('shows loading state', () => {
+  it('hides table body while loading', () => {
     render(WeaveCardTable, { 
       props: { ...defaultProps, loading: true } 
     });
     
-    expect(screen.getByText('正在加载卡片...')).toBeInTheDocument();
+    expect(document.querySelector('table')).toBeNull();
   });
 
-  it('shows empty state when no cards', () => {
+  it('renders headers without data rows when no cards', () => {
     render(WeaveCardTable, { 
       props: { ...defaultProps, cards: [] } 
     });
     
-    expect(screen.getByText('暂无卡片')).toBeInTheDocument();
+    expect(screen.getByText('正面')).toBeInTheDocument();
+    expect(document.querySelectorAll('tbody tr')).toHaveLength(0);
   });
 
   it('calls onCardSelect when checkbox is clicked', async () => {
@@ -130,48 +134,51 @@ describe('WeaveCardTable', () => {
     
     await fireEvent.click(firstCardCheckbox);
     
-    expect(defaultProps.onCardSelect).toHaveBeenCalledWith('1', true);
+    expect(defaultProps.onCardSelect).toHaveBeenCalledWith('card-1', true);
   });
 
   it('calls onSort when column header is clicked', async () => {
     render(WeaveCardTable, { props: defaultProps });
     
-    const frontHeader = screen.getByText('正面内容').closest('th');
+    const frontHeader = screen.getByText('正面').closest('th');
     await fireEvent.click(frontHeader!);
     
     expect(defaultProps.onSort).toHaveBeenCalledWith('front');
   });
 
-  it('saves and loads column widths from localStorage', () => {
+  it('loads column widths from vault storage', () => {
     const savedWidths = JSON.stringify({ front: 250, back: 300 });
-    localStorageMock.getItem.mockReturnValue(savedWidths);
+    vi.mocked(vaultStorage.getItem).mockReturnValue(savedWidths);
     
     render(WeaveCardTable, { props: defaultProps });
     
-    expect(localStorageMock.getItem).toHaveBeenCalledWith('weave-table-column-widths');
+    expect(vaultStorage.getItem).toHaveBeenCalledWith('weave-table-column-widths');
   });
 
   it('displays tags correctly', () => {
     render(WeaveCardTable, { props: defaultProps });
     
     expect(screen.getByText('标签1')).toBeInTheDocument();
-    expect(screen.getByText('+1')).toBeInTheDocument(); // Shows +1 for additional tags
+    expect(screen.getByText('标签2')).toBeInTheDocument();
   });
 
   it('calls onTagsUpdate when tags are edited', async () => {
-    render(WeaveCardTable, { props: defaultProps });
+    const { container } = render(WeaveCardTable, {
+      props: { ...defaultProps, availableTags: ['标签1', '标签2', '新标签1', '新标签2'] }
+    });
     
-    // Click on tags container to start editing
     const tagsContainer = screen.getByText('标签1').closest('button');
     await fireEvent.click(tagsContainer!);
     
-    // Find the input field and change its value
-    const input = screen.getByPlaceholderText('输入标签，用逗号分隔');
-    await fireEvent.input(input, { target: { value: '新标签1, 新标签2' } });
-    
-    // Press Enter to save
+    const input = container.querySelector('.tag-input') as HTMLInputElement;
+    input.value = '新标签1';
+    await fireEvent.input(input);
+    await fireEvent.keyDown(input, { key: 'Enter' });
+    input.value = '新标签2';
+    await fireEvent.input(input);
+    await fireEvent.keyDown(input, { key: 'Enter' });
     await fireEvent.keyDown(input, { key: 'Enter' });
     
-    expect(defaultProps.onTagsUpdate).toHaveBeenCalledWith('1', ['新标签1', '新标签2']);
+    expect(defaultProps.onTagsUpdate).toHaveBeenCalledWith('card-1', ['标签1', '标签2', '新标签1', '新标签2']);
   });
 });

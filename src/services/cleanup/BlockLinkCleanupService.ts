@@ -378,8 +378,15 @@ export class BlockLinkCleanupService {
    */
   private async inferCreationType(card: Card): Promise<CardCreationType> {
     // 规则1: 检查 metadata.creationType（新卡片）
-    if (card.metadata?.creationType) {
-      return card.metadata.creationType as CardCreationType;
+    const metadataCreationType = (card as any).metadata?.creationType;
+    if (metadataCreationType) {
+      return metadataCreationType as CardCreationType;
+    }
+
+    if (card.isBatchScanned) {
+      return card.sourceBlock
+        ? CardCreationType.BATCH_PARSE_MULTI
+        : CardCreationType.BATCH_PARSE_SINGLE;
     }
     
     // 规则2: 如果没有源文件，默认为快捷键
@@ -398,6 +405,23 @@ export class BlockLinkCleanupService {
       if (!content) {
         return CardCreationType.QUICK_CREATE;
       }
+
+      if (card.sourceBlock && card.uuid) {
+        const cleanBlockId = card.sourceBlock.replace(/^\^/, '');
+        const escapedUuid = card.uuid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedBlockId = cleanBlockId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        const multiCardMarkerRegex = new RegExp(`<!--\\s*${escapedUuid}\\s*-->[^\\r\\n]*\\^${escapedBlockId}(?![A-Za-z0-9_-])`, 'i');
+        if (multiCardMarkerRegex.test(content)) {
+          return CardCreationType.BATCH_PARSE_MULTI;
+        }
+
+        const quickCreateBlockRegex = new RegExp(`\\^${escapedBlockId}(?![A-Za-z0-9_-])`, 'm');
+        if (quickCreateBlockRegex.test(content)) {
+          return CardCreationType.QUICK_CREATE;
+        }
+      }
+
       return this.inferCreationTypeFromContent(content, card.sourceBlock, card.uuid);
       
     } catch (error) {
@@ -411,9 +435,35 @@ export class BlockLinkCleanupService {
    */
   private inferCreationTypeFromContent(
     content: string,
-    _blockId?: string,
+    blockId?: string,
     uuid?: string
   ): CardCreationType {
+    const normalizedBlockId = blockId?.replace(/^\^/, '');
+    const escapedUuid = uuid ? uuid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
+    const escapedBlockId = normalizedBlockId
+      ? normalizedBlockId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      : '';
+
+    if (uuid) {
+      const frontmatterUuidRegex = new RegExp(
+        `^---\\r?\\n[\\s\\S]*?^weave-uuid:\\s*${escapedUuid}\\s*$[\\s\\S]*?^---\\s*$`,
+        'm'
+      );
+
+      if (frontmatterUuidRegex.test(content)) {
+        logDebugWithTag('CleanupService', `识别为 BATCH_PARSE_SINGLE: uuid=${uuid}`);
+        return CardCreationType.BATCH_PARSE_SINGLE;
+      }
+    }
+
+    if (uuid && new RegExp(`<!--\\s*${escapedUuid}\\s*-->`, 'i').test(content)) {
+      return CardCreationType.BATCH_PARSE_MULTI;
+    }
+
+    if (normalizedBlockId && new RegExp(`\\^${escapedBlockId}(?![A-Za-z0-9_-])`, 'm').test(content)) {
+      return CardCreationType.QUICK_CREATE;
+    }
+
     // 规则1: 检查是否有YAML weave-uuid → 批量-单文件
     //  修复：支持 Windows (\r\n) 和 Unix (\n) 换行符
     if (uuid && /^---[\r\n][\s\S]*?weave-uuid:/m.test(content)) {

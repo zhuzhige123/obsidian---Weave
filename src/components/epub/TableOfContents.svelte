@@ -15,6 +15,13 @@
 		onNavigate(item.href);
 	}
 
+	function handleKeydown(event: KeyboardEvent, item: TocItem) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			handleClick(item);
+		}
+	}
+
 	function flattenItems(items: TocItem[]): TocItem[] {
 		const result: TocItem[] = [];
 		for (const item of items) {
@@ -31,11 +38,13 @@
 
 <div class="epub-toc-list">
 	{#each flatItems as item}
-		<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 		<div
 			class="epub-toc-item level-{item.level}"
 			class:active={activeHref === item.href}
 			onclick={() => handleClick(item)}
+			onkeydown={(event) => handleKeydown(event, item)}
+			role="button"
+			tabindex="0"
 		>
 			<span class="toc-title">{item.label}</span>
 		</div>

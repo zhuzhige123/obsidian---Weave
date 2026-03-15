@@ -49,6 +49,9 @@
       <EnhancedIcon name={icon} size="18" />
       <span class="title-text">{label}</span>
       <span class="card-count">({stats.total})</span>
+      {#if showStats && stats.due > 0}
+        <span class="badge badge-due">{stats.due} 到期</span>
+      {/if}
     </div>
     
     {#if onSelectAll}
@@ -70,14 +73,11 @@
           style="width: {stats.total > 0 ? (stats.due / stats.total * 100) : 0}%"
         ></div>
       </div>
-      <div class="stats-badges">
-        {#if stats.due > 0}
-          <span class="badge badge-due">{stats.due} 到期</span>
-        {/if}
-        {#if stats.selected > 0}
+      {#if stats.selected > 0}
+        <div class="stats-badges">
           <span class="badge badge-selected">{stats.selected} 已选</span>
-        {/if}
-      </div>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -107,6 +107,7 @@
     gap: 0.5rem;
     flex: 1;
     min-width: 0;
+    flex-wrap: wrap;
   }
 
   .title-text {

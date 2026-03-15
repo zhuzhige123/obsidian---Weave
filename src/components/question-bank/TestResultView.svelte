@@ -52,12 +52,12 @@
     isMobile = isMobileDevice();
     if (isMobile) {
       mobileBounds = getWorkspaceBounds();
-      logger.debug('[TestResultView] 📱 移动端边界检测:', mobileBounds);
+      logger.debug('[TestResultView] 移动端边界检测:', mobileBounds);
     }
   }
 
   // 计算得分
-  const sessionScore = $derived(() => TestScoringEngine.scoreSession(session));
+  const sessionScore = $derived.by(() => TestScoringEngine.scoreSession(session));
 
   // 格式化时间
   function formatTime(seconds: number): string {
@@ -75,8 +75,9 @@
   // 获取成绩标题
   function getGradeTitle(grade: string): string {
     const titleMap: Record<string, string> = {
-      'S': '完美通过！',
+      'A+': '完美通过！',
       'A': '表现优秀',
+      'B+': '表现出色',
       'B': '表现良好',
       'C': '基本掌握',
       'D': '仍需努力',
@@ -87,7 +88,8 @@
 
   // 获取成绩副标题
   function getGradeSubtitle(score: number): string {
-    if (score >= 95) return '全部答对，非常棒！';
+    if (score >= 95) return '近乎完美，非常棒！';
+    if (score >= 90) return '表现优异，继续保持';
     if (score >= 80) return '继续保持这个状态';
     if (score >= 60) return '还有提升空间';
     return '多加练习会更好';
@@ -205,7 +207,7 @@
     <!-- 简洁成绩展示 -->
     <div class="score-header-simple">
       <!-- 成绩环和等级 -->
-      <div class="score-badge" style="color: {TestScoringEngine.getGradeColor(sessionScore().grade)}">
+      <div class="score-badge" style="color: {TestScoringEngine.getGradeColor(sessionScore.grade)}">
         <div class="score-ring">
           <svg viewBox="0 0 100 100">
             <circle
@@ -225,20 +227,20 @@
               stroke="currentColor"
               stroke-width="8"
               stroke-dasharray="283"
-              stroke-dashoffset={283 - (283 * sessionScore().accuracy / 100)}
+              stroke-dashoffset={283 - (283 * sessionScore.accuracy / 100)}
               transform="rotate(-90 50 50)"
               class="progress-ring"
             />
           </svg>
           <div class="score-text">
-            <div class="score-letter">{sessionScore().grade}</div>
+            <div class="score-letter">{sessionScore.grade}</div>
           </div>
         </div>
       </div>
       
       <!-- 标题 -->
       <h2 id="result-title" class="result-title-simple">
-        {getGradeTitle(sessionScore().grade)}
+        {getGradeTitle(sessionScore.grade)}
       </h2>
     </div>
     
@@ -248,11 +250,11 @@
       <div class="stats-grid">
         <div class="stat-item">
           <div class="stat-label">得分</div>
-          <div class="stat-value">{sessionScore().totalScore.toFixed(1)}</div>
+          <div class="stat-value">{sessionScore.totalScore.toFixed(1)}</div>
         </div>
         <div class="stat-item">
           <div class="stat-label">答对</div>
-          <div class="stat-value">{sessionScore().correctCount}</div>
+          <div class="stat-value">{sessionScore.correctCount}</div>
         </div>
         <div class="stat-item">
           <div class="stat-label">用时</div>
@@ -260,7 +262,7 @@
         </div>
         <div class="stat-item">
           <div class="stat-label">正确率</div>
-          <div class="stat-value">{sessionScore().accuracy.toFixed(0)}%</div>
+          <div class="stat-value">{sessionScore.accuracy.toFixed(0)}%</div>
         </div>
       </div>
     </div>
@@ -466,8 +468,8 @@
 
   .stat-item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
-    border-color: rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--interactive-accent) 15%, transparent);
+    border-color: color-mix(in srgb, var(--interactive-accent) 30%, transparent);
   }
 
   .stat-label {
@@ -480,12 +482,8 @@
   .stat-value {
     font-size: 28px;
     font-weight: 700;
-    color: var(--text-normal);
     line-height: 1;
-    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--interactive-accent);
   }
 
   /* 趋势图区域 */
@@ -538,12 +536,12 @@
   }
 
   .metric-btn:hover {
-    border-color: #8b5cf6;
-    color: #8b5cf6;
+    border-color: var(--interactive-accent);
+    color: var(--interactive-accent);
   }
 
   .metric-btn.active {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    background: var(--interactive-accent);
     color: white;
     border-color: transparent;
   }
@@ -578,7 +576,7 @@
   }
 
   .btn-close {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    background: var(--interactive-accent);
     color: white;
     border: none;
     border-radius: 8px;
@@ -587,13 +585,13 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--interactive-accent) 30%, transparent);
     min-width: 120px;
   }
 
   .btn-close:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--interactive-accent) 40%, transparent);
   }
 
   .btn-close:active {
@@ -665,8 +663,8 @@
     left: 0;
     right: 0;
     padding: 12px;
-    background: transparent !important;
-    backdrop-filter: none !important;
+    background: transparent;
+    backdrop-filter: none;
     overflow-y: auto;
   }
 
@@ -692,13 +690,6 @@
     height: 60px;
   }
 
-  :global(body.is-phone) .score-value {
-    font-size: 36px;
-  }
-
-  :global(body.is-phone) .score-label {
-    font-size: 16px;
-  }
 </style>
 
 

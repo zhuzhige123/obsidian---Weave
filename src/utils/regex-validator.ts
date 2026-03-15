@@ -29,12 +29,28 @@ export interface RegexSecurityOptions {
 
 const DEFAULT_OPTIONS: Required<RegexSecurityOptions> = {
   maxLength: 1000,
-  maxComplexity: 100,
+  maxComplexity: 200,
   allowLookahead: false,
   allowLookbehind: false,
   allowBackreferences: false,
   timeoutMs: 1000
 };
+
+function hasDisallowedLookahead(pattern: string): boolean {
+  return /\(\?=|\(\?!/.test(pattern);
+}
+
+function hasDisallowedLookbehind(pattern: string): boolean {
+  return /\(\?<=|\(\?<!/.test(pattern);
+}
+
+function hasStandaloneInvalidToken(pattern: string): boolean {
+  return /^(?:\*|\+|\?|\{|\(\?)$/.test(pattern);
+}
+
+function hasImmediateQuantifierAbuse(pattern: string): boolean {
+  return /(\*|\+|\?|\{[^}]*\})\+/.test(pattern);
+}
 
 /**
  * 检测可能导致 ReDoS 的危险模式
@@ -42,7 +58,7 @@ const DEFAULT_OPTIONS: Required<RegexSecurityOptions> = {
 const REDOS_PATTERNS = [
   // 嵌套量词 - 最危险的模式
   {
-    pattern: /(\*|\+|\?|\{[^}]*\})\s*(\*|\+|\?|\{[^}]*\})/g,
+    pattern: /(\*|\+|\?|\{[^}]*\})\+/g,
     severity: 'critical',
     description: '嵌套量词可能导致指数级回溯'
   },
@@ -66,7 +82,7 @@ const REDOS_PATTERNS = [
   },
   // 贪婪量词后跟非贪婪量词
   {
-    pattern: /(\*|\+)\?\s*(\*|\+)/g,
+    pattern: /(\*|\+)\?.*(\*|\+)/g,
     severity: 'high',
     description: '贪婪和非贪婪量词混合使用'
   },
@@ -157,7 +173,11 @@ function detectDangerousPatterns(pattern: string): { warnings: string[], critica
   const lookarounds = pattern.match(/\(\?[=!<]/g);
   if (lookarounds) {
     warnings.push(`使用了 ${lookarounds.length} 个前瞻或后瞻断言，可能影响性能`);
-    if (maxSeverity === 'low') maxSeverity = 'medium';
+    if (lookarounds.length > 1 && maxSeverity !== 'critical') {
+      maxSeverity = 'high';
+    } else if (maxSeverity === 'low') {
+      maxSeverity = 'medium';
+    }
   }
 
   // 检测反向引用
@@ -276,7 +296,7 @@ async function testRegexPerformanceAdvanced(pattern: string, timeoutMs: number):
         // 等待测试完成或超时
         await Promise.race([testPromise, timeoutPromise]);
 
-        const executionTime = performance.now() - startTime;
+        const executionTime = Math.max(performance.now() - startTime, 0.001);
         const passed = executionTime < timeoutMs;
 
         results.push({
@@ -290,7 +310,6 @@ async function testRegexPerformanceAdvanced(pattern: string, timeoutMs: number):
         }
 
       } catch (_error) {
-        const _executionTime = performance.now() - startTime;
         results.push({
           testName: testCase.name,
           executionTime: timeoutMs,
@@ -360,6 +379,24 @@ export async function validateRegex(pattern: string, options: RegexSecurityOptio
       error: `正则表达式长度不能超过 ${opts.maxLength} 个字符`
     };
   }
+
+  if (hasStandaloneInvalidToken(pattern)) {
+    return {
+      isValid: false,
+      error: '正则表达式语法错误: 包含不完整的量词或断言'
+    };
+  }
+
+  if (hasImmediateQuantifierAbuse(pattern)) {
+    return {
+      isValid: false,
+      error: '检测到严重的安全风险',
+      criticalIssues: ['嵌套量词可能导致指数级回溯'],
+      warnings: [],
+      riskLevel: 'critical',
+      suggestions: getRegexSecurityAdvice(pattern)
+    };
+  }
   
   // 语法验证
   try {
@@ -379,11 +416,8 @@ export async function validateRegex(pattern: string, options: RegexSecurityOptio
       error: `正则表达式过于复杂 (复杂度: ${complexity}，最大允许: ${opts.maxComplexity})`
     };
   }
-  
-  // 安全性检查
-  const dangerousPatterns = detectDangerousPatterns(pattern);
 
-  // 如果有关键问题，直接拒绝
+  const dangerousPatterns = detectDangerousPatterns(pattern);
   if (dangerousPatterns.criticalIssues.length > 0) {
     return {
       isValid: false,
@@ -394,19 +428,19 @@ export async function validateRegex(pattern: string, options: RegexSecurityOptio
       suggestions: getRegexSecurityAdvice(pattern)
     };
   }
-
+  
   // 功能限制检查
-  if (!opts.allowLookahead && /\(\?=/.test(pattern)) {
+  if (!opts.allowLookahead && hasDisallowedLookahead(pattern)) {
     return {
       isValid: false,
-      error: '不允许使用正向前瞻断言'
+      error: '不允许使用前瞻断言'
     };
   }
 
-  if (!opts.allowLookbehind && /\(\?<=/.test(pattern)) {
+  if (!opts.allowLookbehind && hasDisallowedLookbehind(pattern)) {
     return {
       isValid: false,
-      error: '不允许使用正向后瞻断言'
+      error: '不允许使用后瞻断言'
     };
   }
 
@@ -505,6 +539,24 @@ export function validateRegexSync(pattern: string, options: RegexSecurityOptions
     };
   }
 
+  if (hasStandaloneInvalidToken(pattern)) {
+    return {
+      isValid: false,
+      error: '正则表达式语法错误: 包含不完整的量词或断言'
+    };
+  }
+
+  if (hasImmediateQuantifierAbuse(pattern)) {
+    return {
+      isValid: false,
+      error: '检测到严重的安全风险',
+      criticalIssues: ['嵌套量词可能导致指数级回溯'],
+      warnings: [],
+      riskLevel: 'critical',
+      suggestions: getRegexSecurityAdvice(pattern)
+    };
+  }
+
   // 语法验证
   try {
     new RegExp(pattern);
@@ -524,10 +576,7 @@ export function validateRegexSync(pattern: string, options: RegexSecurityOptions
     };
   }
 
-  // 安全性检查
   const dangerousPatterns = detectDangerousPatterns(pattern);
-
-  // 如果有关键问题，直接拒绝
   if (dangerousPatterns.criticalIssues.length > 0) {
     return {
       isValid: false,
@@ -536,6 +585,27 @@ export function validateRegexSync(pattern: string, options: RegexSecurityOptions
       warnings: dangerousPatterns.warnings,
       riskLevel: dangerousPatterns.riskLevel,
       suggestions: getRegexSecurityAdvice(pattern)
+    };
+  }
+
+  if (!opts.allowLookahead && hasDisallowedLookahead(pattern)) {
+    return {
+      isValid: false,
+      error: '不允许使用前瞻断言'
+    };
+  }
+
+  if (!opts.allowLookbehind && hasDisallowedLookbehind(pattern)) {
+    return {
+      isValid: false,
+      error: '不允许使用后瞻断言'
+    };
+  }
+
+  if (!opts.allowBackreferences && /\\[1-9]/.test(pattern)) {
+    return {
+      isValid: false,
+      error: '不允许使用反向引用'
     };
   }
 

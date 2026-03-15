@@ -1,6 +1,9 @@
 import type { Bookmark, Highlight, Note, HighlightColor } from './types';
 import { generateUUID } from '../../utils/helpers';
 import type { EpubStorageService } from './EpubStorageService';
+import type { EpubBacklinkHighlightService } from './EpubBacklinkHighlightService';
+import { EpubLinkService } from './EpubLinkService';
+import { t } from '../../utils/i18n';
 
 export class EpubAnnotationService {
 	private storageService: EpubStorageService;
@@ -108,20 +111,20 @@ export class EpubAnnotationService {
 		const highlights = await this.getHighlights(bookId);
 		const notes = await this.getNotes(bookId);
 
-		let markdown = `# 《${book.metadata.title}》阅读笔记\n\n`;
-		markdown += `## 书籍信息\n\n`;
-		markdown += `- **作者**: ${book.metadata.author}\n`;
+		let markdown = `# ${book.metadata.title} - ${t('epub.export.readingNotes')}\n\n`;
+		markdown += `## ${t('epub.export.bookInfo')}\n\n`;
+		markdown += `- **${t('epub.export.author')}**: ${book.metadata.author}\n`;
 		if (book.metadata.publisher) {
-			markdown += `- **出版社**: ${book.metadata.publisher}\n`;
+			markdown += `- **${t('epub.export.publisher')}**: ${book.metadata.publisher}\n`;
 		}
 		if (book.metadata.isbn) {
 			markdown += `- **ISBN**: ${book.metadata.isbn}\n`;
 		}
-		markdown += `- **阅读进度**: ${book.currentPosition.percent}%\n`;
+		markdown += `- **${t('epub.export.readingProgress')}**: ${book.currentPosition.percent}%\n`;
 		markdown += `\n`;
 
 		if (bookmarks.length > 0) {
-			markdown += `## 书签\n\n`;
+			markdown += `## ${t('epub.export.bookmarks')}\n\n`;
 			for (const bookmark of bookmarks) {
 				markdown += `- **${bookmark.title}**\n`;
 				markdown += `  > ${bookmark.preview}\n\n`;
@@ -129,7 +132,7 @@ export class EpubAnnotationService {
 		}
 
 		if (highlights.length > 0) {
-			markdown += `## 高亮\n\n`;
+			markdown += `## ${t('epub.export.highlights')}\n\n`;
 			const groupedByColor = highlights.reduce((acc, h) => {
 				if (!acc[h.color]) acc[h.color] = [];
 				acc[h.color].push(h);
@@ -145,7 +148,7 @@ export class EpubAnnotationService {
 		}
 
 		if (notes.length > 0) {
-			markdown += `## 笔记\n\n`;
+			markdown += `## ${t('epub.export.notes')}\n\n`;
 			for (const note of notes) {
 				markdown += `### ${new Date(note.createdTime).toLocaleDateString()}\n\n`;
 				markdown += `${note.content}\n\n`;
@@ -159,13 +162,46 @@ export class EpubAnnotationService {
 	}
 
 	private getColorName(color: HighlightColor): string {
-		const names: Record<HighlightColor, string> = {
-			yellow: '黄色高亮',
-			green: '绿色高亮',
-			blue: '蓝色高亮',
-			pink: '粉色高亮',
-			purple: '紫色高亮'
+		const keyMap: Record<HighlightColor, string> = {
+			yellow: 'epub.export.colorYellow',
+			green: 'epub.export.colorGreen',
+			blue: 'epub.export.colorBlue',
+			pink: 'epub.export.colorPink',
+			purple: 'epub.export.colorPurple'
 		};
-		return names[color];
+		return t(keyMap[color]);
+	}
+
+	async collectAllHighlights(
+		bookId: string,
+		filePath: string,
+		backlinkService: EpubBacklinkHighlightService
+	): Promise<Array<{ cfiRange: string; color: string; text?: string; sourceFile?: string; sourceRef?: string }>> {
+		const allHighlights: Array<{ cfiRange: string; color: string; text?: string; sourceFile?: string; sourceRef?: string }> = [];
+
+		const storedHighlights = await this.getHighlights(bookId);
+		for (const h of storedHighlights) {
+			allHighlights.push({ cfiRange: h.cfiRange, color: h.color, text: h.text });
+		}
+
+		const backlinkHighlights = await backlinkService.collectHighlights(filePath);
+		for (const bh of backlinkHighlights) {
+			const bhNorm = EpubLinkService.normalizeCfi(bh.cfiRange);
+			const existing = allHighlights.find(h => EpubLinkService.normalizeCfi(h.cfiRange) === bhNorm);
+			if (existing) {
+				if (!existing.sourceFile) existing.sourceFile = bh.sourceFile;
+				if (!existing.sourceRef) existing.sourceRef = bh.sourceRef;
+			} else {
+				allHighlights.push({
+					cfiRange: bh.cfiRange,
+					color: bh.color,
+					text: bh.text,
+					sourceFile: bh.sourceFile,
+					sourceRef: bh.sourceRef
+				});
+			}
+		}
+
+		return allHighlights;
 	}
 }

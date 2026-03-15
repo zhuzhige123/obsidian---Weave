@@ -143,7 +143,7 @@ export class DeckHierarchyService {
    * @deprecated 平级架构不支持子牌组，请使用 createDeck()
    * 保留仅为向后兼容，实际行为等同于 createDeck()
    */
-  async createSubdeck(_parentId: string, name: string): Promise<Deck> {
+  createSubdeck(_parentId: string, name: string): Promise<Deck> {
     logger.warn('[DeckHierarchyService] createSubdeck() 已废弃，平级架构不支持子牌组，将创建平级牌组');
     return this.createDeck(name);
   }
@@ -152,7 +152,7 @@ export class DeckHierarchyService {
    * @deprecated 平级架构不支持移动牌组
    * 调用此方法将抛出错误
    */
-  async moveDeck(_deckId: string, _newParentId: string | null): Promise<void> {
+  moveDeck(_deckId: string, _newParentId: string | null): Promise<void> {
     throw new Error('[DeckHierarchyService] moveDeck() 已废弃 - 平级架构不支持牌组移动');
   }
 
@@ -160,7 +160,7 @@ export class DeckHierarchyService {
    * 向后兼容别名：创建牌组
    * @deprecated 请使用 createDeck()
    */
-  async createRootDeck(name: string, settings?: Partial<DeckSettings>): Promise<Deck> {
+  createRootDeck(name: string, settings?: Partial<DeckSettings>): Promise<Deck> {
     return this.createDeck(name, settings);
   }
 
@@ -238,7 +238,7 @@ export class DeckHierarchyService {
    * @deprecated 请使用 deleteDeck()
    * 平级架构无子牌组，行为等同于 deleteDeck()
    */
-  async deleteDeckWithChildren(deckId: string): Promise<void> {
+  deleteDeckWithChildren(deckId: string): Promise<void> {
     return this.deleteDeck(deckId);
   }
 
@@ -267,7 +267,7 @@ export class DeckHierarchyService {
   /**
    * @deprecated 平级架构无子孙概念，始终返回空数组
    */
-  async getDescendants(_deckId: string): Promise<Deck[]> {
+  getDescendants(_deckId: string): Deck[] {
     return [];
   }
 
@@ -282,7 +282,7 @@ export class DeckHierarchyService {
   /**
    * @deprecated 平级架构无子牌组，始终返回空数组
    */
-  async getChildren(_deckId: string): Promise<Deck[]> {
+  getChildren(_deckId: string): Deck[] {
     return [];
   }
 
@@ -314,7 +314,7 @@ export class DeckHierarchyService {
   /**
    * @deprecated 请使用 reorderDecks()
    */
-  async reorderSiblings(_parentId: string | null, orderedDeckIds: string[]): Promise<void> {
+  reorderSiblings(_parentId: string | null, orderedDeckIds: string[]): Promise<void> {
     return this.reorderDecks(orderedDeckIds);
   }
 
@@ -416,7 +416,7 @@ export class DeckHierarchyService {
    * 生成牌组ID
    */
   private generateDeckId(): string {
-    return `deck_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `deck_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**

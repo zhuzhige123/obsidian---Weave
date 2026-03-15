@@ -129,7 +129,7 @@ export function getVisibleNavigationItems(navigationVisibility?: Record<string, 
 
     // 根据 ID 映射检查可见性
     const visibilityKey = getNavigationVisibilityKey(_item.id);
-    if (visibilityKey && navigationVisibility.hasOwnProperty(visibilityKey)) {
+    if (visibilityKey && Object.hasOwn(navigationVisibility, visibilityKey)) {
       return navigationVisibility[visibilityKey] !== false;
     }
 

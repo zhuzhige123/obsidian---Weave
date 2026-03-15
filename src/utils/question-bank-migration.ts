@@ -8,7 +8,7 @@ import { logger } from '../utils/logger';
 
 import { App, Notice } from 'obsidian';
 import type { WeavePlugin } from '../main';
-import { getV2PathsFromApp } from '../config/paths';
+import { getPluginPaths, getV2PathsFromApp } from '../config/paths';
 
 export interface MigrationResult {
   success: boolean;
@@ -26,7 +26,7 @@ export class QuestionBankMigration {
   constructor(plugin: WeavePlugin) {
     this.plugin = plugin;
     this.app = plugin.app;
-    this.oldBasePath = `${plugin.app.vault.configDir}/plugins/weave/question-bank`;
+    this.oldBasePath = `${getPluginPaths(plugin.app).root}/question-bank`;
     this.newBasePath = getV2PathsFromApp(plugin.app).questionBank.root;
   }
 
@@ -247,16 +247,14 @@ export class QuestionBankMigration {
   /**
    * 更新QuestionBankStorage的basePath配置
    */
-  async updateStorageConfig(): Promise<void> {
+  updateStorageConfig(): void {
     try {
       logger.debug('[Migration] 更新QuestionBankStorage配置...');
       
-      // 如果插件中有questionBankStorage实例，更新其配置
       const questionBankStorage = (this.plugin as any).questionBankStorage;
       if (questionBankStorage) {
-        // 更新basePath
         (questionBankStorage as any).basePath = this.newBasePath;
-        logger.debug(`[Migration] ✅ QuestionBankStorage basePath updated to: ${this.newBasePath}`);
+        logger.debug(`[Migration] QuestionBankStorage basePath updated to: ${this.newBasePath}`);
       }
     } catch (error) {
       logger.error('[Migration] 更新存储配置失败:', error);

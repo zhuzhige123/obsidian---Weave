@@ -21,6 +21,8 @@ import { QACardParser } from '../../parsers/card-type-parsers/QACardParser';
 import { ChoiceCardParser } from '../../parsers/card-type-parsers/ChoiceCardParser';
 import { ClozeCardParser } from '../../parsers/card-type-parsers/ClozeCardParser';
 import type { CardType } from '../../parsers/MarkdownFieldsConverter';
+import { DirectoryUtils } from '../../utils/directory-utils';
+import { getPluginPaths } from '../../config/paths';
 
 /**
  * 迁移报告
@@ -242,15 +244,12 @@ export class ContentOnlyMigration {
     
     // 保存备份文件
     const backupFileName = `weave-backup-content-only-${timestamp}.json`;
-    const configDir = this.plugin.app.vault.configDir;
-    const backupPath = `${configDir}/plugins/weave/backups/${backupFileName}`;
+    const backupDir = getPluginPaths(this.plugin.app).backups;
+    const backupPath = `${backupDir}/${backupFileName}`;
     
     try {
       // 确保备份目录存在
-      const backupDir = `${configDir}/plugins/weave/backups`;
-      if (!(await this.plugin.app.vault.adapter.exists(backupDir))) {
-        await this.plugin.app.vault.adapter.mkdir(backupDir);
-      }
+      await DirectoryUtils.ensureDirRecursive(this.plugin.app.vault.adapter, backupDir);
       
       await this.plugin.app.vault.adapter.write(
         backupPath,

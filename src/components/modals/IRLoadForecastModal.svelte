@@ -1141,12 +1141,6 @@
       justify-content: flex-end;
     }
 
-    .legend-section {
-      justify-content: center;
-      padding: 10px 12px;
-      gap: 12px;
-    }
-
     .chart-container {
       min-height: 250px;
     }

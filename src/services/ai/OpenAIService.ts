@@ -94,7 +94,13 @@ export class OpenAIService extends AIService {
 
       const data = response.json;
       const content_text = data.choices[0].message.content;
-      const parsedCards = this.parseResponse(content_text);
+      let parsedCards = this.parseResponse(content_text);
+
+      // 截断：AI返回数量可能超出请求，只取需要的数量
+      if (parsedCards.length > config.cardCount) {
+        logger.debug(`[OpenAI] AI returned ${parsedCards.length} cards, truncating to requested ${config.cardCount}`);
+        parsedCards = parsedCards.slice(0, config.cardCount);
+      }
 
       // 转换为GeneratedCard格式
       const cards: GeneratedCard[] = parsedCards.map((card: any) => {
@@ -375,8 +381,7 @@ ${request.instruction ? `\n【额外要求】\n${request.instruction}` : ''}
 
       return response.status === 200;
     } catch (error) {
-      logger.error('OpenAI connection test failed:', error);
-      return false;
+      throw this.classifyConnectionError(error);
     }
   }
 

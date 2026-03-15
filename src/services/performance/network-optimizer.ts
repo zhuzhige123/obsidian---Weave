@@ -398,7 +398,7 @@ export class ConnectionPoolManager {
    * 创建新连接
    */
   private createConnection(host: string): Connection {
-    const connectionId = `conn-${host}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const connectionId = `conn-${host}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     
     const connection: Connection = {
       id: connectionId,

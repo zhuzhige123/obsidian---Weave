@@ -259,7 +259,7 @@
     if (onDissolveDeck) {
       menu.addItem((item) =>
         item
-          .setTitle('解散牌组')
+          .setTitle(t('decks.menu.dissolveDeck'))
           .setIcon("unlink")
           .onClick(() => onDissolveDeck?.(deckId))
       );
@@ -333,8 +333,8 @@
     <!-- @deprecated 增量摘录模式已弃用，显示提示信息 -->
     <div class="extract-list-wrapper deprecated-notice">
       <div class="placeholder-icon">--</div>
-      <h2 class="placeholder-title">增量阅读</h2>
-      <p class="placeholder-desc">增量阅读功能已整合到左侧边栏</p>
+      <h2 class="placeholder-title">{t('decks.grid.readingTitle')}</h2>
+      <p class="placeholder-desc">{t('decks.grid.readingDesc')}</p>
     </div>
   {:else if currentFilter === 'question-bank'}
     <!-- 题库牌组模式 - 网格视图 -->

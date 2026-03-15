@@ -74,7 +74,7 @@
   
   // 获取当前选中的牌组名称
   let selectedDeckName = $derived(
-    availableDecks.find(d => d.id === selectedDeckId)?.name || '选择牌组...'
+    availableDecks.find(d => d.id === selectedDeckId)?.name || t('study.unifiedActions.selectDeck')
   );
 </script>
 
@@ -96,11 +96,11 @@
       {:else}
         <!-- 桌面端：使用原生 select -->
         <div class="deck-selector">
-          <label for="deck-select">导入到记忆牌组：</label>
+          <label for="deck-select">{t('study.unifiedActions.importToDeck')}</label>
           <ObsidianDropdown
             className="deck-select"
             options={[
-              { id: '', label: '选择牌组...' },
+              { id: '', label: t('study.unifiedActions.selectDeck') },
               ...availableDecks.map((deck) => ({ id: deck.id, label: deck.name }))
             ]}
             value={selectedDeckId}
@@ -131,7 +131,7 @@
       onclick={onRegenerate} 
       disabled={isRegenerating}
       type="button"
-      title={isRegenerating ? '正在重新生成，请稍候...' : ''}
+      title={isRegenerating ? t('study.unifiedActions.regeneratingWait') : ''}
     >
       {#if isMobile}
         <EnhancedIcon name="refresh-cw" size="18" />
@@ -147,7 +147,7 @@
       onclick={onSave} 
       disabled={selectedCount === 0 || isRegenerating || (showDeckSelector && !selectedDeckId)}
       type="button"
-      title={isRegenerating ? '正在重新生成，请稍候...' : (showDeckSelector && !selectedDeckId) ? '请先选择目标牌组' : ''}
+      title={isRegenerating ? t('study.unifiedActions.regeneratingWait') : (showDeckSelector && !selectedDeckId) ? t('study.unifiedActions.selectTargetDeck') : ''}
     >
       {#if isMobile}
         <EnhancedIcon name="save" size="18" />
@@ -248,18 +248,6 @@
     white-space: nowrap;
   }
 
-  .deck-select {
-    min-width: 160px;
-    padding: 0.375rem 0.75rem;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 0.375rem;
-    background: var(--background-primary);
-    color: var(--text-normal);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: border-color 0.2s ease;
-  }
-
   :global(.obsidian-dropdown-trigger.deck-select) {
     min-width: 160px;
     padding: 0.375rem 0.75rem;
@@ -272,18 +260,8 @@
     min-height: 0;
   }
 
-  .deck-select:hover {
-    border-color: var(--interactive-accent);
-  }
-
   :global(.obsidian-dropdown-trigger.deck-select:hover:not(.disabled)) {
     border-color: var(--interactive-accent);
-  }
-
-  .deck-select:focus {
-    outline: none;
-    border-color: var(--interactive-accent);
-    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
   }
 
   :global(.obsidian-dropdown-trigger.deck-select:focus-visible) {

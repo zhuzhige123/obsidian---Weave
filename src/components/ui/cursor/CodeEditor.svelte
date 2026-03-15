@@ -16,7 +16,7 @@
     border: none;
     background: var(--weave-surface);
     color: var(--weave-text-primary);
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-family: var(--font-monospace, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
     font-size: 14px;
     resize: vertical;
     outline: none;

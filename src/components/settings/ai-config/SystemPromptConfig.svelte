@@ -4,6 +4,9 @@
   import ObsidianIcon from "../../ui/ObsidianIcon.svelte";
   import { PromptBuilderService } from "../../../services/ai/PromptBuilderService";
   import { showObsidianConfirm } from "../../../utils/obsidian-confirm";
+  import { tr } from '../../../utils/i18n';
+
+  let t = $derived($tr);
 
   interface Props {
     systemPromptConfig: SystemPromptConfig;
@@ -68,8 +71,8 @@
   async function restoreDefault() {
     const confirmed = await showObsidianConfirm(
       (window as any).app,
-      '确定要恢复默认的系统提示词吗？这将清空您的自定义内容。',
-      { title: '确认恢复默认' }
+      t('dataManagement.systemPrompt.confirmRestore'),
+      { title: t('dataManagement.systemPrompt.confirmRestoreTitle') }
     );
     if (confirmed) {
       systemPromptConfig.customPrompt = '';
@@ -83,8 +86,8 @@
     if (systemPromptConfig.customPrompt) {
       const confirmed = await showObsidianConfirm(
         (window as any).app,
-        '这将覆盖当前的自定义内容，确定继续吗？',
-        { title: '确认覆盖' }
+        t('dataManagement.systemPrompt.confirmOverwrite'),
+        { title: t('dataManagement.systemPrompt.confirmOverwriteTitle') }
       );
       if (!confirmed) {
         return;
@@ -109,10 +112,10 @@
       <div class="toggle-info">
         <div class="toggle-label">
           <ObsidianIcon name="wand-sparkles" size={18} />
-          <span>使用内置系统提示词</span>
+          <span>{t('dataManagement.systemPrompt.useBuiltin')}</span>
         </div>
         <p class="toggle-description">
-          内置系统提示词包含完整的格式规范和生成要求，确保生成标准化的学习卡片。
+          {t('dataManagement.systemPrompt.useBuiltinDesc')}
         </p>
       </div>
       <label class="toggle-switch">
@@ -131,15 +134,15 @@
     <div class="builtin-section">
       <div class="section-header">
         <div class="header-left">
-          <h4>内置系统提示词</h4>
-          <span class="badge badge-readonly">只读</span>
+          <h4>{t('dataManagement.systemPrompt.builtinTitle')}</h4>
+          <span class="badge badge-readonly">{t('dataManagement.systemPrompt.readonlyBadge')}</span>
         </div>
         <button
           class="btn-toggle"
           onclick={() => showBuiltinPrompt = !showBuiltinPrompt}
         >
           <ObsidianIcon name={showBuiltinPrompt ? "chevron-up" : "chevron-down"} size={16} />
-          <span>{showBuiltinPrompt ? "收起" : "查看内容"}</span>
+          <span>{showBuiltinPrompt ? t('dataManagement.systemPrompt.collapse') : t('dataManagement.systemPrompt.viewContent')}</span>
         </button>
       </div>
 
@@ -148,7 +151,7 @@
           <div class="preview-toolbar">
             <span class="toolbar-info">
               <ObsidianIcon name="info" size={14} />
-              此为示例预览（基于默认配置），实际使用时会根据生成配置动态调整
+              {t('dataManagement.systemPrompt.previewNote')}
             </span>
           </div>
           <div class="prompt-content">{builtinPrompt()}</div>
@@ -158,12 +161,12 @@
       <div class="info-card">
         <ObsidianIcon name="lightbulb" size={16} />
         <div class="info-content">
-          <p><strong>内置系统提示词的作用：</strong></p>
+          <p><strong>{t('dataManagement.systemPrompt.builtinPurpose')}</strong></p>
           <ul>
-            <li>定义标准的卡片JSON格式（问答题、挖空题、选择题）</li>
-            <li>说明必需的字段和可选的增强字段（Hint、Explanation等）</li>
-            <li>规范选择题的&#123;✓&#125;标记语法</li>
-            <li>指导生成高质量的学习卡片</li>
+            <li>{t('dataManagement.systemPrompt.builtinBenefit1')}</li>
+            <li>{t('dataManagement.systemPrompt.builtinBenefit2')}</li>
+            <li>{t('dataManagement.systemPrompt.builtinBenefit3')}</li>
+            <li>{t('dataManagement.systemPrompt.builtinBenefit4')}</li>
           </ul>
         </div>
       </div>
@@ -173,25 +176,25 @@
     <div class="custom-section">
       <div class="section-header">
         <div class="header-left">
-          <h4>自定义系统提示词</h4>
-          <span class="badge badge-custom">自定义</span>
+          <h4>{t('dataManagement.systemPrompt.customTitle')}</h4>
+          <span class="badge badge-custom">{t('dataManagement.systemPrompt.customBadge')}</span>
         </div>
         <div class="header-actions">
           <button
             class="btn btn-secondary"
             onclick={useBuiltinAsTemplate}
-            title="使用内置提示词作为起点"
+            title={t('dataManagement.systemPrompt.useAsTemplateTitle')}
           >
             <ObsidianIcon name="copy" size={14} />
-            <span>使用内置作为模板</span>
+            <span>{t('dataManagement.systemPrompt.useAsTemplate')}</span>
           </button>
           <button
             class="btn btn-danger"
             onclick={restoreDefault}
-            title="恢复默认"
+            title={t('dataManagement.systemPrompt.restoreDefault')}
           >
             <ObsidianIcon name="rotate-ccw" size={14} />
-            <span>恢复默认</span>
+            <span>{t('dataManagement.systemPrompt.restoreDefault')}</span>
           </button>
         </div>
       </div>
@@ -200,17 +203,17 @@
         <div class="editor-toolbar">
           <span class="toolbar-label">
             <ObsidianIcon name="edit-3" size={14} />
-            编辑系统提示词
+            {t('dataManagement.systemPrompt.editPrompt')}
           </span>
           {#if systemPromptConfig.lastModified}
             <span class="last-modified">
-              最后修改：{new Date(systemPromptConfig.lastModified).toLocaleString('zh-CN')}
+              {t('dataManagement.systemPrompt.lastModified')}{new Date(systemPromptConfig.lastModified).toLocaleString()}
             </span>
           {/if}
         </div>
         <textarea
           class="prompt-editor"
-          placeholder="在此输入自定义系统提示词...&#10;&#10;提示：系统提示词用于指导AI理解输出格式和要求。您可以：&#10;1. 定义自己的卡片格式&#10;2. 添加特殊要求或约束&#10;3. 使用变量占位符：&#123;cardCount&#125;、&#123;difficulty&#125;等"
+          placeholder={t('dataManagement.systemPrompt.editorPlaceholder')}
           value={systemPromptConfig.customPrompt}
           oninput={handleCustomPromptChange}
         ></textarea>
@@ -219,13 +222,13 @@
       <div class="warning-card">
         <ObsidianIcon name="alert-triangle" size={16} />
         <div class="warning-content">
-          <p><strong>注意事项：</strong></p>
+          <p><strong>{t('dataManagement.systemPrompt.warningTitle')}</strong></p>
           <ul>
-            <li>自定义系统提示词可能导致生成的卡片格式不符合Weave要求</li>
-            <li>请确保包含必要的JSON格式说明和字段定义</li>
-            <li>选择题必须说明使用 &#123;✓&#125; 标记正确答案</li>
-            <li>挖空题必须说明使用 ==文本== 语法</li>
-            <li>建议先使用"内置作为模板"，然后在此基础上修改</li>
+            <li>{t('dataManagement.systemPrompt.warning1')}</li>
+            <li>{t('dataManagement.systemPrompt.warning2')}</li>
+            <li>{t('dataManagement.systemPrompt.warning3')}</li>
+            <li>{t('dataManagement.systemPrompt.warning4')}</li>
+            <li>{t('dataManagement.systemPrompt.warning5')}</li>
           </ul>
         </div>
       </div>
@@ -233,32 +236,32 @@
       <div class="variable-help">
         <h5>
           <ObsidianIcon name="code" size={14} />
-          可用变量
+          {t('dataManagement.systemPrompt.availableVars')}
         </h5>
         <div class="variable-grid">
           <div class="variable-item">
             <code>&#123;cardCount&#125;</code>
-            <span>卡片数量</span>
+            <span>{t('dataManagement.systemPrompt.varCardCount')}</span>
           </div>
           <div class="variable-item">
             <code>&#123;difficulty&#125;</code>
-            <span>难度等级</span>
+            <span>{t('dataManagement.systemPrompt.varDifficulty')}</span>
           </div>
           <div class="variable-item">
             <code>&#123;qaPercent&#125;</code>
-            <span>问答题百分比</span>
+            <span>{t('dataManagement.systemPrompt.varQaPercent')}</span>
           </div>
           <div class="variable-item">
             <code>&#123;clozePercent&#125;</code>
-            <span>挖空题百分比</span>
+            <span>{t('dataManagement.systemPrompt.varClozePercent')}</span>
           </div>
           <div class="variable-item">
             <code>&#123;choicePercent&#125;</code>
-            <span>选择题百分比</span>
+            <span>{t('dataManagement.systemPrompt.varChoicePercent')}</span>
           </div>
         </div>
         <p class="help-text">
-          这些变量会在实际使用时自动替换为相应的值
+          {t('dataManagement.systemPrompt.varAutoReplace')}
         </p>
       </div>
     </div>

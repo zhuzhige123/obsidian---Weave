@@ -117,7 +117,7 @@
     hasError = true;
     error = err;
     errorInfo = info;
-    errorId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    errorId = `error_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     // 记录错误到性能监控
     globalPerformanceMonitor.recordOperation(

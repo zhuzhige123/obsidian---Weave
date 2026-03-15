@@ -232,18 +232,24 @@
     }
   }
 
+  function handleOverlayClick(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      closeModal();
+    }
+  }
+
+  function handleOverlayKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      closeModal();
+    }
+  }
+
   // 父牌组选择功能已移除 - 不再支持父子牌组层级结构
 </script>
 
 {#if open}
-  <div class="modal-overlay" role="presentation" onclick={(e) => {
-    // 只有点击遮罩层本身才关闭，不是点击内部内容
-    if (e.target === e.currentTarget) closeModal();
-  }}>
-    <div class="modal" role="dialog" aria-modal="true" tabindex="0" onclick={(e) => {
-      // Svelte 5: 不使用 stopPropagation，改用条件检查
-      if (e.target === e.currentTarget) return;
-    }}>
+  <div class="modal-overlay" role="presentation" onclick={handleOverlayClick} onkeydown={handleOverlayKeydown} tabindex="-1">
+    <div class="modal" role="dialog" aria-modal="true" tabindex="0">
       <div class="modal-header">
         <h3>{mode === 'edit' ? t('modals.createDeck.titleEdit') : t('modals.createDeck.titleCreate')}</h3>
         <button class="icon-btn" aria-label={t('modals.createDeck.close')} onclick={closeModal}>×</button>
@@ -263,7 +269,7 @@
         </label>
 
         <label>
-          <span>牌组标签（单选）</span>
+          <span>{t('modals.createDeck.tagLabel')}</span>
           
           <!-- 标签输入框（内含已选标签） -->
           <div class="tag-input-wrapper">
@@ -275,7 +281,7 @@
                     type="button"
                     class="tag-chip-remove" 
                     onclick={clearTag}
-                    aria-label="移除标签"
+                    aria-label={t('modals.createDeck.removeTag')}
                   >
                     ×
                   </button>
@@ -284,7 +290,7 @@
             {/if}
             <input 
               class="tag-input" 
-              placeholder={selectedTag ? "" : "输入标签后按回车添加"} 
+              placeholder={selectedTag ? "" : t('modals.createDeck.tagPlaceholder')} 
               bind:value={tagInput}
               onkeydown={handleTagInput}
             />
@@ -293,7 +299,7 @@
           <!-- 可选标签列表 -->
           {#if availableTags.length > 0}
             <div class="available-tags">
-              <div class="available-tags-title">可选标签（点击选择）</div>
+              <div class="available-tags-title">{t('modals.createDeck.availableTags')}</div>
               <div class="available-tags-list">
                 {#each availableTags as tag}
                   <button 
@@ -308,7 +314,7 @@
             </div>
           {/if}
           
-          <span class="hint">标签用于牌组分类，仅可选择一个标签</span>
+          <span class="hint">{t('modals.createDeck.tagHint')}</span>
         </label>
       </div>
 
@@ -597,51 +603,5 @@
   .btn:disabled { 
     opacity: 0.6; 
     cursor: not-allowed; 
-  }
-
-  /* 牌组选择器按钮样式 */
-  .deck-selector-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.625rem 0.75rem;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 0.5rem;
-    background: var(--background-secondary);
-    color: var(--text-normal);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: left;
-  }
-
-  .deck-selector-btn:hover {
-    border-color: var(--background-modifier-border-hover);
-    background: var(--background-modifier-hover);
-  }
-
-  .deck-selector-btn:focus {
-    outline: none;
-    border-color: var(--interactive-accent);
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
-  }
-
-  .deck-selector-text {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .deck-selector-icon {
-    flex-shrink: 0;
-    margin-left: 0.5rem;
-    opacity: 0.6;
-    transition: transform 0.2s ease;
-  }
-
-  .deck-selector-btn:hover .deck-selector-icon {
-    opacity: 1;
   }
 </style>

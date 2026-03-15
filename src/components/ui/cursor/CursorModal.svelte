@@ -1,29 +1,39 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   // 简单的模态框组件占位符
   interface Props {
     open?: boolean;
     title?: string;
     onClose?: () => void;
+    children?: Snippet;
   }
 
   let {
     open = false,
     title,
-    onClose
+    onClose,
+    children
   }: Props = $props();
+
+  function handleOverlayPointerDown(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      onClose?.();
+    }
+  }
 </script>
 
 {#if open}
-  <div class="modal-overlay" onclick={onClose}>
-    <div class="modal-content" onclick={(e) => { e.stopPropagation(); }}>
+  <div class="modal-overlay" onmousedown={handleOverlayPointerDown} role="presentation">
+    <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
       {#if title}
         <div class="modal-header">
           <h2>{title}</h2>
-          <button onclick={onClose}>×</button>
+          <button type="button" onclick={onClose}>×</button>
         </div>
       {/if}
       <div class="modal-body">
-        <slot />
+        {@render children?.()}
       </div>
     </div>
   </div>

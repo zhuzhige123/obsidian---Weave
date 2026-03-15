@@ -166,13 +166,13 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       });
       
       if (status.isConnected) {
-        new Notice('连接成功！Anki 正在运行');
+        new Notice(t('ankiConnect.notices.connectSuccess'));
         //  不自动刷新，提示用户手动操作
         setTimeout(() => {
-          new Notice('点击"获取 Anki 牌组列表"开始配置', 3000);
+          new Notice(t('ankiConnect.notices.connectHint'), 3000);
         }, 500);
       } else {
-        new Notice('连接失败：' + (status.error?.message || '未知错误'));
+        new Notice(t('ankiConnect.notices.connectFailed') + (status.error?.message || t('common.unknown')));
       }
     } catch (error: any) {
       connectionStatus = {
@@ -184,7 +184,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
           suggestion: '请确保 Anki 正在运行且已安装 AnkiConnect 插件'
         }
       };
-      new Notice('连接测试失败：' + error.message);
+      new Notice(t('ankiConnect.notices.connectTestFailed') + error.message);
     } finally {
       //  确保一定会重置状态
       isTesting = false;
@@ -196,7 +196,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
    */
   async function refreshData() {
     if (!ankiService || !isConnected) {
-      new Notice('请先测试连接');
+      new Notice(t('ankiConnect.notices.pleaseTestFirst'));
       return;
     }
     
@@ -208,9 +208,9 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
         fetchAnkiDecks(),
         loadWeaveDecks()
       ]);
-      new Notice('牌组数据已刷新');
+      new Notice(t('ankiConnect.notices.dataRefreshed'));
     } catch (error: any) {
-      new Notice('刷新数据失败：' + error.message);
+      new Notice(t('ankiConnect.notices.refreshFailed') + error.message);
     } finally {
       isRefreshing = false;
     }
@@ -244,10 +244,10 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       });
       
       //  不再自动创建映射，改为显示获取成功的通知
-      new Notice(`已获取 ${decks.length} 个 Anki 牌组，请手动添加映射`);
+      new Notice(t('ankiConnect.notices.fetchedDecks', { count: decks.length }));
     } catch (error: any) {
       logger.error('获取 Anki 牌组失败:', error);
-      new Notice(`获取牌组失败：${error.message}`);
+      new Notice(t('ankiConnect.notices.fetchDecksFailed') + error.message);
       throw error;
     } finally {
       isFetchingDecks = false;
@@ -259,7 +259,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
    */
   async function fetchAnkiModels() {
     if (!ankiService) {
-      new Notice('请先测试连接');
+      new Notice(t('ankiConnect.notices.pleaseTestFirst'));
       return;
     }
     
@@ -269,10 +269,10 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
     progressModal = {
       open: true,
       operation: 'fetch_models',
-      title: '获取 Anki 模板',
+      title: t('ankiConnect.notices.fetchModelsTitle'),
       current: 0,
       total: 0,
-      status: '正在连接...',
+      status: t('ankiConnect.notices.preparing'),
       currentItem: '',
       deckIndex: 0,
       totalDecks: 0
@@ -301,11 +301,11 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       // 关闭进度模态窗
       progressModal.open = false;
       
-      new Notice(`已获取 ${models.length} 个模板`);
+      new Notice(t('ankiConnect.notices.fetchedModels', { count: models.length }));
     } catch (error: any) {
       logger.error('获取 Anki 模板失败:', error);
       progressModal.open = false;
-      new Notice(`获取模板失败：${error.message}`);
+      new Notice(t('ankiConnect.notices.fetchModelsFailed') + error.message);
     } finally {
       isFetchingModels = false;
     }
@@ -351,7 +351,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
     
     // 检查是否已存在
     if (settings.deckMappings[mappingId]) {
-      new Notice(`映射已存在: ${mapping.ankiDeckName}`);
+      new Notice(t('ankiConnect.notices.mappingExists', { name: mapping.ankiDeckName }));
       return;
     }
     
@@ -363,7 +363,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
     
     // 映射添加成功
     saveSettings();
-    new Notice(`已添加映射: ${mapping.weaveDeckName} ⇄ ${mapping.ankiDeckName}`);
+    new Notice(t('ankiConnect.notices.mappingAdded', { weave: mapping.weaveDeckName, anki: mapping.ankiDeckName }));
   }
 
   /**
@@ -406,13 +406,13 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
    */
   async function quickSyncToAnki(deckId: string) {
     if (!ankiService) {
-      new Notice('请点击"测试连接"进行初始化');
+      new Notice(t('ankiConnect.notices.pleaseInitFirst'));
       return;
     }
     
     const mapping = settings.deckMappings[deckId];
     if (!mapping) {
-      new Notice('牌组映射不存在');
+      new Notice(t('ankiConnect.notices.mappingNotFound'));
       return;
     }
     
@@ -423,10 +423,10 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       progressModal = {
         open: true,
         operation: 'sync_to_anki',
-        title: '导出到 Anki',
+        title: t('ankiConnect.notices.exportToAnkiTitle'),
         current: 0,
         total: 0,
-        status: '正在准备...',
+        status: t('ankiConnect.notices.preparing'),
         currentItem: mapping.weaveDeckName,
         deckIndex: 1,
         totalDecks: 1
@@ -440,7 +440,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
           // 更新进度
           progressModal.current = current;
           progressModal.total = total;
-          progressModal.status = status || '正在同步卡片';
+          progressModal.status = status || t('ankiConnect.notices.syncingCards');
         }
       );
       
@@ -454,8 +454,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
         
         // 显示成功通知
         new Notice(
-          `"${mapping.weaveDeckName}" 同步完成!\n` +
-          `导出: ${result.exportedCards} 张 | 跳过: ${result.skippedCards} 张`,
+          t('ankiConnect.notices.syncComplete', { name: mapping.weaveDeckName, exported: result.exportedCards, skipped: result.skippedCards }),
           5000
         );
         
@@ -463,18 +462,18 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
           logger.warn('同步过程中出现警告:', result.errors);
         }
       } else {
-        throw new Error('同步失败');
+        throw new Error(t('ankiConnect.notices.syncFailed'));
       }
     } catch (error: any) {
       progressModal.open = false;
       logger.error('同步牌组失败:', error);
       
       // 用户友好的错误消息
-      let userMessage = '同步失败';
+      let userMessage = t('ankiConnect.notices.syncFailed');
       if (error.message?.includes('not running') || error.message?.includes('未运行')) {
-        userMessage = 'Anki 未运行，请先启动 Anki';
+        userMessage = t('ankiConnect.notices.ankiNotRunning');
       } else if (error.message?.includes('deck') || error.message?.includes('牌组')) {
-        userMessage = '牌组不存在或无法访问';
+        userMessage = t('ankiConnect.notices.deckNotAccessible');
       } else if (error.message) {
         userMessage = error.message;
       }
@@ -488,13 +487,13 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
    */
   async function handleBidirectionalSync(deckId: string) {
     if (!ankiService) {
-      new Notice('请点击"测试连接"进行初始化');
+      new Notice(t('ankiConnect.notices.pleaseInitFirst'));
       return;
     }
     
     const mapping = settings.deckMappings[deckId];
     if (!mapping) {
-      new Notice('牌组映射不存在');
+      new Notice(t('ankiConnect.notices.mappingNotFound'));
       return;
     }
     
@@ -505,19 +504,19 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       progressModal = {
         open: true,
         operation: 'batch_sync',
-        title: '双向智能同步',
+        title: t('ankiConnect.notices.bidirectionalSyncTitle'),
         current: 0,
         total: 0,
-        status: '正在准备...',
+        status: t('ankiConnect.notices.preparing'),
         currentItem: mapping.weaveDeckName,
         deckIndex: 1,
         totalDecks: 1
       };
       
-      new Notice(`正在双向同步 "${mapping.weaveDeckName}"...`);
+      new Notice(t('ankiConnect.notices.bidirectionalSyncing', { name: mapping.weaveDeckName }));
       
       // 先导入（从 Anki 到 Weave）
-      progressModal.status = '正在从 Anki 导入...';
+      progressModal.status = t('ankiConnect.notices.importingFromAnki');
       const importResult = await ankiService.importDeckWithTemplates(
         mapping.ankiDeckName,
         mapping.weaveDeckId,
@@ -525,19 +524,19 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
         (current, total, status) => {
           progressModal.current = current;
           progressModal.total = total;
-          progressModal.status = `导入: ${status || '正在导入卡片'}`;
+          progressModal.status = t('ankiConnect.notices.importPrefix') + (status || t('ankiConnect.notices.importingCards'));
         }
       );
       
       // 再导出（从 Weave 到 Anki）
-      progressModal.status = '正在导出到 Anki...';
+      progressModal.status = t('ankiConnect.notices.exportingToAnki');
       const exportResult = await ankiService.exportDeckToAnki(
         mapping.weaveDeckId,
         mapping.ankiDeckName,
         (current, total, status) => {
           progressModal.current = current;
           progressModal.total = total;
-          progressModal.status = `导出: ${status || '正在同步卡片'}`;
+          progressModal.status = t('ankiConnect.notices.exportPrefix') + (status || t('ankiConnect.notices.syncingCards'));
         }
       );
       
@@ -551,9 +550,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
         
         // 显示成功通知
         new Notice(
-          `"${mapping.weaveDeckName}" 双向同步完成!\n` +
-          `导入: ${importResult.importedCards} 张 | 导出: ${exportResult.exportedCards} 张\n` +
-          `跳过: ${importResult.skippedCards + exportResult.skippedCards} 张`,
+          t('ankiConnect.notices.bidirectionalComplete', { name: mapping.weaveDeckName, imported: importResult.importedCards, exported: exportResult.exportedCards, skipped: importResult.skippedCards + exportResult.skippedCards }),
           6000
         );
         
@@ -561,15 +558,15 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
           logger.warn('双向同步过程中出现警告:', [...importResult.errors, ...exportResult.errors]);
         }
       } else {
-        throw new Error('双向同步失败');
+        throw new Error(t('ankiConnect.notices.bidirectionalFailed'));
       }
     } catch (error: any) {
       progressModal.open = false;
       logger.error('双向同步失败:', error);
       
-      let userMessage = '双向同步失败';
+      let userMessage = t('ankiConnect.notices.bidirectionalFailed');
       if (error.message?.includes('not running') || error.message?.includes('未运行')) {
-        userMessage = 'Anki 未运行，请先启动 Anki';
+        userMessage = t('ankiConnect.notices.ankiNotRunning');
       } else if (error.message) {
         userMessage = error.message;
       }
@@ -583,7 +580,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
    */
   async function handleImportDeck(ankiDeckName: string, weaveDeckId: string) {
     if (!ankiService) {
-      new Notice('请点击"测试连接"进行初始化');
+      new Notice(t('ankiConnect.notices.pleaseInitFirst'));
       return;
     }
 
@@ -592,10 +589,10 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       progressModal = {
         open: true,
         operation: 'sync_from_anki',
-        title: '从 Anki 导入',
+        title: t('ankiConnect.notices.importFromAnkiTitle'),
         current: 0,
         total: 0,
-        status: '正在准备...',
+        status: t('ankiConnect.notices.preparing'),
         currentItem: ankiDeckName,
         deckIndex: 1,
         totalDecks: 1
@@ -612,7 +609,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
           // 更新进度模态窗
           progressModal.current = current;
           progressModal.total = total;
-          progressModal.status = status || '正在导入卡片';
+          progressModal.status = status || t('ankiConnect.notices.importingCards');
         }
       );
 
@@ -634,25 +631,22 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
         }
 
         new Notice(
-          `导入完成！\n` +
-          `卡片: ${result.importedCards} 张\n` +
-          `模板: ${result.importedTemplates} 个\n` +
-          `跳过: ${result.skippedCards} 张`,
+          t('ankiConnect.notices.importComplete', { cards: result.importedCards, templates: result.importedTemplates, skipped: result.skippedCards }),
           8000
         );
 
         if (result.errors.length > 0) {
           logger.warn('导入过程中出现错误:', result.errors);
-          new Notice(`有 ${result.errors.length} 个警告，请查看控制台`, 5000);
+          new Notice(t('ankiConnect.notices.importWarnings', { count: result.errors.length }), 5000);
         }
       } else {
-        throw new Error('导入失败');
+        throw new Error(t('ankiConnect.notices.importFailedError'));
       }
     } catch (error: any) {
       // 关闭进度模态窗
       progressModal.open = false;
       logger.error('导入牌组失败:', error);
-      new Notice(`导入失败：${error.message}`, 8000);
+      new Notice(t('ankiConnect.notices.importFailed') + error.message, 8000);
     }
   }
 
@@ -661,7 +655,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
    */
   async function performSync(mode: 'to_anki' | 'from_anki' | 'bidirectional') {
     if (!ankiService) {
-      new Notice('请点击"测试连接"进行初始化');
+      new Notice(t('ankiConnect.notices.pleaseInitFirst'));
       return;
     }
     
@@ -676,7 +670,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
     }
     
     if (enabledMappings.length === 0) {
-      new Notice('没有启用的牌组映射');
+      new Notice(t('ankiConnect.notices.noEnabledMappings'));
       return;
     }
     
@@ -696,10 +690,10 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       progressModal = {
         open: true,
         operation: mode === 'to_anki' ? 'sync_to_anki' : (mode === 'from_anki' ? 'sync_from_anki' : 'batch_sync'),
-        title: mode === 'to_anki' ? '批量导出到 Anki' : (mode === 'from_anki' ? '批量从 Anki 导入' : '批量双向同步'),
+        title: mode === 'to_anki' ? t('ankiConnect.notices.batchExportTitle') : (mode === 'from_anki' ? t('ankiConnect.notices.batchImportTitle') : t('ankiConnect.notices.batchBidirectionalTitle')),
         current: 0,
         total: 0,
-        status: '正在准备...',
+        status: t('ankiConnect.notices.preparing'),
         currentItem: '',
         deckIndex: 0,
         totalDecks: enabledMappings.length
@@ -714,7 +708,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
         progressModal.deckIndex = i + 1;
         progressModal.current = 0;
         progressModal.total = 0;
-        progressModal.status = '正在处理...';
+        progressModal.status = t('ankiConnect.notices.processing');
         
         try {
           if (mode === 'to_anki') {
@@ -725,7 +719,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
               (current, total, status) => {
                 progressModal.current = current;
                 progressModal.total = total;
-                progressModal.status = status || '正在同步卡片';
+                progressModal.status = status || t('ankiConnect.notices.syncingCards');
               }
             );
             
@@ -742,7 +736,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
                 results.errors.push(`${mapping.weaveDeckName}: ${result.errors.map(e => e.message).join(', ')}`);
               }
             } else {
-              throw new Error('导出失败');
+              throw new Error(t('ankiConnect.notices.exportFailed'));
             }
           } else if (mode === 'from_anki') {
             // 从 Anki 导入
@@ -753,7 +747,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
               (current, total, status) => {
                 progressModal.current = current;
                 progressModal.total = total;
-                progressModal.status = status || '正在导入卡片';
+                progressModal.status = status || t('ankiConnect.notices.importingCards');
               }
             );
             
@@ -770,7 +764,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
                 results.errors.push(`${mapping.ankiDeckName}: ${result.errors.map(e => e.message).join(', ')}`);
               }
             } else {
-              throw new Error('导入失败');
+              throw new Error(t('ankiConnect.notices.importFailedError'));
             }
           }
         } catch (error: any) {
@@ -790,15 +784,12 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       // 显示汇总通知
       if (results.failedDecks === 0) {
         new Notice(
-          `批量处理完成！\n` +
-          `成功: ${results.successDecks}/${results.totalDecks} 个牌组 | 总卡片: ${results.successCards} 张`,
+          t('ankiConnect.notices.batchComplete', { success: results.successDecks, total: results.totalDecks, cards: results.successCards }),
           6000
         );
       } else {
         new Notice(
-          `批量处理完成（有错误）\n` +
-          `成功: ${results.successDecks} | 失败: ${results.failedDecks}\n` +
-          `详情请查看控制台`,
+          t('ankiConnect.notices.batchCompleteWithErrors', { success: results.successDecks, failed: results.failedDecks }),
           8000
         );
       }
@@ -809,7 +800,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
     } catch (error: any) {
       progressModal.open = false;
       logger.error('批量处理失败:', error);
-      new Notice(`批量处理失败：${error.message}`, 5000);
+      new Notice(t('ankiConnect.notices.batchFailed') + error.message, 5000);
     }
   }
 
@@ -844,7 +835,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
     }
     
     if (showNotice) {
-      new Notice('AnkiConnect 设置已保存');
+      new Notice(t('ankiConnect.notices.settingsSaved'));
     }
   }
 
@@ -872,10 +863,10 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       // 更新插件实例
       (plugin as any).ankiConnectService = ankiService;
       
-      new Notice('AnkiConnect 服务已启动');
+      new Notice(t('ankiConnect.notices.serviceStarted'));
     } catch (error: any) {
       logger.error('[AnkiConnect] 服务启动失败:', error);
-      new Notice(`启动失败: ${error.message}`);
+      new Notice(t('ankiConnect.notices.startupFailed') + error.message);
     }
   }
 
@@ -911,7 +902,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       ankiService = null;
       (plugin as any).ankiConnectService = null;
       
-      new Notice('AnkiConnect 服务已停止');
+      new Notice(t('ankiConnect.notices.serviceStopped'));
     } catch (error: any) {
       logger.error('[AnkiConnect] 服务停止失败:', error);
       // 不抛出错误，确保用户可以继续操作
@@ -941,7 +932,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
     // 保存设置（响应式 effect 会自动处理服务启停）
     saveSettings(false).catch((error) => {
       logger.error('保存设置失败:', error);
-      new Notice('保存设置失败');
+      new Notice(t('ankiConnect.notices.saveFailed'));
     });
   }
 
@@ -976,7 +967,7 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
         if (hoursSinceLastFetch > 1 && ankiDecks.length > 0) {
           // 显示提示
           setTimeout(() => {
-            new Notice('牌组数据可能已过期，建议重新获取', 5000);
+            new Notice(t('ankiConnect.notices.dataExpired'), 5000);
           }, 2000);
         }
       }
@@ -1030,13 +1021,13 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
           <div class="setting-label">{t('ankiConnect.connection.status')}</div>
           <div class="setting-description">
             {#if isTesting}
-              测试中...
+              {t('ankiConnect.notices.testing')}
             {:else if connectionStatus === null}
-              未测试
+              {t('ankiConnect.notices.notTested')}
             {:else if connectionStatus.isConnected}
-              已连接 {#if connectionStatus.apiVersion}<span style="opacity: 0.7;">· API v{connectionStatus.apiVersion}</span>{/if}
+              {t('ankiConnect.notices.connected')} {#if connectionStatus.apiVersion}<span style="opacity: 0.7;">· API v{connectionStatus.apiVersion}</span>{/if}
             {:else}
-              未连接
+              {t('ankiConnect.notices.disconnected')}
             {/if}
           </div>
         </div>
@@ -1063,9 +1054,9 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       <!-- CORS 配置提示 -->
       <div class="info-banner cors-hint">
         <div class="info-content">
-          <div class="info-title">AnkiConnect CORS 配置</div>
+          <div class="info-title">{t('ankiConnect.notices.corsTitle')}</div>
           <div class="info-text">
-            请在 Anki 的 <strong>工具 → 插件 → AnkiConnect → 配置</strong> 中，将 <code>"app://obsidian.md"</code> 添加到 <code>webCorsOriginList</code> 数组中，否则无法正常同步卡片。
+            {@html t('ankiConnect.notices.corsDesc')}
           </div>
           <div class="info-code">
             <pre>"webCorsOriginList": [
@@ -1074,8 +1065,8 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
 ]</pre>
             <button class="copy-btn" onclick={() => {
               navigator.clipboard.writeText('"webCorsOriginList": [\n    "http://localhost",\n    "app://obsidian.md"\n]');
-              new Notice('已复制到剪贴板');
-            }}>复制</button>
+              new Notice(t('ankiConnect.notices.copiedToClipboard'));
+            }}>{t('ankiConnect.notices.copyBtn')}</button>
           </div>
         </div>
       </div>
@@ -1134,9 +1125,9 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
       {#if settings.autoSync.enabled}
         <div class="setting-item">
           <div class="setting-info">
-            <div class="setting-label">同步间隔（分钟）</div>
+            <div class="setting-label">{t('ankiConnect.autoSync.intervalLabel')}</div>
             <div class="setting-description">
-              定时同步的时间间隔
+              {t('ankiConnect.autoSync.intervalDesc')}
             </div>
           </div>
           <div class="setting-control">
@@ -1172,9 +1163,9 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
 
         <div class="setting-item">
           <div class="setting-info">
-            <div class="setting-label">文件变更检测</div>
+            <div class="setting-label">{t('ankiConnect.autoSync.fileWatcherLabel')}</div>
             <div class="setting-description">
-              检测到卡片文件修改时自动同步
+              {t('ankiConnect.autoSync.fileWatcherDesc')}
             </div>
           </div>
           <div class="setting-control">
@@ -1319,19 +1310,6 @@ import { showObsidianConfirm } from '../../utils/obsidian-confirm';
     font-size: 13px;
     color: var(--text-muted);
     line-height: 1.5;
-  }
-
-  .info-banner .info-text code {
-    background: var(--background-primary-alt);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: var(--font-monospace);
-    font-size: 12px;
-    color: var(--text-accent);
-  }
-
-  .info-banner .info-text strong {
-    color: var(--text-normal);
   }
 
   .info-banner .info-code {

@@ -1,6 +1,5 @@
 import type { App, TFile } from 'obsidian';
 import { normalizePath } from 'obsidian';
-import { getPluginPaths } from '../../config/paths';
 import { logger } from '../../utils/logger';
 
 export class EditorTempFileCleanupService {
@@ -121,7 +120,6 @@ export class EditorTempFileCleanupService {
   private isInAnyTempDir(path: string): boolean {
     try {
       const p = normalizePath(path);
-      if (p.startsWith(normalizePath(`${getPluginPaths(this.app).temp}/`))) return true;
 
       // 兼容任意父目录：只要包含 /weave/temp/ 或 /Weave/temp/ 都认为是临时目录
       if (p.includes('/weave/temp/')) return true;

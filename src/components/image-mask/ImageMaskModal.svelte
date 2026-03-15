@@ -266,9 +266,9 @@ onMount(() => {
             <div class="settings-body">
               <!-- 灵敏度设置 -->
               <div class="setting-item">
-                <label class="setting-label">
+                <div class="setting-label">
                   <span>调整灵敏度</span>
-                </label>
+                </div>
                 <div class="setting-control">
                   <input
                     type="range"
@@ -479,30 +479,6 @@ onMount(() => {
   border-color: var(--interactive-accent);
   color: var(--text-on-accent);
   font-weight: 600;
-}
-
-.close-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: all 0.2s;
-}
-
-.close-button:hover {
-  background: var(--background-modifier-hover);
-  color: var(--text-normal);
-}
-
-.close-button:active {
-  background: var(--background-modifier-active);
 }
 
 .modal-body {
@@ -846,14 +822,6 @@ onMount(() => {
   background: var(--background-modifier-hover);
 }
 
-.setting-item.sub-item {
-  background: var(--background-primary);
-  margin-left: 24px;
-  margin-top: 12px;
-  padding: 12px;
-  border-left: 3px solid var(--background-modifier-border);
-}
-
 .setting-label {
   display: flex;
   align-items: center;
@@ -927,58 +895,6 @@ onMount(() => {
   padding: 4px 8px;
   border-radius: 6px;
   font-variant-numeric: tabular-nums;
-}
-
-/*  只读文本值样式 */
-.setting-value-text {
-  font-size: 14px;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.setting-select {
-  flex: 1;
-  padding: 8px 12px;
-  background: var(--background-primary);
-  border: 1.5px solid var(--background-modifier-border);
-  border-radius: 6px;
-  font-size: 14px;
-  color: var(--text-normal);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-
-.setting-select:hover {
-  border-color: var(--interactive-accent);
-}
-
-.setting-select:focus {
-  outline: none;
-  border-color: var(--interactive-accent);
-  box-shadow: 0 0 0 2px var(--interactive-accent-hover);
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  user-select: none;
-  color: var(--text-normal);
-  transition: color 0.2s ease;
-}
-
-.checkbox-label:hover {
-  color: var(--text-accent);
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
 }
 
 /* 操作按钮区域 */

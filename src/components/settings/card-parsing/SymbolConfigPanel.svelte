@@ -98,7 +98,7 @@
       <div class="config-item">
         <label for="systemExcludeTags" class="config-label">
           {t('settings.cardParsing.systemExcludeTags.label')}
-          <span class="readonly-badge">官方标准</span>
+          <span class="readonly-badge">{t('dataManagement.officialStandard')}</span>
         </label>
         <input
           type="text"

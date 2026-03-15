@@ -1,71 +1,45 @@
-<!--
-  模板卡片组件
-  职责：展示单个解析模板的信息和操作按钮
--->
 <script lang="ts">
   import type { ParseTemplate } from '../../../../types/newCardParsingTypes';
+  import { tr } from '../../../../utils/i18n';
+
+  let t = $derived($tr);
 
   interface Props {
     template: ParseTemplate;
-    onView?: (template: ParseTemplate) => void;
-    onEdit?: (template: ParseTemplate) => void;
-    onDuplicate?: (template: ParseTemplate) => void;
-    onDelete?: (template: ParseTemplate) => void;
-    readonly?: boolean;
+    onEdit: (template: ParseTemplate) => void;
+    onDuplicate: (template: ParseTemplate) => void;
+    onDelete: (template: ParseTemplate) => void;
   }
 
-  let { template, onView, readonly = false }: Props = $props();
+  let { template, onEdit, onDuplicate, onDelete }: Props = $props();
+
+  const isOfficial = $derived(template.weaveMetadata?.source === 'official');
 </script>
 
-<div class="template-card" class:official={template.isOfficial}>
-  <div class="template-card-header">
-    <div class="template-info">
-      <h4 class="template-name">
-        {template.name}
-      </h4>
-      <!-- 徽章组 -->
-      <div class="template-badges">
-        {#if template.isOfficial}
-          <span class="badge badge-official">官方</span>
-        {/if}
-        {#if template.weaveMetadata?.source === 'anki_imported'}
-          <span class="badge badge-anki">Anki</span>
-        {:else}
-          <span class="badge badge-weave">Weave</span>
-        {/if}
-      </div>
-      <p class="template-description">{template.description || '无描述'}</p>
-    </div>
-    <span class="template-type-badge {template.type}">
-      单字段解析
-    </span>
-  </div>
-
-  <div class="template-content">
-    {#if template.fields}
-      <div class="template-fields">
-        <div class="fields-label">字段配置 ({template.fields.length})</div>
-        <div class="fields-preview">
-          {#each template.fields.slice(0, 3) as field}
-            <span class="field-tag">{field.name}</span>
-          {/each}
-          {#if template.fields.length > 3}
-            <span class="field-tag more">+{template.fields.length - 3}</span>
-          {/if}
-        </div>
-      </div>
-    {:else if template.regex}
-      <div class="template-regex">
-        <div class="regex-label">正则表达式</div>
-        <code class="regex-preview">{template.regex.slice(0, 50)}{template.regex.length > 50 ? '...' : ''}</code>
-      </div>
+<div class="template-card">
+  <div class="template-header">
+    <h5 class="template-name">{template.name}</h5>
+    {#if isOfficial}
+      <span class="template-badge official">{t('dataManagement.templateMgmt.official') ?? 'Official'}</span>
+    {:else}
+      <span class="template-badge custom">{t('dataManagement.templateMgmt.custom') ?? 'Custom'}</span>
     {/if}
   </div>
 
-  <div class="template-card-actions">
-    {#if onView}
-      <button class="btn btn-secondary btn-sm" onclick={() => onView?.(template)}>
-        查看详情
+  {#if template.description}
+    <p class="template-desc">{template.description}</p>
+  {/if}
+
+  <div class="template-actions">
+    <button class="btn btn-small btn-secondary" onclick={() => onEdit(template)}>
+      {t('common.edit') ?? 'Edit'}
+    </button>
+    <button class="btn btn-small btn-secondary" onclick={() => onDuplicate(template)}>
+      {t('common.duplicate') ?? 'Duplicate'}
+    </button>
+    {#if !isOfficial}
+      <button class="btn btn-small btn-danger" onclick={() => onDelete(template)}>
+        {t('common.delete') ?? 'Delete'}
       </button>
     {/if}
   </div>
@@ -73,206 +47,56 @@
 
 <style>
   .template-card {
-    background: var(--background-secondary);
+    padding: 16px;
     border: 1px solid var(--background-modifier-border);
-    border-radius: var(--weave-radius-lg);
-    padding: var(--weave-space-lg);
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
+    border-radius: 8px;
+    background: var(--background-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  .template-card:hover {
-    border-color: var(--interactive-accent);
-    box-shadow: 0 4px 12px var(--background-modifier-box-shadow);
-    transform: translateY(-2px);
-  }
-
-  .template-card.official {
-    border-color: var(--color-accent);
-    background: linear-gradient(135deg, var(--background-secondary) 0%, rgba(var(--color-accent-rgb), 0.05) 100%);
-  }
-
-  .template-card-header {
-    margin-bottom: var(--weave-space-md);
+  .template-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   .template-name {
-    margin: 0 0 var(--weave-space-xs) 0;
-    color: var(--text-normal);
-    font-size: 1.1rem;
+    margin: 0;
+    font-size: 14px;
     font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: var(--weave-space-xs);
+    color: var(--text-normal);
   }
 
-  .template-description {
-    margin: 0;
+  .template-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .template-badge.official {
+    background: color-mix(in srgb, var(--interactive-accent) 15%, transparent);
+    color: var(--interactive-accent);
+  }
+
+  .template-badge.custom {
+    background: var(--background-secondary);
     color: var(--text-muted);
-    font-size: 0.9rem;
+  }
+
+  .template-desc {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted);
     line-height: 1.4;
   }
 
-  .template-type-badge {
-    position: absolute;
-    top: var(--weave-space-md);
-    right: var(--weave-space-md);
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .template-type-badge.single-field {
-    background: var(--color-green);
-    color: var(--text-on-accent);
-  }
-
-  /*  已移除：complete-regex 类型样式（该类型已废弃） */
-
-  .template-card-actions {
-    display: flex;
-    gap: var(--weave-space-xs);
-    justify-content: flex-end;
-  }
-
-  .template-content {
-    margin-bottom: var(--weave-space-lg);
-    min-height: 60px;
-  }
-
-  .template-fields {
-    margin-bottom: var(--weave-space-sm);
-  }
-
-  .fields-label, .regex-label {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-bottom: var(--weave-space-xs);
-    font-weight: 500;
-  }
-
-  .fields-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--weave-space-xs);
-  }
-
-  .field-tag {
-    background: var(--background-primary);
-    color: var(--text-normal);
-    padding: 2px 8px;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    border: 1px solid var(--background-modifier-border);
-  }
-
-  .field-tag.more {
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
-    border-color: var(--interactive-accent);
-  }
-
-  .template-regex {
-    margin-bottom: var(--weave-space-sm);
-  }
-
-  .regex-preview {
-    display: block;
-    background: var(--background-primary);
-    padding: var(--weave-space-sm);
-    border-radius: var(--weave-radius-sm);
-    font-family: var(--font-monospace);
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    border: 1px solid var(--background-modifier-border);
-    word-break: break-all;
-  }
-
-  /* 徽章样式 */
-  .template-badges {
+  .template-actions {
     display: flex;
     gap: 6px;
-    margin: 6px 0;
-  }
-
-  .badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .badge-official {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-  }
-
-  .badge-Weave {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: white;
-  }
-
-  .badge-anki {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    color: white;
-  }
-
-  .btn-sm {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-  }
-
-  .btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-secondary {
-    background: var(--background-modifier-border);
-    color: var(--text-normal);
-  }
-
-  .btn-secondary:hover {
-    background: var(--background-modifier-hover);
-  }
-
-  .btn-danger {
-    background: var(--color-red);
-    color: var(--text-on-accent);
-  }
-
-  .btn-danger:hover {
-    background: var(--color-red);
-    opacity: 0.8;
-  }
-
-  /* 响应式设计 */
-  @media (max-width: 768px) {
-    .template-card {
-      padding: var(--weave-space-md);
-    }
-
-    .template-card-actions {
-      flex-direction: column;
-      gap: var(--weave-space-xs);
-    }
-
-    .template-card-actions button {
-      width: 100%;
-    }
+    margin-top: 4px;
   }
 </style>
-
-

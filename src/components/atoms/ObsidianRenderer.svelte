@@ -44,6 +44,18 @@
   let isMounted = $state(false);  
   let pendingRender = $state(false);
 
+  function convertToObsidianHighlight(text: string): string {
+    const leadingWhitespace = text.match(/^\s*/)?.[0] ?? '';
+    const trailingWhitespace = text.match(/\s*$/)?.[0] ?? '';
+    const trimmedText = text.trim();
+
+    if (!trimmedText) {
+      return text;
+    }
+
+    return `${leadingWhitespace}==${trimmedText}==${trailingWhitespace}`;
+  }
+
   // 预处理挖空内容
   //  支持三种模式（优先级从高到低）：
   // 1. activeClozeOrdinal参数：直接传递的挖空序号（1-based）- V2渐进式挖空
@@ -67,7 +79,7 @@
           
           if (ord === activeClozeOrd) {
             // 当前激活的挖空：转换为高亮（让Obsidian渲染为<mark>）
-            return `==${text}==`;
+            return convertToObsidianHighlight(text);
           } else {
             // 其他挖空：直接显示答案文本（移除挖空标记）
             return text;
@@ -89,7 +101,7 @@
           
           if (ord === activeClozeOrd) {
             // 当前激活的挖空：转换为高亮（让Obsidian渲染为<mark>）
-            return `==${text}==`;
+            return convertToObsidianHighlight(text);
           } else {
             // 其他挖空：直接显示答案文本（移除挖空标记）
             return text;
@@ -107,7 +119,7 @@
       
       if (hasAnkiCloze) {
         processedContent = processedContent.replace(ankiClozeRegex, (match, num, text, hint) => {
-          return `==${text}==`;
+          return convertToObsidianHighlight(text);
         });
         
         logger.debug('[ObsidianRenderer]','✅ 已转换Anki挖空格式为Obsidian高亮格式');
@@ -184,17 +196,59 @@
   }
 
   /**
+   * 脚注弹窗状态
+   */
+  let activeFootnotePopover: HTMLElement | null = null;
+  let footnoteHideTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function removeFootnotePopover(): void {
+    if (footnoteHideTimer) {
+      clearTimeout(footnoteHideTimer);
+      footnoteHideTimer = null;
+    }
+    if (activeFootnotePopover) {
+      activeFootnotePopover.remove();
+      activeFootnotePopover = null;
+    }
+  }
+
+  function scheduleRemovePopover(delay = 200): void {
+    if (footnoteHideTimer) clearTimeout(footnoteHideTimer);
+    footnoteHideTimer = setTimeout(removeFootnotePopover, delay);
+  }
+
+  function cancelRemovePopover(): void {
+    if (footnoteHideTimer) {
+      clearTimeout(footnoteHideTimer);
+      footnoteHideTimer = null;
+    }
+  }
+
+  /**
+   * 查找脚注定义元素（兼容不同ID格式）
+   */
+  function findFootnoteElement(container: HTMLElement, footnoteId: string): Element | null {
+    return container.querySelector(`li[id="${footnoteId}"]`) ||
+           container.querySelector(`[id="${footnoteId}"]`) ||
+           container.querySelector(`[data-footnote-id="${footnoteId}"]`);
+  }
+
+  /**
    * 设置脚注处理器
    */
   function setupFootnoteHandlers(container: HTMLElement): void {
     if (!container) return;
 
-    const footnoteRefs = container.querySelectorAll('a.footnote-ref, sup a[href^="#fn"]');
-    const footnotesSection = container.querySelector('.footnotes, section.footnotes');
+    const footnoteRefs = container.querySelectorAll(
+      'a.footnote-ref, sup a[href^="#fn"], sup[class*="footnote"] a, a[data-footnote-ref], a[role="doc-noteref"]'
+    );
+    const footnotesSection = container.querySelector(
+      '.footnotes, section.footnotes, section[data-footnotes], [class*="footnote-list"]'
+    );
     
     if (footnoteRefs.length === 0 && !footnotesSection) return;
 
-    // 为脚注引用添加点击处理
+    // 为脚注引用添加悬停弹窗和点击处理
     footnoteRefs.forEach((ref) => {
       const refEl = ref as HTMLAnchorElement;
       const href = refEl.getAttribute('href');
@@ -210,17 +264,8 @@
 
       const clickHandler = (e: MouseEvent) => {
         e.preventDefault();
-        // Svelte 5: 脚注点击不需要 stopPropagation
         
-        // 查找脚注内容
-        let footnoteContent = container.querySelector(`#${footnoteId}`) ||
-                             container.querySelector(`li[id="${footnoteId}"]`) ||
-                             container.querySelector(`[data-footnote-id="${footnoteId}"]`);
-        
-        if (!footnoteContent && footnoteId.startsWith('fn:')) {
-          const num = footnoteId.substring(3);
-          footnoteContent = container.querySelector(`#fnref\\:${num}`);
-        }
+        const footnoteContent = findFootnoteElement(container, footnoteId);
         
         if (footnoteContent) {
           footnoteContent.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -233,6 +278,41 @@
 
       refEl.addEventListener('click', clickHandler, { capture: true });
       (refEl as any)._weaveFootnoteHandler = clickHandler;
+
+      // 悬停弹窗
+      const oldEnter = (refEl as any)._weaveFootnoteEnter;
+      const oldLeave = (refEl as any)._weaveFootnoteLeave;
+      if (oldEnter) refEl.removeEventListener('mouseenter', oldEnter);
+      if (oldLeave) refEl.removeEventListener('mouseleave', oldLeave);
+
+      let hoverShowTimer: ReturnType<typeof setTimeout> | null = null;
+
+      const enterHandler = (e: MouseEvent) => {
+        // 如果已有同一个弹窗，取消隐藏计时
+        if (activeFootnotePopover) {
+          cancelRemovePopover();
+          return;
+        }
+
+        // 延迟显示弹窗（避免快速掠过时闪烁）
+        hoverShowTimer = setTimeout(() => {
+          hoverShowTimer = null;
+          showFootnotePopover(refEl, container, footnoteId);
+        }, 300);
+      };
+
+      const leaveHandler = () => {
+        if (hoverShowTimer) {
+          clearTimeout(hoverShowTimer);
+          hoverShowTimer = null;
+        }
+        scheduleRemovePopover(300);
+      };
+
+      refEl.addEventListener('mouseenter', enterHandler);
+      refEl.addEventListener('mouseleave', leaveHandler);
+      (refEl as any)._weaveFootnoteEnter = enterHandler;
+      (refEl as any)._weaveFootnoteLeave = leaveHandler;
     });
 
     // 为脚注返回链接添加处理
@@ -253,10 +333,8 @@
 
       const clickHandler = (e: MouseEvent) => {
         e.preventDefault();
-        // Svelte 5: 脚注返回链接不需要 stopPropagation
         
-        // 查找脚注引用
-        let target = container.querySelector(`#${targetId}`);
+        let target = container.querySelector(`#${CSS.escape(targetId)}`);
         
         if (!target && targetId.startsWith('fnref:')) {
           const num = targetId.substring(6);
@@ -277,12 +355,48 @@
       backRefEl.addEventListener('click', clickHandler, { capture: true });
       (backRefEl as any)._weaveBackrefHandler = clickHandler;
     });
+  }
 
-    // 确保脚注区域可见
-    if (footnotesSection) {
-      (footnotesSection as HTMLElement).style.display = '';
-      (footnotesSection as HTMLElement).style.visibility = 'visible';
-    }
+  /**
+   * 显示脚注弹窗
+   */
+  function showFootnotePopover(refEl: HTMLElement, container: HTMLElement, footnoteId: string): void {
+    removeFootnotePopover();
+
+    const footnoteLi = findFootnoteElement(container, footnoteId);
+    if (!footnoteLi) return;
+
+    const clone = footnoteLi.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('a.footnote-backref, a[href^="#fnref"]').forEach(el => el.remove());
+    clone.removeAttribute('id');
+
+    const popover = document.createElement('div');
+    popover.className = 'weave-footnote-popover';
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'weave-footnote-popover-content';
+    contentDiv.innerHTML = clone.innerHTML;
+    popover.appendChild(contentDiv);
+
+    popover.addEventListener('mouseenter', cancelRemovePopover);
+    popover.addEventListener('mouseleave', () => scheduleRemovePopover(300));
+
+    document.body.appendChild(popover);
+    activeFootnotePopover = popover;
+
+    const rect = refEl.getBoundingClientRect();
+    popover.style.left = `${rect.left}px`;
+    popover.style.top = `${rect.bottom + 6}px`;
+
+    requestAnimationFrame(() => {
+      if (!activeFootnotePopover) return;
+      const pr = popover.getBoundingClientRect();
+      if (pr.right > window.innerWidth - 16) {
+        popover.style.left = `${window.innerWidth - pr.width - 16}px`;
+      }
+      if (pr.bottom > window.innerHeight - 16) {
+        popover.style.top = `${rect.top - pr.height - 6}px`;
+      }
+    });
   }
 
   // 后处理渲染内容，处理挖空占位符样式
@@ -411,6 +525,9 @@
         return;
       }
       
+      // 防止切换卡片时答案闪烁：渲染期间隐藏容器，等待onRenderComplete处理后才显示
+      container.style.visibility = 'hidden';
+
       container.innerHTML = '';
 
       // 预处理内容
@@ -456,8 +573,13 @@
       //  修复：设置脚注处理器
       setupFootnoteHandlers(container);
 
-      // 触发完成回调
+      // 触发完成回调（父组件在此回调中分割DOM并隐藏答案区域）
       onRenderComplete?.(container);
+
+      // 回调完成后恢复可见（答案已被隐藏）
+      if (isMounted && container) {
+        container.style.visibility = '';
+      }
       
       logger.debug('[ObsidianRenderer]','✅ 渲染成功', {
         contentLength: content.length,
@@ -475,6 +597,9 @@
       
       logger.error('[ObsidianRenderer] 渲染失败:', error);
       renderError = error instanceof Error ? error.message : '未知渲染错误';
+      
+      // 错误时恢复可见
+      container.style.visibility = '';
       
       // 降级到简单HTML渲染
       container.innerHTML = `
@@ -575,21 +700,15 @@
   onMount(() => {
     isMounted = true;  //  标记组件已挂载
     logger.debug('[ObsidianRenderer]','onMount - 组件已挂载');
-    
-    //  安全的初次渲染：延迟执行避免阻塞启动
-    setTimeout(() => {
-      if (container && content !== undefined) {
-        previousContent = content;
-        previousShowCloze = showClozeAnswers;
-        previousActiveClozeOrdinal = activeClozeOrdinal; // 🆕 初始化挖空序号
-        renderContent();
-      }
-    }, 0);
+    // 初次渲染由 $effect 监听 content 变化自动触发（previousContent 初始为 ''，检测到变化后调度 renderContent）
+    // 不在此处重复调度，避免双重渲染导致卡片切换时内容抖动
   });
 
   onDestroy(() => {
     isMounted = false;  //  标记组件已卸载（防止异步渲染继续）
     
+    removeFootnotePopover();
+
     if (component) {
       component.unload();
       component = null;
@@ -903,6 +1022,43 @@
   .weave-obsidian-renderer :global(.weave-choice-content .footnotes) {
     display: block;
     visibility: visible;
+  }
+
+  /* Ctrl+hover 脚注弹窗样式 */
+  :global(.weave-footnote-popover) {
+    position: fixed;
+    z-index: var(--layer-popover, 400);
+    max-width: 420px;
+    min-width: 180px;
+    padding: 0;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    pointer-events: auto;
+    animation: footnotePopIn 0.15s ease-out;
+  }
+
+  :global(.weave-footnote-popover-content) {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--text-normal);
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  :global(.weave-footnote-popover-content p) {
+    margin: 0 0 0.25rem;
+  }
+
+  :global(.weave-footnote-popover-content p:last-child) {
+    margin-bottom: 0;
+  }
+
+  @keyframes footnotePopIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /*  P0修复：表格边框样式 - 确保Obsidian表格在预览中正确显示边框 */

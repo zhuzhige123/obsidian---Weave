@@ -1,5 +1,8 @@
 <script lang="ts">
   import { logger } from '../../../../utils/logger';
+  import { tr } from '../../../../utils/i18n';
+
+  let t = $derived($tr);
 
   import { Notice } from 'obsidian';
   import type { UnifiedBackupService } from '../../../../services/ankiconnect/backup/UnifiedBackupService';
@@ -54,7 +57,7 @@
       deviceInfo = extractDeviceInfo(backupList);
     } catch (error) {
       logger.error('加载备份数据失败:', error);
-      new Notice('加载备份数据失败');
+      new Notice(t('dataManagement.backup.mgmt.loadFailed'));
     } finally {
       isLoading = false;
     }
@@ -103,19 +106,19 @@
         level: BackupLevel.GLOBAL,
         trigger: BackupTrigger.MANUAL,
         data: null, // 全局备份会自动获取所有数据
-        reason: '用户手动创建备份'
+        reason: t('dataManagement.backup.mgmt.manualReason')
       });
       
       if (result.success) {
-        new Notice('备份创建成功');
+        new Notice(t('dataManagement.backup.mgmt.createSuccess'));
         await loadBackupData();
         onRefresh?.();
       } else {
-        new Notice('备份创建失败: ' + result.error);
+        new Notice(t('dataManagement.backup.mgmt.createFailed') + result.error);
       }
     } catch (error) {
       logger.error('创建备份失败:', error);
-      new Notice('创建备份失败');
+      new Notice(t('dataManagement.backup.mgmt.createFailed'));
     } finally {
       isCreatingBackup = false;
     }
@@ -125,14 +128,14 @@
     try {
       const result = await backupService.restoreBackup(backupId);
       if (result.success) {
-        new Notice(`成功恢复 ${result.restoredItems} 项数据`);
+        new Notice(t('dataManagement.backup.mgmt.restoreSuccess', { count: result.restoredItems ?? 0 }));
         onRefresh?.();
       } else {
-        new Notice('恢复失败: ' + result.error);
+        new Notice(t('dataManagement.backup.mgmt.restoreFailed') + result.error);
       }
     } catch (error) {
       logger.error('恢复备份失败:', error);
-      new Notice('恢复备份失败');
+      new Notice(t('dataManagement.backup.mgmt.restoreFailed'));
     }
   }
 
@@ -140,14 +143,14 @@
     try {
       const success = await backupService.deleteBackup(backupId);
       if (success) {
-        new Notice('备份已删除');
+        new Notice(t('dataManagement.backup.mgmt.deleted'));
         await loadBackupData();
       } else {
-        new Notice('删除失败');
+        new Notice(t('dataManagement.backup.mgmt.deleteFailed'));
       }
     } catch (error) {
       logger.error('删除备份失败:', error);
-      new Notice('删除备份失败: ' + (error as Error).message);
+      new Notice(t('dataManagement.backup.mgmt.deleteFailedDetail') + (error as Error).message);
     }
   }
 
@@ -165,11 +168,11 @@
         }
       }
       
-      new Notice(`清理完成: 成功 ${successCount}, 失败 ${failedCount}`);
+      new Notice(t('dataManagement.backup.mgmt.cleanupDone', { success: successCount, failed: failedCount }));
       await loadBackupData();
     } catch (error) {
       logger.error('批量清理失败:', error);
-      new Notice('批量清理失败: ' + (error as Error).message);
+      new Notice(t('dataManagement.backup.mgmt.cleanupFailed') + (error as Error).message);
     }
   }
 
@@ -184,26 +187,26 @@
   <!-- 统计汇总 -->
   <div class="settings-group">
     <div class="group-header">
-      <h4 class="section-title with-accent-bar accent-cyan">备份统计</h4>
-      <p class="group-description">当前备份系统的总体情况</p>
+      <h4 class="section-title with-accent-bar accent-cyan">{t('dataManagement.backup.mgmt.statsTitle')}</h4>
+      <p class="group-description">{t('dataManagement.backup.mgmt.statsDesc')}</p>
     </div>
 
     <div class="stats-summary">
       <div class="stat-card">
         <div class="stat-value">{stats.totalBackups}</div>
-        <div class="stat-label">总备份</div>
+        <div class="stat-label">{t('dataManagement.backup.mgmt.totalBackups')}</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">{formatSize(stats.totalSize)}</div>
-        <div class="stat-label">总大小</div>
+        <div class="stat-label">{t('dataManagement.backup.mgmt.totalSize')}</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">{stats.compressedBackups}</div>
-        <div class="stat-label">压缩备份</div>
+        <div class="stat-label">{t('dataManagement.backup.mgmt.compressedBackups')}</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">{stats.deviceCount}</div>
-        <div class="stat-label">设备数量</div>
+        <div class="stat-label">{t('dataManagement.backup.mgmt.deviceCount')}</div>
       </div>
     </div>
 
@@ -214,14 +217,14 @@
         onclick={handleCreateBackup}
         disabled={isCreatingBackup}
       >
-        {isCreatingBackup ? '创建中...' : '创建备份'}
+        {isCreatingBackup ? t('dataManagement.backup.mgmt.creating') : t('dataManagement.backup.mgmt.createBackup')}
       </button>
       <button
         class="btn btn-secondary"
         onclick={loadBackupData}
         disabled={isLoading}
       >
-        {isLoading ? '刷新中...' : '🔄 刷新'}
+        {isLoading ? t('dataManagement.backup.mgmt.refreshing') : t('dataManagement.backup.mgmt.refresh')}
       </button>
     </div>
   </div>

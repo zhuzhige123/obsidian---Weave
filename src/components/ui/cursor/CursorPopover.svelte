@@ -1,21 +1,29 @@
 <script lang="ts">
-  interface Props { open?: boolean; }
-  let { open = false }: Props = $props();
+  import type { Snippet } from 'svelte';
+
+  interface Props { open?: boolean; trigger?: Snippet; children?: Snippet; }
+  let { open = false, trigger, children }: Props = $props();
 </script>
 
 <div class="cursor-popover">
-  <div onclick={() => open = !open}>
-    <slot name="trigger" />
-  </div>
+  <button type="button" class="popover-trigger" onclick={() => open = !open}>
+    {@render trigger?.()}
+  </button>
   {#if open}
     <div class="popover-content">
-      <slot />
+      {@render children?.()}
     </div>
   {/if}
 </div>
 
 <style>
   .cursor-popover { position: relative; display: inline-block; }
+  .popover-trigger {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
   .popover-content {
     position: absolute;
     top: 100%;

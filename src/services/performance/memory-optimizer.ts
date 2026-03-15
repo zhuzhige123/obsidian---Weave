@@ -320,7 +320,7 @@ export class MemoryPoolManager {
   }
 
   private createMemoryBlock(size: number, metadata?: Record<string, any>): MemoryBlock {
-    const id = `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `block-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     
     return {
       id,

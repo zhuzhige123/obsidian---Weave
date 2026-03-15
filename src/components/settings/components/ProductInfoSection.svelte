@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { PRODUCT_INFO, ACKNOWLEDGMENTS } from '../constants/settings-constants';
+  import { PRODUCT_INFO, getAcknowledgments } from '../constants/settings-constants';
   import { ACTIVATION_HELP_TEXT } from '../constants/activation-constants';
   import ActivationModal from './ActivationModal.svelte';
   import { tr } from '../../../utils/i18n';
@@ -16,10 +16,12 @@
   let t = $derived($tr);
 
   // 产品信息配置（移除emoji图标）
+  let acknowledgments = $derived(getAcknowledgments());
+
   let productData = $derived([
     {
       label: t('about.product.productName'),
-      value: PRODUCT_INFO.NAME
+      value: t('about.product.name')
     },
     {
       label: t('about.product.version'),
@@ -49,7 +51,7 @@
   <div class="section-header">
     <div class="header-content">
       <div class="product-logo">
-        <div class="logo-icon">🎴</div>
+        <div class="logo-icon" aria-hidden="true">🎴</div>
         <div class="logo-text">
           <h2 class="product-title">Weave</h2>
           <p class="product-tagline">{t('about.product.description')}</p>
@@ -80,7 +82,7 @@
       <span class="link-text">{t('about.quickLinks.openSource')}</span>
     </a>
     <a
-      href={ACTIVATION_HELP_TEXT.CONTACT_INFO.github}
+      href="https://iwi05cktlph.feishu.cn/wiki/space/7602663447460891839?ccm_open_type=lark_wiki_spaceLink&open_tab_from=wiki_home"
       target="_blank"
       class="quick-link"
     >
@@ -105,7 +107,7 @@
   <div class="acknowledgments-section">
     <h3 class="section-title">{t('about.acknowledgments.title')}</h3>
     <div class="acknowledgments-grid">
-      {#each ACKNOWLEDGMENTS as item}
+      {#each acknowledgments as item}
         <a
           href={item.url}
           target="_blank"
@@ -163,6 +165,12 @@
   .logo-icon {
     font-size: 3rem;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    flex-shrink: 0;
   }
 
   .logo-text {
@@ -249,6 +257,8 @@
 
     .logo-icon {
       font-size: 2.5rem;
+      width: 3rem;
+      height: 3rem;
     }
 
     .product-title {

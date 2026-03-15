@@ -37,9 +37,9 @@
  * │ .obsidian/plugins/weave/   (插件目录 - 不同步)   │
  * │  ├── backups/              (备份文件)            │
  * │  ├── cache/                (可重建缓存)          │
- * │  ├── temp/                 (临时文件)            │
- * │  ├── logs/                 (日志文件)            │
- * │  └── state/                (迁移状态)            │
+ * │  ├── indices/              (索引文件)            │
+ * │  ├── migration/            (迁移状态)            │
+ * │  └── user-profile.json    (用户配置)            │
  * └──────────────────────────────────────────────────┘
  * 
  * 核心原则：
@@ -57,9 +57,6 @@ export const WEAVE_DATA = 'weave';
 
 /** @deprecated legacy：旧的 Vault 隐藏数据根目录（历史版本机读数据） */
 export const LEGACY_DOT_TUANKI = '.tuanki';
-
-/** @deprecated legacy：更名前的 Vault 数据根目录 */
-export const LEGACY_TUANKI_FOLDER = 'tuanki';
 
 /** @deprecated v2.x 旧的机读数据子目录名（已废弃，数据现在直接在 weave/ 下） */
 export const LEGACY_MACHINE_DATA_SUBDIR = '_data';
@@ -125,6 +122,7 @@ export function getV2Paths(parentFolder?: string) {
       tagGroupProfiles: `${root}/incremental-reading/tag-group-profiles.json`,
       documentGroupMap: `${root}/incremental-reading/document-group-map.json`,
       pdfBookmarkTasks: `${root}/incremental-reading/pdf-bookmark-tasks.json`,
+      epubBookmarkTasks: `${root}/incremental-reading/epub-bookmark-tasks.json`,
       materials: {
         root: `${root}/incremental-reading/materials`,
         index: `${root}/incremental-reading/materials/materials.json`,
@@ -187,16 +185,8 @@ export function getPluginDir(app?: { vault: { configDir: string } }): string {
   const configDir = app?.vault?.configDir ?? '.obsidian';
   return `${configDir}/plugins/weave`;
 }
-/** @deprecated 使用 getPluginDir(app) 代替 */
-export const PLUGIN_DIR = '.obsidian/plugins/weave';
-
 /** Schema 版本号 */
 export const SCHEMA_VERSION = '3.0.0';
-
-/** @deprecated v0.8.x 旧路径 */
-export const LEGACY_WEAVE_DATA_V1 = '.tuanki';
-/** @deprecated v0.9.x 旧路径 */
-export const LEGACY_WEAVE_DATA_V2 = 'weave-data';
 
 /** 默认媒体文件夹名 */
 export const DEFAULT_MEDIA_FOLDER_NAME = 'media';
@@ -205,21 +195,12 @@ export const DEFAULT_MEDIA_FOLDER_NAME = 'media';
 // V2.0 规范化路径（新架构）
 // ============================================================================
 
-/**
- * � Vault 数据路径（需跨设备同步）
- */
-export const PATHS_V2 = getV2Paths(undefined);
-
 /** 动态获取插件目录路径（支持自定义 configDir） */
 export function getPluginPaths(app?: { vault: { configDir: string } }) {
   const root = getPluginDir(app);
   return {
     root,
-    config: {
-      root: `${root}/config`,
-      settings: `${root}/config/settings.json`,
-      userProfile: `${root}/config/user-profile.json`,
-    },
+    userProfile: `${root}/user-profile.json`,
     indices: {
       root: `${root}/indices`,
       card: `${root}/indices/card-index.json`,
@@ -230,10 +211,7 @@ export function getPluginPaths(app?: { vault: { configDir: string } }) {
     cache: {
       root: `${root}/cache`,
       anchors: `${root}/cache/anchors-cache.json`,
-      render: `${root}/cache/render-cache.json`,
     },
-    temp: `${root}/temp`,
-    logs: `${root}/logs`,
     backups: `${root}/backups`,
     migration: {
       root: `${root}/migration`,
@@ -243,51 +221,7 @@ export function getPluginPaths(app?: { vault: { configDir: string } }) {
 }
 
 /**
- * @deprecated 使用 getPluginPaths(app) 代替
- * 📁 插件目录路径（配置/缓存/索引 - 不同步）
- */
-export const PLUGIN_PATHS = {
-  root: PLUGIN_DIR,
-  
-  /** 用户配置 */
-  config: {
-    root: `${PLUGIN_DIR}/config`,
-    settings: `${PLUGIN_DIR}/config/settings.json`,
-    userProfile: `${PLUGIN_DIR}/config/user-profile.json`,
-  },
-  
-  /** 索引文件 */
-  indices: {
-    root: `${PLUGIN_DIR}/indices`,
-    card: `${PLUGIN_DIR}/indices/card-index.json`,
-    deck: `${PLUGIN_DIR}/indices/deck-index.json`,
-    ir: `${PLUGIN_DIR}/indices/ir-index.json`,
-    question: `${PLUGIN_DIR}/indices/question-index.json`,
-  },
-  
-  /** 缓存文件 */
-  cache: {
-    root: `${PLUGIN_DIR}/cache`,
-    anchors: `${PLUGIN_DIR}/cache/anchors-cache.json`,
-    render: `${PLUGIN_DIR}/cache/render-cache.json`,
-  },
-  
-  /** 临时文件 */
-  temp: `${PLUGIN_DIR}/temp`,
-  /** 日志文件 */
-  logs: `${PLUGIN_DIR}/logs`,
-  /** 备份文件 */
-  backups: `${PLUGIN_DIR}/backups`,
-  
-  /** 迁移状态 */
-  migration: {
-    root: `${PLUGIN_DIR}/migration`,
-    state: `${PLUGIN_DIR}/migration/migration-state.json`,
-  },
-} as const;
-
-/**
- * 🔄 旧版本路径（用于迁移检测）
+ *  旧版本路径（用于迁移检测）
  */
 export const LEGACY_PATHS = {
   /** 记忆牌组旧路径 */
@@ -333,7 +267,7 @@ export const LEGACY_PATHS = {
 
 /**
  * 📁 V1.x 兼容路径（向后兼容）
- * @deprecated 迁移完成后请使用 PATHS_V2
+ * @deprecated 迁移完成后请使用 getV2Paths(parentFolder)
  */
 export const PATHS = {
   /** 数据根目录 */
@@ -376,9 +310,6 @@ export const PATHS = {
  * - 删除数据文件夹不会影响备份
  * - 只有卸载插件时才会删除备份
  */
-/** @deprecated 使用 getBackupFolder(app) 代替 */
-export const BACKUP_FOLDER = '.obsidian/plugins/weave/backups';
-
 export function getBackupFolder(app?: { vault: { configDir: string } }): string {
   const configDir = app?.vault?.configDir ?? '.obsidian';
   return `${configDir}/plugins/weave/backups`;
@@ -418,17 +349,6 @@ export function getIndexPath(indexName: string, app?: { vault: { configDir: stri
  */
 export function getMediaPath(relativePath: string, parentFolder?: string): string {
   return `${getReadableMediaFolder(parentFolder)}/${relativePath}`;
-}
-
-/**
- * 辅助函数：获取题库路径
- * @param subPath 子路径（可选）
- * @returns 完整题库路径
- */
-export function getQuestionBankPath(subPath?: string): string {
-  return subPath
-    ? `${PATHS_V2.questionBank.root}/${subPath}`
-    : PATHS_V2.questionBank.root;
 }
 
 /**

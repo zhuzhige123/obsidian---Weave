@@ -18,6 +18,9 @@ import { validateContentLength } from '../../utils/file-utils';
 import { replaceTemplateVariables, buildVariablesFromConfig } from '../../utils/prompt-template-utils';
 import { createBatches } from '../../utils/batch-utils';
 
+/** 卡片内容相似度去重阈值（前 N 个非空白字符相同即视为重复） */
+const DEDUP_PREFIX_LENGTH = 60;
+
 export interface AICardGenerationCallbacks {
   onProgress: (progress: GenerationProgress) => void;
   onCardsUpdate: (cards: GeneratedCard[]) => void;
@@ -46,6 +49,44 @@ export class AICardGenerationService {
   private buildRateLimitNotice(provider: string, raw?: string): string {
     const detail = raw ? `\n\n原始信息：${raw}` : '';
     return `AI服务触发限流/配额限制（429）。\n\n建议：\n1) 稍后再试（通常需要等待一段时间）\n2) 减少生成数量或降低并发/频率\n3) 检查${provider}账户配额、余额或套餐限制\n4) 需要时切换模型/提供商${detail}`;
+  }
+
+  /**
+   * 提取卡片内容的去重指纹（取 content 的前 N 个非空白字符）
+   */
+  private getContentFingerprint(card: GeneratedCard): string {
+    const raw = (card.content || '').replace(/\s+/g, '').toLowerCase();
+    return raw.slice(0, DEDUP_PREFIX_LENGTH);
+  }
+
+  /**
+   * 对新生成的卡片进行去重，过滤掉与已有卡片内容重复的条目
+   */
+  private deduplicateCards(
+    newCards: GeneratedCard[],
+    existingCards: GeneratedCard[]
+  ): GeneratedCard[] {
+    const existingFingerprints = new Set(
+      existingCards.map(c => this.getContentFingerprint(c))
+    );
+
+    const uniqueCards: GeneratedCard[] = [];
+    for (const card of newCards) {
+      const fp = this.getContentFingerprint(card);
+      if (!fp) continue;
+      if (existingFingerprints.has(fp)) {
+        logger.debug('[Dedup] 跳过重复卡片:', fp.slice(0, 30) + '...');
+        continue;
+      }
+      existingFingerprints.add(fp);
+      uniqueCards.push(card);
+    }
+
+    const removedCount = newCards.length - uniqueCards.length;
+    if (removedCount > 0) {
+      logger.debug(`[Dedup] 移除了 ${removedCount} 张重复卡片`);
+    }
+    return uniqueCards;
   }
 
   /**
@@ -78,7 +119,7 @@ export class AICardGenerationService {
       throw new Error('请先在设置中配置AI服务');
     }
 
-    // 确定使用的提示词
+    // 确定使用的提示词模板（未替换变量的原始模板）
     const promptText = selectedPrompt 
       ? selectedPrompt.prompt 
       : customPrompt || '请根据以下内容生成学习卡片';
@@ -111,26 +152,37 @@ export class AICardGenerationService {
       throw new Error(`${provider} API密钥未配置`);
     }
 
-    // 替换模板变量
-    const variables = buildVariablesFromConfig(generationConfig);
-    const finalPrompt = replaceTemplateVariables(promptText, variables);
-
-    // 智能分批
-    const batches = createBatches(totalCount, 'fast-first');
+    // 智能分批：小数量（<=15）不分批，一次性生成
+    const batches = totalCount <= 15
+      ? [totalCount]
+      : createBatches(totalCount, 'fast-first');
     logger.debug(`分批生成策略: ${batches.join(' + ')} = ${totalCount}张卡片`);
 
     // 循环生成每批
     for (let i = 0; i < batches.length; i++) {
-      const batchSize = batches[i];
+      // 计算本批实际需要的数量（考虑已生成的卡片）
+      const remaining = totalCount - generatedCards.length;
+      if (remaining <= 0) {
+        logger.debug(`已达到目标数量 ${totalCount}，提前终止`);
+        break;
+      }
+      const batchSize = Math.min(batches[i], remaining);
       const batchNum = i + 1;
 
-      logger.debug(`开始生成第${batchNum}批 (${batchSize}张)`);
+      logger.debug(`开始生成第${batchNum}批 (${batchSize}张, 剩余需要${remaining}张)`);
+
+      // 在批次内替换模板变量，确保 {count}/{cardCount} 与本批请求数量一致
+      const batchVariables = buildVariablesFromConfig({
+        ...generationConfig,
+        cardCount: batchSize
+      });
+      const batchPrompt = replaceTemplateVariables(promptText, batchVariables);
 
       const batchConfig: GenerationConfig = {
         ...generationConfig,
         cardCount: batchSize,
         templateId: selectedPrompt?.id || 'custom',
-        promptTemplate: finalPrompt,
+        promptTemplate: batchPrompt,
         customPrompt: customPrompt || undefined,
         provider: provider,
         model: model,
@@ -141,7 +193,9 @@ export class AICardGenerationService {
       callbacks.onProgress({
         status: 'generating',
         progress: Math.round((i / batches.length) * 100),
-        message: `正在生成第${batchNum}/${batches.length}批 (${batchSize}张)...`,
+        message: batches.length > 1
+          ? `正在生成第${batchNum}/${batches.length}批 (${batchSize}张)...`
+          : `正在生成 ${batchSize} 张卡片...`,
         currentCard: generatedCards.length,
         totalCards: totalCount
       });
@@ -159,7 +213,23 @@ export class AICardGenerationService {
       );
 
       if (response.success && response.cards) {
-        const newCards = response.cards.map(card => ({
+        // 截断：AI返回数量可能超出请求，只取需要的数量
+        let batchCards = response.cards;
+        if (batchCards.length > batchSize) {
+          logger.debug(`[Truncate] AI返回 ${batchCards.length} 张，截断到请求的 ${batchSize} 张`);
+          batchCards = batchCards.slice(0, batchSize);
+        }
+
+        // 去重：过滤掉与已生成卡片内容重复的条目
+        batchCards = this.deduplicateCards(batchCards, generatedCards);
+
+        // 总量保护：确保累计不超过目标总数
+        const canAdd = totalCount - generatedCards.length;
+        if (batchCards.length > canAdd) {
+          batchCards = batchCards.slice(0, canAdd);
+        }
+
+        const newCards = batchCards.map(card => ({
           ...card,
           isNew: true
         }));

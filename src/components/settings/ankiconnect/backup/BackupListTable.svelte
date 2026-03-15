@@ -2,6 +2,9 @@
   import type { BackupMetadata } from '../../../../types/backup-types';
   import { BackupLevel, BackupTrigger } from '../../../../types/backup-types';
   import { showObsidianConfirm } from '../../../../utils/obsidian-confirm';
+  import { tr as trStore } from '../../../../utils/i18n';
+
+  let t = $derived($trStore);
   
   let {
     backups = [],
@@ -43,16 +46,16 @@
     const isToday = date.toDateString() === now.toDateString();
     
     if (isToday) {
-      return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
     }
     
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     if (date.toDateString() === yesterday.toDateString()) {
-      return '昨天 ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      return t('dataManagement.backup.list.yesterday') + date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
     }
     
-    return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
   }
 
   function formatSize(bytes: number): string {
@@ -72,12 +75,12 @@
 
   function getTriggerText(trigger: BackupTrigger): string {
     switch (trigger) {
-      case BackupTrigger.AUTO_IMPORT: return '自动(导入)';
-      case BackupTrigger.AUTO_SYNC: return '自动(同步)';
-      case BackupTrigger.MANUAL: return '手动';
-      case BackupTrigger.SCHEDULED: return '定时';
-      case BackupTrigger.PRE_UPDATE: return '更新前';
-      default: return '未知';
+      case BackupTrigger.AUTO_IMPORT: return t('dataManagement.backup.list.triggerAutoImport');
+      case BackupTrigger.AUTO_SYNC: return t('dataManagement.backup.list.triggerAutoSync');
+      case BackupTrigger.MANUAL: return t('dataManagement.backup.list.triggerManual');
+      case BackupTrigger.SCHEDULED: return t('dataManagement.backup.list.triggerScheduled');
+      case BackupTrigger.PRE_UPDATE: return t('dataManagement.backup.list.triggerPreUpdate');
+      default: return t('dataManagement.backup.list.triggerUnknown');
     }
   }
 
@@ -99,13 +102,13 @@
   }
 
   async function handleRestore(backupId: string) {
-    const confirmed = await showObsidianConfirm((window as any).app, '确定要恢复此备份吗？这将覆盖当前数据。', { title: '确认恢复' });
+    const confirmed = await showObsidianConfirm((window as any).app, t('dataManagement.backup.list.confirmRestore'), { title: t('dataManagement.backup.list.confirmRestoreTitle') });
     if (!confirmed) return;
     await onRestore(backupId);
   }
 
   async function handleDelete(backupId: string) {
-    const confirmed = await showObsidianConfirm((window as any).app, '确定要删除此备份吗？此操作不可恢复。', { title: '确认删除' });
+    const confirmed = await showObsidianConfirm((window as any).app, t('dataManagement.backup.list.confirmDelete'), { title: t('dataManagement.backup.list.confirmDeleteTitle') });
     if (!confirmed) return;
     await onDelete(backupId);
   }
@@ -113,14 +116,14 @@
 
 <div class="backup-list-table settings-group">
   <div class="group-header">
-    <h4>备份列表</h4>
-    <p class="group-description">所有可用的备份记录</p>
+    <h4>{t('dataManagement.backup.list.title')}</h4>
+    <p class="group-description">{t('dataManagement.backup.list.description')}</p>
   </div>
 
   {#if isLoading}
     <div class="loading-state">
       <div class="loading-spinner"></div>
-      <p>加载中...</p>
+      <p>{t('dataManagement.backup.list.loading')}</p>
     </div>
   {:else if backups.length === 0}
     <!-- 空状态：不显示任何提示 -->
@@ -130,18 +133,18 @@
       <table class="anki-table">
         <thead>
           <tr>
-            <th>类型</th>
+            <th>{t('dataManagement.backup.list.colType')}</th>
             <th class="sortable" onclick={() => toggleSort('timestamp')}>
-              时间 {sortField === 'timestamp' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+              {t('dataManagement.backup.list.colTime')} {sortField === 'timestamp' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
             </th>
-            <th>设备</th>
-            <th>内容</th>
+            <th>{t('dataManagement.backup.list.colDevice')}</th>
+            <th>{t('dataManagement.backup.list.colContent')}</th>
             <th class="sortable" onclick={() => toggleSort('size')}>
-              大小 {sortField === 'size' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+              {t('dataManagement.backup.list.colSize')} {sortField === 'size' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
             </th>
-            <th>触发方式</th>
-            <th>状态</th>
-            <th>操作</th>
+            <th>{t('dataManagement.backup.list.colTrigger')}</th>
+            <th>{t('dataManagement.backup.list.colStatus')}</th>
+            <th>{t('dataManagement.backup.list.colActions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -163,9 +166,9 @@
                   {#if backup.summary.deckName}
                     <div class="content-main">{backup.summary.deckName}</div>
                   {:else}
-                    <div class="content-main">全局备份</div>
+                    <div class="content-main">{t('dataManagement.backup.list.globalBackup')}</div>
                   {/if}
-                  <div class="content-detail">{backup.summary.cardCount} 张卡片</div>
+                  <div class="content-detail">{t('dataManagement.backup.list.cardCount', { count: backup.summary.cardCount })}</div>
                 </div>
               </td>
               <td>
@@ -173,7 +176,7 @@
                   <div class="size-main">{formatSize(backup.size)}</div>
                   {#if backup.compressed}
                     <div class="size-detail">
-                      压缩 {Math.round((backup.compressionRatio || 0) * 100)}%
+                      {t('dataManagement.backup.list.compressed', { ratio: Math.round((backup.compressionRatio || 0) * 100) })}
                     </div>
                   {/if}
                 </div>
@@ -186,12 +189,12 @@
               <td>
                 <div class="status-badges">
                   {#if backup.isHealthy}
-                    <span class="status-badge healthy" title="健康">✓</span>
+                    <span class="status-badge healthy" title={t('dataManagement.backup.list.healthy')}>✓</span>
                   {:else}
-                    <span class="status-badge unhealthy" title="异常">[!]</span>
+                    <span class="status-badge unhealthy" title={t('dataManagement.backup.list.unhealthy')}>[!]</span>
                   {/if}
                   {#if backup.encrypted}
-                    <span class="status-badge encrypted" title="加密">[E]</span>
+                    <span class="status-badge encrypted" title={t('dataManagement.backup.list.encrypted')}>[E]</span>
                   {/if}
                 </div>
               </td>
@@ -200,24 +203,24 @@
                   <button
                     class="btn btn-small btn-secondary"
                     onclick={() => toggleExpand(backup.id)}
-                    title="详情"
+                    title={t('dataManagement.backup.list.details')}
                   >
-                    {expandedBackupId === backup.id ? '收起' : '详情'}
+                    {expandedBackupId === backup.id ? t('dataManagement.backup.list.collapse') : t('dataManagement.backup.list.details')}
                   </button>
                   <button
                     class="btn btn-small btn-primary"
                     onclick={() => handleRestore(backup.id)}
-                    title="恢复"
+                    title={t('dataManagement.backup.list.restore')}
                   >
-                    恢复
+                    {t('dataManagement.backup.list.restore')}
                   </button>
                   {#if backup.canDelete}
                     <button
                       class="btn btn-small btn-danger"
                       onclick={() => handleDelete(backup.id)}
-                      title="删除"
+                      title={t('dataManagement.backup.list.delete')}
                     >
-                      删除
+                      {t('dataManagement.backup.list.delete')}
                     </button>
                   {/if}
                 </div>
@@ -230,22 +233,22 @@
                 <td colspan="8">
                   <div class="backup-details">
                     <div class="detail-section">
-                      <h5>基本信息</h5>
+                      <h5>{t('dataManagement.backup.list.basicInfo')}</h5>
                       <div class="detail-grid">
                         <div class="detail-item">
-                          <span class="detail-label">备份ID:</span>
+                          <span class="detail-label">{t('dataManagement.backup.list.backupId')}</span>
                           <span class="detail-value">{backup.id}</span>
                         </div>
                         <div class="detail-item">
-                          <span class="detail-label">插件版本:</span>
+                          <span class="detail-label">{t('dataManagement.backup.list.pluginVersion')}</span>
                           <span class="detail-value">{backup.pluginVersion}</span>
                         </div>
                         <div class="detail-item">
-                          <span class="detail-label">Obsidian版本:</span>
+                          <span class="detail-label">{t('dataManagement.backup.list.obsidianVersion')}</span>
                           <span class="detail-value">{backup.obsidianVersion}</span>
                         </div>
                         <div class="detail-item">
-                          <span class="detail-label">仓库名称:</span>
+                          <span class="detail-label">{t('dataManagement.backup.list.vaultName')}</span>
                           <span class="detail-value">{backup.vaultName}</span>
                         </div>
                       </div>
@@ -253,14 +256,14 @@
                     
                     {#if backup.description || backup.userNotes}
                       <div class="detail-section">
-                        <h5>备注</h5>
+                        <h5>{t('dataManagement.backup.list.notes')}</h5>
                         <p class="detail-notes">{backup.description || backup.userNotes}</p>
                       </div>
                     {/if}
                     
                     {#if backup.tags.length > 0}
                       <div class="detail-section">
-                        <h5>标签</h5>
+                        <h5>{t('dataManagement.backup.list.tags')}</h5>
                         <div class="tag-list">
                           {#each backup.tags as tag}
                             <span class="tag">{tag}</span>
@@ -270,19 +273,19 @@
                     {/if}
                     
                     <div class="detail-section">
-                      <h5>文件信息</h5>
+                      <h5>{t('dataManagement.backup.list.fileInfo')}</h5>
                       <div class="detail-grid">
                         <div class="detail-item">
-                          <span class="detail-label">存储路径:</span>
+                          <span class="detail-label">{t('dataManagement.backup.list.storagePath')}</span>
                           <span class="detail-value code">{backup.storagePath}</span>
                         </div>
                         <div class="detail-item">
-                          <span class="detail-label">备份类型:</span>
-                          <span class="detail-value">{backup.type === 'full' ? '完整备份' : '增量备份'}</span>
+                          <span class="detail-label">{t('dataManagement.backup.list.backupType')}</span>
+                          <span class="detail-value">{backup.type === 'full' ? t('dataManagement.backup.list.fullBackup') : t('dataManagement.backup.list.incrementalBackup')}</span>
                         </div>
                         {#if backup.baseBackupId}
                           <div class="detail-item">
-                            <span class="detail-label">基础备份:</span>
+                            <span class="detail-label">{t('dataManagement.backup.list.baseBackup')}</span>
                             <span class="detail-value">{backup.baseBackupId}</span>
                           </div>
                         {/if}
@@ -305,17 +308,17 @@
           onclick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
         >
-          ← 上一页
+          {t('dataManagement.backup.list.prevPage')}
         </button>
         <span class="page-info">
-          第 {currentPage} / {totalPages} 页
+          {t('dataManagement.backup.list.pageInfo', { current: currentPage, total: totalPages })}
         </span>
         <button
           class="btn btn-small"
           onclick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
         >
-          下一页 →
+          {t('dataManagement.backup.list.nextPage')}
         </button>
       </div>
     {/if}

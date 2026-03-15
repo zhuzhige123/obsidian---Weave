@@ -54,7 +54,8 @@
   import { IRStorageService } from '../../services/incremental-reading/IRStorageService';
   import type { IRStudySession } from '../../types/ir-types';
   import { isPdfBookmarkTaskId } from '../../services/incremental-reading/IRPdfBookmarkTaskService';
-  // @deprecated v5.0: PATHS_V2 不再需要（isChunkFilePath 已移除）
+  import { isEpubBookmarkTaskId } from '../../services/incremental-reading/IREpubBookmarkTaskService';
+  import { VIEW_TYPE_EPUB } from '../../views/EpubView';
   // AI助手相关导入
   import { AIAssistantMenuBuilder } from '../../services/menu/AIAssistantMenuBuilder';
   import type { AIAction, SplitCardRequest } from '../../types/ai-types';
@@ -685,6 +686,8 @@
       await services.init();
       if (isPdfBookmarkTaskId(updatedBlock.id)) {
         await services.v4SchedulerService?.pdfBookmarkTaskService.updateTaskFromBlock(updatedBlock as any);
+      } else if (isEpubBookmarkTaskId(updatedBlock.id)) {
+        await services.v4SchedulerService?.epubBookmarkTaskService.updateTaskFromBlock(updatedBlock as any);
       } else {
         await services.storageService!.saveBlock(updatedBlock as any);
         await syncChunkScheduleFromBlock(updatedBlock);
@@ -695,6 +698,8 @@
   }
 
   const isPdfBlock = $derived(currentBlock ? isPdfBookmarkTaskId(currentBlock.id) : false);
+  const isEpubBlock = $derived(currentBlock ? isEpubBookmarkTaskId(currentBlock.id) : false);
+  const isExternalBlock = $derived(isPdfBlock || isEpubBlock);
 
   // v3.1: 内容块导航所需的 siblings 派生状态
   const siblings = $derived.by(() => {
@@ -1317,7 +1322,7 @@
           const cardToSave = { 
             ...card, 
             deckId: targetDeckIdForSplit,
-            uuid: `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // 生成新UUID
+            uuid: `card-${Date.now()}-${Math.random().toString(36).substring(2, 11)}` // 生成新UUID
           };
           
           // 保存卡片
@@ -1660,8 +1665,8 @@
       
       const updatedBlock = result.block;
       
-      // 同步持久化（completeBlockV4 已处理 PDF 书签任务，此处同步 chunks.json）
-      if (!isPdfBookmarkTaskId(updatedBlock.id)) {
+      // 同步持久化（completeBlockV4 已处理 PDF/EPUB 书签任务，此处同步 chunks.json）
+      if (!isPdfBookmarkTaskId(updatedBlock.id) && !isEpubBookmarkTaskId(updatedBlock.id)) {
         await syncChunkScheduleFromBlock(updatedBlock);
       }
       
@@ -1911,11 +1916,34 @@
       const contextPath = plugin.app.workspace.getActiveFile()?.path ?? '';
 
       const pdfBookmarkLink = (currentBlock as any)?.pdfBookmarkLink;
-      const linkText = typeof pdfBookmarkLink === 'string' && pdfBookmarkLink.trim().length > 0
-        ? pdfBookmarkLink.trim().replace(/^!?\[\[/, '').replace(/\]\]$/, '').split('|')[0]
-        : currentBlock.sourcePath;
+      const epubBookmarkHref = (currentBlock as any)?.epubBookmarkHref;
+      let linkText: string;
+      if (typeof pdfBookmarkLink === 'string' && pdfBookmarkLink.trim().length > 0) {
+        linkText = pdfBookmarkLink.trim().replace(/^!?\[\[/, '').replace(/\]\]$/, '').split('|')[0];
+      } else {
+        linkText = currentBlock.sourcePath;
+      }
 
-      plugin.app.workspace.openLinkText(linkText, contextPath, true);
+      // EPUB: reuse existing tab or open new
+      if (isEpubBookmarkTaskId(currentBlock.id) && epubBookmarkHref) {
+        const navDetail = { filePath: currentBlock.sourcePath, href: epubBookmarkHref };
+        const existingLeaf = plugin.app.workspace.getLeavesOfType(VIEW_TYPE_EPUB)
+          .find(l => {
+            try {
+              const s = (l.view as any)?.getState?.();
+              return s?.filePath === currentBlock.sourcePath || s?.file === currentBlock.sourcePath;
+            } catch { return false; }
+          });
+        if (existingLeaf) {
+          plugin.app.workspace.setActiveLeaf(existingLeaf, { focus: true });
+          window.dispatchEvent(new CustomEvent('Weave:epub-navigate', { detail: navDetail }));
+        } else {
+          (window as any).__weaveEpubPendingNav = navDetail;
+          plugin.app.workspace.openLinkText(linkText, contextPath, true);
+        }
+      } else {
+        plugin.app.workspace.openLinkText(linkText, contextPath, true);
+      }
     }
   }
 
@@ -2545,6 +2573,36 @@
         return;
       }
 
+      // EPUB 书签任务：打开 EPUB 阅读器并跳转到对应章节
+      if (isEpubBookmarkTaskId(currentBlock.id)) {
+        const epubPath = currentBlock.sourcePath;
+        const tocHref = (currentBlock as any).epubBookmarkHref || '';
+        const resumeCfi = (currentBlock as any).epubBookmarkResumeCfi || '';
+        const contextPath = plugin.app.workspace.getActiveFile()?.path ?? '';
+
+        if (resumeCfi || tocHref) {
+          const navDetail: any = { filePath: epubPath, cfi: resumeCfi, href: tocHref };
+          const existingLeaf = plugin.app.workspace.getLeavesOfType(VIEW_TYPE_EPUB)
+            .find(l => {
+              try {
+                const s = (l.view as any)?.getState?.();
+                return s?.filePath === epubPath || s?.file === epubPath;
+              } catch { return false; }
+            });
+          if (existingLeaf) {
+            plugin.app.workspace.setActiveLeaf(existingLeaf, { focus: true });
+            window.dispatchEvent(new CustomEvent('Weave:epub-navigate', { detail: navDetail }));
+          } else {
+            (window as any).__weaveEpubPendingNav = navDetail;
+            await plugin.app.workspace.openLinkText(epubPath, contextPath, true);
+          }
+        } else {
+          await plugin.app.workspace.openLinkText(epubPath, contextPath, true);
+        }
+        new Notice(`已打开 EPUB: ${(currentBlock as any).epubBookmarkTitle || epubPath}`);
+        return;
+      }
+
       const file = plugin.app.vault.getAbstractFileByPath(currentBlock.sourcePath);
       if (file && file instanceof TFile) {
         // 在新标签页中打开文件
@@ -2608,7 +2666,7 @@
       // 获取所有文件夹
       const folders: string[] = ['/'];
       plugin.app.vault.getAllLoadedFiles().forEach((file) => {
-        if (file.hasOwnProperty('children')) {
+        if ('children' in file) {
           folders.push(file.path);
         }
       });
@@ -3303,7 +3361,7 @@
         deckPath
       );
       const updatedBlock = completeResult.block;
-      if (!isPdfBookmarkTaskId(updatedBlock.id)) {
+      if (!isPdfBookmarkTaskId(updatedBlock.id) && !isEpubBookmarkTaskId(updatedBlock.id)) {
         await syncChunkScheduleFromBlock(updatedBlock);
       }
       const blockIndex = activeBlocks.findIndex(b => b.id === updatedBlock.id);
@@ -3555,6 +3613,14 @@
         const wikiLink = cleanLink ? `[[${cleanLink}|${title}]]` : '';
         return `## ${title}\n\n${wikiLink}`;
       }
+      if (isEpubBookmarkTaskId(block.id)) {
+        const title = (block as any).epubBookmarkTitle || (block as any).contentPreview || 'EPUB';
+        const epubPath = block.sourcePath || '';
+        const level = (block as any).epubBookmarkLevel ?? 0;
+        const heading = '#'.repeat(Math.min(level + 2, 4));
+        const wikiLink = epubPath ? `[[${epubPath}|${title}]]` : '';
+        return `${heading} ${title}\n\n${wikiLink}\n\n> EPUB chapter - click "Open Source" to read`;
+      }
       // v5.0: 块文件方案 - 直接读取整个文件（去除 YAML frontmatter）
       const content = await plugin.app.vault.adapter.read(block.sourcePath);
       if (!content) return '无法加载内容';
@@ -3587,15 +3653,15 @@
         // v5.4: 缓存内容用于双向同步变化检测
         editorSyncService?.cacheCurrentContent(content);
 
-        if (typeof filePath === 'string' && filePath.length > 0 && !isPdfBookmarkTaskId(blockRef.id)) {
+        if (typeof filePath === 'string' && filePath.length > 0 && !isPdfBookmarkTaskId(blockRef.id) && !isEpubBookmarkTaskId(blockRef.id)) {
           await refreshSaveBaseline(filePath);
         }
         // v5.7: 标注信号由独立的 $effect 监听 blockContent 变化自动计算
         logger.debug('[IRFocusInterface] 内容加载完成:', content.substring(0, 50));
       });
 
-      // PDF 书签任务：强制预览模式（不自动打开 PDF，避免进入学习界面时被跳转到 PDF 阅读界面）
-      if (isPdfBookmarkTaskId(currentBlock.id)) {
+      // PDF/EPUB 书签任务：强制预览模式
+      if (isPdfBookmarkTaskId(currentBlock.id) || isEpubBookmarkTaskId(currentBlock.id)) {
         if (isEditMode) {
           isEditMode = false;
         }
@@ -4270,6 +4336,7 @@
           <div 
             class="toolbar-section actions-section"
             class:is-dragging={isDraggingButton}
+            role="presentation"
             onmousemove={handleButtonDragMove}
             onmouseup={handleButtonDragEnd}
             onmouseleave={handleButtonDragEnd}
@@ -4390,8 +4457,9 @@
                     </div>
                     <!-- 理由输入（强制） -->
                     <div class="priority-reason-section">
-                      <label class="reason-label">调整理由（必填）</label>
+                      <label class="reason-label" for="priority-reason-input">调整理由（必填）</label>
                       <textarea
+                        id="priority-reason-input"
                         class="reason-input"
                         placeholder="为什么要调整优先级？例如：这是考试重点..."
                         bind:value={priorityReason}
@@ -4692,11 +4760,14 @@
 
 <!-- 提醒设置模态窗（复用 StudyInterface 设计） -->
 {#if showReminderModal}
-  <div class="modal-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={() => showReminderModal = false}>
-    <div class="reminder-modal" role="button" tabindex="0" onclick={(e) => e.stopPropagation()} onkeydown={(_e) => {
-    }}>
+  <div class="modal-overlay" role="presentation" onclick={(event) => {
+    if (event.target === event.currentTarget) {
+      showReminderModal = false;
+    }
+  }}>
+    <div class="reminder-modal" role="dialog" aria-modal="true" aria-labelledby="reminder-modal-title" tabindex="-1">
       <div class="modal-header">
-        <h3>设置复习提醒</h3>
+        <h3 id="reminder-modal-title">设置复习提醒</h3>
         <button class="modal-close" onclick={() => showReminderModal = false}>×</button>
       </div>
 
@@ -4743,11 +4814,14 @@
 
 <!-- 优先级设置模态窗（复用 StudyInterface 设计） -->
 {#if showPriorityModal}
-  <div class="modal-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={() => showPriorityModal = false}>
-    <div class="priority-modal" role="button" tabindex="0" onclick={(e) => e.stopPropagation()} onkeydown={(_e) => {
-    }}>
+  <div class="modal-overlay" role="presentation" onclick={(event) => {
+    if (event.target === event.currentTarget) {
+      showPriorityModal = false;
+    }
+  }}>
+    <div class="priority-modal" role="dialog" aria-modal="true" aria-labelledby="priority-modal-title" tabindex="-1">
       <div class="modal-header">
-        <h3>设置优先级</h3>
+        <h3 id="priority-modal-title">设置优先级</h3>
         <button class="modal-close" onclick={() => showPriorityModal = false}>×</button>
       </div>
 
@@ -5826,11 +5900,6 @@
 
 
   /* 侧边栏自评按钮激活状态 */
-  .toolbar-btn.rating-bar-btn.active {
-    background: color-mix(in srgb, var(--interactive-accent) 20%, transparent);
-    color: var(--interactive-accent);
-  }
-
   /* ==================== 设置浮动菜单样式 ==================== */
   .ir-settings-menu {
     min-width: 220px;

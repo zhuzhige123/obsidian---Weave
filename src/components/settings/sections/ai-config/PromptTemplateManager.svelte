@@ -105,7 +105,7 @@
 
   // 删除模板
   async function deleteTemplate(templateId: string) {
-    const confirmed = await showObsidianConfirm(plugin.app, t('aiConfig.promptTemplates.custom.deleteConfirm'), { title: '确认删除' });
+    const confirmed = await showObsidianConfirm(plugin.app, t('aiConfig.promptTemplates.custom.deleteConfirm'), { title: t('common.confirmDelete') });
     if (confirmed) {
       promptTemplates.custom = promptTemplates.custom.filter(t => t.id !== templateId);
     }
@@ -116,6 +116,18 @@
     showTemplateModal = false;
     editingTemplate = null;
     isCreating = false;
+  }
+
+  function handleModalOverlayKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      closeModal();
+    }
+  }
+
+  function handleModalOverlayClick(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      closeModal();
+    }
   }
   
   // 🆕 查看模板详情
@@ -239,8 +251,8 @@
 
 <!-- 模板编辑模态窗口 -->
 {#if showTemplateModal && editingTemplate}
-  <div class="modal-overlay" role="presentation" onclick={closeModal}>
-    <div class="modal" role="dialog" tabindex="-1" onclick={(e) => { e.stopPropagation(); }}>
+  <div class="modal-overlay" role="presentation" onclick={handleModalOverlayClick} onkeydown={handleModalOverlayKeydown} tabindex="-1">
+    <div class="modal" role="dialog" tabindex="-1">
       <div class="modal-header">
         <h3>{isCreating ? t('aiConfig.promptTemplates.modal.createTitle') : t('aiConfig.promptTemplates.modal.editTitle')}</h3>
         <button class="btn-icon" onclick={closeModal}>

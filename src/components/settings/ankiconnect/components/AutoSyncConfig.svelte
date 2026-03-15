@@ -4,6 +4,9 @@
 -->
 <script lang="ts">
   import type { AnkiConnectService } from '../../../../services/ankiconnect/AnkiConnectService';
+  import { tr } from '../../../../utils/i18n';
+
+  let t = $derived($tr);
 
   interface AutoSyncSettings {
     enabled: boolean;
@@ -42,9 +45,9 @@
   <!-- 启用自动同步 -->
   <div class="setting-item">
     <div class="setting-info">
-      <div class="setting-label">启用自动同步</div>
+      <div class="setting-label">{t('ankiConnect.autoSync.enableLabel')}</div>
       <div class="setting-description">
-        按设定间隔自动同步卡片到 Anki
+        {t('ankiConnect.autoSync.enableDesc')}
       </div>
     </div>
     <div class="setting-control">
@@ -62,9 +65,9 @@
   {#if autoSyncSettings.enabled}
     <div class="setting-item">
       <div class="setting-info">
-        <div class="setting-label">同步间隔（分钟）</div>
+        <div class="setting-label">{t('ankiConnect.autoSync.intervalLabel')}</div>
         <div class="setting-description">
-          定时同步的时间间隔
+          {t('ankiConnect.autoSync.intervalDesc')}
         </div>
       </div>
       <div class="setting-control">
@@ -81,9 +84,9 @@
 
     <div class="setting-item">
       <div class="setting-info">
-        <div class="setting-label">启动时同步</div>
+        <div class="setting-label">{t('ankiConnect.autoSync.syncOnStartupLabel')}</div>
         <div class="setting-description">
-          Obsidian 启动时自动执行同步
+          {t('ankiConnect.autoSync.syncOnStartupDesc')}
         </div>
       </div>
       <div class="setting-control">
@@ -100,9 +103,9 @@
 
     <div class="setting-item">
       <div class="setting-info">
-        <div class="setting-label">文件变更检测</div>
+        <div class="setting-label">{t('ankiConnect.autoSync.fileWatcherLabel')}</div>
         <div class="setting-description">
-          检测到卡片文件修改时自动同步
+          {t('ankiConnect.autoSync.fileWatcherDesc')}
         </div>
       </div>
       <div class="setting-control">

@@ -10,7 +10,7 @@
   import LazyGridCard from '../cards/LazyGridCard.svelte';
   import EnhancedIcon from '../ui/EnhancedIcon.svelte';
 
-  type GridCardAttributeType = 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified';
+  type GridCardAttributeType = 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified' | 'accuracy' | 'question_type' | 'ir_state' | 'ir_priority';
   
   interface Props {
     cards: Card[];
@@ -18,13 +18,13 @@
     plugin: WeavePlugin;
     layoutMode?: 'fixed' | 'masonry';
     attributeType?: GridCardAttributeType;
-    isMobile?: boolean; // 🆕 移动端状态
+    isMobile?: boolean; // 移动端状态
     onCardClick?: (card: Card) => void;
     onCardEdit?: (card: Card) => void;
     onCardDelete?: (card: Card) => void;
     onCardView?: (card: Card) => void;
-    onSourceJump?: (card: Card) => void; // 🆕 源文档跳转
-    onCardLongPress?: (card: Card) => void; // 🆕 长按触发多选
+    onSourceJump?: (card: Card) => void; // 源文档跳转
+    onCardLongPress?: (card: Card) => void; // 长按触发多选
     loading?: boolean;
   }
 
@@ -56,10 +56,17 @@
   // 性能优化：缓存上次的容器宽度
   let lastContainerWidth = 0;
 
+  // 渲染状态检测
+  const RENDERING_OVERLAY_THRESHOLD = 30;
+  let isRendering = $state(false);
+
   // 计算属性
   const shouldUseVirtualScroll = $derived(cards.length > 100); //  从300降低到100
   const visibleCards = $derived(cards.slice(0, visibleCount));
   const hasMore = $derived(visibleCount < cards.length);
+  const renderingProgress = $derived(
+    cards.length > 0 ? Math.round((visibleCards.length / cards.length) * 100) : 0
+  );
 
   /**
    * 加载更多卡片
@@ -243,14 +250,54 @@
     const initialCount = shouldUseVirtualScroll ? 60 : 30;
     visibleCount = Math.min(initialCount, cards.length);
   });
+
+  // 渲染状态检测：卡片数据变化时显示遮罩
+  $effect(() => {
+    const totalCards = cards.length;
+    if (totalCards >= RENDERING_OVERLAY_THRESHOLD) {
+      isRendering = true;
+      tick().then(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            isRendering = false;
+          });
+        });
+      });
+    } else {
+      isRendering = false;
+    }
+  });
 </script>
 
 <div class="grid-view" bind:this={scrollContainer}>
+    <!-- 渲染进度遮罩 -->
+    {#if isRendering && !loading}
+      <div class="weave-rendering-overlay"></div>
+      <div class="weave-rendering-progress-container">
+        {#if renderingProgress < 100}
+          <div class="weave-rendering-progress-bar" style="width: {renderingProgress}%"></div>
+        {:else}
+          <div class="weave-rendering-progress-bar weave-rendering-progress-bar--indeterminate"></div>
+        {/if}
+      </div>
+      <div class="weave-rendering-info">
+        <div class="weave-spinner-small"></div>
+        <span>{visibleCards.length} / {cards.length} 张卡片</span>
+      </div>
+    {/if}
+
     {#if loading}
       <!-- 加载状态 -->
       <div class="weave-loading-state">
         <div class="weave-spinner"></div>
         <p>加载中...</p>
+      </div>
+    {:else if cards.length === 0}
+      <!-- 空状态 -->
+      <div class="weave-empty-state">
+        <EnhancedIcon name="inbox" size={48} />
+        <h3>暂无卡片</h3>
+        <p>当前筛选条件下没有找到卡片</p>
       </div>
     {:else}
       <!-- 网格容器 -->
@@ -261,7 +308,7 @@
         class:masonry-layout={layoutMode === 'masonry'}
         style="--column-count: {columnCount}"
       >
-        {#each visibleCards as card, i (card.uuid || 'unknown')}
+        {#each visibleCards as card, i (card.uuid || `__idx_${i}`)}
           <div data-card-index={i}>
             <LazyGridCard
               {card}
@@ -307,6 +354,7 @@
   @import './styles/grid-common.css';
 
   .grid-view {
+    position: relative;
     flex: 1;
     min-width: 0;
     overflow-y: auto;

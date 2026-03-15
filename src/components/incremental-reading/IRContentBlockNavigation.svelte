@@ -454,6 +454,7 @@
     color: var(--text-normal);
     line-height: 1.3;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
@@ -516,6 +517,7 @@
   :global(body.is-phone) .nav-card-title,
   :global(body.is-mobile) .nav-card-title {
     font-size: 0.85rem;
+    line-clamp: 1;
     -webkit-line-clamp: 1;
   }
 </style>

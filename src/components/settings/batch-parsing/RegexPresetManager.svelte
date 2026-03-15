@@ -5,6 +5,9 @@
   import RangeSeparatorConfig from './RangeSeparatorConfig.svelte';
   import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
   import ObsidianDropdown from '../../ui/ObsidianDropdown.svelte';
+  import { tr } from '../../../utils/i18n';
+
+  let t = $derived($tr);
   
   // Props
   interface Props {
@@ -60,7 +63,7 @@
    * 生成新预设ID
    */
   function generatePresetId(): string {
-    return `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `custom-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
   
   /**
@@ -68,7 +71,7 @@
    */
   function createNewPreset(): RegexParsingConfig {
     return {
-      name: '新预设',
+      name: t('dataManagement.batchScan.regexPreset.newPresetName'),
       description: '',
       mode: 'separator',
       separatorMode: { ...DEFAULT_SEPARATOR_MODE },
@@ -152,7 +155,7 @@
     if (!editingPreset) return;
     
     if (!editingPreset.name || !editingPreset.name.trim()) {
-      new Notice('预设名称不能为空');
+      new Notice(t('dataManagement.batchScan.regexPreset.nameEmpty'));
       return;
     }
 
@@ -172,7 +175,7 @@
     });
 
     if (duplicateByName) {
-      new Notice('预设名称已存在');
+      new Notice(t('dataManagement.batchScan.regexPreset.nameDuplicate'));
       return;
     }
     
@@ -193,7 +196,7 @@
 
     if (presetToSave.mode === 'separator') {
       if (!presetToSave.separatorMode?.cardSeparator?.trim()) {
-        new Notice('卡片分隔符不能为空');
+        new Notice(t('dataManagement.batchScan.regexPreset.separatorEmpty'));
         return;
       }
       try {
@@ -203,20 +206,20 @@
           new RegExp(presetToSave.separatorMode.frontBackSeparator, 'm');
         }
       } catch (e) {
-        new Notice(`分隔符正则无效: ${e instanceof Error ? e.message : String(e)}`);
+        new Notice(t('dataManagement.batchScan.regexPreset.separatorInvalid', { error: e instanceof Error ? e.message : String(e) }));
         return;
       }
     }
 
     if (presetToSave.mode === 'pattern') {
       if (!presetToSave.patternMode?.cardPattern?.trim()) {
-        new Notice('卡片匹配正则不能为空');
+        new Notice(t('dataManagement.batchScan.regexPreset.patternEmpty'));
         return;
       }
       try {
         new RegExp(presetToSave.patternMode.cardPattern, presetToSave.patternMode.flags || 'g');
       } catch (e) {
-        new Notice(`卡片匹配正则无效: ${e instanceof Error ? e.message : String(e)}`);
+        new Notice(t('dataManagement.batchScan.regexPreset.patternInvalid', { error: e instanceof Error ? e.message : String(e) }));
         return;
       }
     }
@@ -226,7 +229,7 @@
       const id = presetToSave.id || generatePresetId();
       const newPreset = { ...presetToSave, id };
       onPresetsChange([...presets, newPreset]);
-      new Notice('预设已创建');
+      new Notice(t('dataManagement.batchScan.regexPreset.created'));
     } else {
       // 更新现有预设
       const id = editingOriginalId || presetToSave.id || generatePresetId();
@@ -242,7 +245,7 @@
         return p.name === presetWithId.name ? presetWithId : p;
       });
       onPresetsChange(updated);
-      new Notice('预设已保存');
+      new Notice(t('dataManagement.batchScan.regexPreset.saved'));
     }
     
     editingPreset = null;
@@ -257,8 +260,8 @@
   async function deletePreset(preset: RegexParsingConfig) {
     const confirmed = await showObsidianConfirm(
       (window as any).app,
-      `确定要删除预设 "${preset.name}" 吗？`,
-      { title: '确认删除' }
+      t('dataManagement.batchScan.regexPreset.confirmDelete', { name: preset.name }),
+      { title: t('dataManagement.batchScan.regexPreset.confirmDeleteTitle') }
     );
     if (confirmed) {
       if (preset.id) {
@@ -266,7 +269,7 @@
       } else {
         onPresetsChange(presets.filter(p => p.name !== preset.name));
       }
-      new Notice('预设已删除');
+      new Notice(t('dataManagement.batchScan.regexPreset.deleted'));
     }
   }
   
@@ -297,12 +300,12 @@
     
     // 检查是否已存在同名预设
     if (presets.some(p => (p.id && p.id === officialPreset.id) || p.name === officialPreset.name)) {
-      new Notice(`预设 "${officialPreset.name}" 已存在`);
+      new Notice(t('dataManagement.batchScan.regexPreset.alreadyExists', { name: officialPreset.name }));
       return;
     }
     
     onPresetsChange([...presets, officialPreset]);
-    new Notice(`已导入预设 "${officialPreset.name}"`);
+    new Notice(t('dataManagement.batchScan.regexPreset.imported', { name: officialPreset.name }));
   }
 </script>
 
@@ -310,7 +313,7 @@
   <!-- 标题栏 -->
   <div class="preset-header">
     <div class="preset-header-left">
-      <h4 class="group-title with-accent-bar accent-red">正则预设管理</h4>
+      <h4 class="group-title with-accent-bar accent-red">{t('dataManagement.batchScan.regexPreset.title')}</h4>
       <span class="preset-count">({presets.length})</span>
     </div>
     <div class="preset-header-right">
@@ -318,7 +321,7 @@
         class="add-preset-btn"
         onclick={addPreset}
       >
-        + 新建预设
+        {t('dataManagement.batchScan.regexPreset.newPreset')}
       </button>
     </div>
   </div>
@@ -327,7 +330,7 @@
   <div class="preset-content">
     <!-- 官方预设导入 -->
     <div class="official-presets">
-      <div class="section-label">官方预设（快速导入）</div>
+      <div class="section-label">{t('dataManagement.batchScan.regexPreset.officialPresets')}</div>
       <div class="preset-chips">
         {#each Object.keys(REGEX_PRESETS) as key}
           {@const preset = REGEX_PRESETS[key as keyof typeof REGEX_PRESETS]}
@@ -344,7 +347,7 @@
     
     <!-- 自定义预设列表 -->
     <div class="custom-presets">
-      <div class="section-label">自定义预设</div>
+      <div class="section-label">{t('dataManagement.batchScan.regexPreset.customPresets')}</div>
       
       {#if presets.length > 0}
         <div class="preset-list">
@@ -353,8 +356,8 @@
               <div class="preset-info">
                 <div class="preset-name">{preset.name}</div>
                 <div class="preset-meta">
-                  模式: {preset.mode === 'separator' ? '分隔符' : '完整正则'} | 
-                  同步: {preset.syncMethod === 'tag-based' ? '标签判断' : '完全同步'}
+                  {t('dataManagement.batchScan.regexPreset.mode')} {preset.mode === 'separator' ? t('dataManagement.batchScan.regexPreset.modeSeparator') : t('dataManagement.batchScan.regexPreset.modePattern')} | 
+                  {t('dataManagement.batchScan.regexPreset.sync')} {preset.syncMethod === 'tag-based' ? t('dataManagement.batchScan.regexPreset.syncTagBased') : t('dataManagement.batchScan.regexPreset.syncFullSync')}
                 </div>
               </div>
               <div class="preset-actions">
@@ -362,13 +365,13 @@
                   class="action-btn edit"
                   onclick={() => editPreset(preset)}
                 >
-                  编辑
+                  {t('dataManagement.batchScan.regexPreset.edit')}
                 </button>
                 <button 
                   class="action-btn delete"
                   onclick={() => deletePreset(preset)}
                 >
-                  删除
+                  {t('dataManagement.batchScan.regexPreset.delete')}
                 </button>
               </div>
             </div>
@@ -397,14 +400,14 @@
           role="document"
         >
           <div class="editor-header">
-            <h3 id="preset-editor-title">{isCreating ? '新建正则预设' : '编辑正则预设'}</h3>
-            <button class="close-btn" onclick={cancelEdit} aria-label="关闭">×</button>
+            <h3 id="preset-editor-title">{isCreating ? t('dataManagement.batchScan.regexPreset.createTitle') : t('dataManagement.batchScan.regexPreset.editTitle')}</h3>
+            <button class="close-btn" onclick={cancelEdit} aria-label={t('dataManagement.batchScan.regexPreset.close')}>×</button>
           </div>
           
           <div class="editor-body">
             <!-- 基本信息 -->
             <div class="form-group">
-              <label for="preset-name">预设名称</label>
+              <label for="preset-name">{t('dataManagement.batchScan.regexPreset.presetName')}</label>
               <input 
                 type="text" 
                 id="preset-name"
@@ -414,17 +417,17 @@
                     editingPreset.name = e.currentTarget.value;
                   }
                 }}
-                placeholder="例如：默认Weave格式"
+                placeholder={t('dataManagement.batchScan.regexPreset.presetNamePlaceholder')}
               />
             </div>
             
             <!-- 解析模式 -->
             <div class="form-group">
-              <label for="parsing-mode">解析模式</label>
+              <label for="parsing-mode">{t('dataManagement.batchScan.regexPreset.parsingMode')}</label>
               <ObsidianDropdown
                 options={[
-                  { id: 'separator', label: '分隔符模式（简单）' },
-                  { id: 'pattern', label: '完整正则模式（灵活）' }
+                  { id: 'separator', label: t('dataManagement.batchScan.regexPreset.separatorMode') },
+                  { id: 'pattern', label: t('dataManagement.batchScan.regexPreset.patternMode') }
                 ]}
                 value={editingPreset?.mode || 'separator'}
                 onchange={(value) => {
@@ -457,7 +460,7 @@
             {#if editingPreset?.mode === 'pattern'}
               <!-- 卡片匹配正则表达式 -->
               <div class="form-group">
-                <label for="card-pattern">卡片匹配正则表达式</label>
+                <label for="card-pattern">{t('dataManagement.batchScan.regexPreset.cardPattern')}</label>
                 <textarea 
                   id="card-pattern"
                   value={safePatternMode.cardPattern}
@@ -465,15 +468,15 @@
                     if (!editingPreset?.patternMode) editingPreset!.patternMode = { ...DEFAULT_PATTERN_MODE };
                     editingPreset!.patternMode.cardPattern = e.currentTarget.value;
                   }}
-                  placeholder="例如：Q:\s*(.+?)\s*A:\s*(.+?)"
+                  placeholder={t('dataManagement.batchScan.regexPreset.cardPatternPlaceholder')}
                   rows="3"
                 ></textarea>
-                <small class="help-text">直接在全文中匹配所有卡片，通过捕获组（括号）提取问题和答案</small>
+                <small class="help-text">{t('dataManagement.batchScan.regexPreset.cardPatternHelp')}</small>
               </div>
               
               <!-- 正则标志 -->
               <div class="form-group">
-                <label for="regex-flags">正则标志</label>
+                <label for="regex-flags">{t('dataManagement.batchScan.regexPreset.regexFlags')}</label>
                 <input 
                   type="text" 
                   id="regex-flags"
@@ -482,19 +485,19 @@
                     if (!editingPreset?.patternMode) editingPreset!.patternMode = { ...DEFAULT_PATTERN_MODE };
                     editingPreset!.patternMode.flags = e.currentTarget.value;
                   }}
-                  placeholder="例如：gs"
+                  placeholder={t('dataManagement.batchScan.regexPreset.regexFlagsPlaceholder')}
                 />
-                <small class="help-text">g=全局匹配，s=允许.匹配换行，i=忽略大小写，m=多行模式</small>
+                <small class="help-text">{t('dataManagement.batchScan.regexPreset.regexFlagsHelp')}</small>
               </div>
             {/if}
             
             <!-- 同步方法 -->
             <div class="form-group">
-              <label for="sync-method">同步方法</label>
+              <label for="sync-method">{t('dataManagement.batchScan.regexPreset.syncMethod')}</label>
               <ObsidianDropdown
                 options={[
-                  { id: 'tag-based', label: '标签判断模式' },
-                  { id: 'full-sync', label: '完全同步模式' }
+                  { id: 'tag-based', label: t('dataManagement.batchScan.regexPreset.tagBasedMode') },
+                  { id: 'full-sync', label: t('dataManagement.batchScan.regexPreset.fullSyncMode') }
                 ]}
                 value={editingPreset?.syncMethod || 'tag-based'}
                 onchange={(value) => {
@@ -507,8 +510,8 @@
           </div>
           
           <div class="editor-footer">
-            <button class="btn-cancel" onclick={cancelEdit}>取消</button>
-            <button class="btn-save" onclick={savePreset}>保存</button>
+            <button class="btn-cancel" onclick={cancelEdit}>{t('dataManagement.batchScan.regexPreset.cancel')}</button>
+            <button class="btn-save" onclick={savePreset}>{t('dataManagement.batchScan.regexPreset.save')}</button>
           </div>
         </div>
       </div>
@@ -829,6 +832,18 @@
   .btn-cancel:hover,
   .btn-save:hover {
     opacity: 0.8;
+  }
+
+  /* mobile: keep save/cancel buttons in a row */
+  :global(body.is-phone) .editor-footer {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+
+  :global(body.is-phone) .editor-footer .btn-cancel,
+  :global(body.is-phone) .editor-footer .btn-save {
+    flex: 1;
+    min-width: 0;
   }
 </style>
 

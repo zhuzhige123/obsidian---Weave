@@ -5,6 +5,9 @@
 <script lang="ts">
   import PremiumBadge from '../../../premium/PremiumBadge.svelte';
   import { PREMIUM_FEATURES } from '../../../../services/premium/PremiumFeatureGuard';
+  import { tr } from '../../../../utils/i18n';
+
+  let t = $derived($tr);
 
   interface MediaSyncSettings {
     enabled: boolean;
@@ -29,9 +32,9 @@
   <!-- 启用媒体同步 -->
   <div class="setting-item">
     <div class="setting-info">
-      <div class="setting-label">启用媒体同步</div>
+      <div class="setting-label">{t('ankiConnect.advanced.mediaSyncLabel')}</div>
       <div class="setting-description">
-        同步图片、音频等媒体文件到 Anki
+        {t('ankiConnect.advanced.mediaSyncDesc')}
       </div>
     </div>
     <div class="setting-control">

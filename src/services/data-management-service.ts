@@ -304,13 +304,13 @@ export class DataManagementService {
           });
           score -= 20;
         } else {
-          // 检查卡片数据结构
-          const invalidCards = cards.filter((card: any) => !card.uuid || !card.deckId);
+          // 检查卡片数据结构（引用式牌组架构下 deckId 已废弃，只检查 uuid）
+          const invalidCards = cards.filter((card: any) => !card.uuid);
           if (invalidCards.length > 0) {
             issues.push({
               id: 'invalid-card-structure',
               type: 'invalid_format',
-              description: `发现 ${invalidCards.length} 张卡片缺少必要字段`,
+              description: `发现 ${invalidCards.length} 张卡片缺少 UUID`,
               severity: 'warning',
               fixSuggestion: '建议清理无效卡片数据'
             });
@@ -445,13 +445,11 @@ export class DataManagementService {
     return getV2PathsFromApp(this.plugin.app).root;
   }
 
-  private async getFieldTemplateCount(): Promise<number> {
-    // 新系统不使用预定义模板，返回0
+  private getFieldTemplateCount(): number {
     return 0;
   }
 
-  private async getTriadTemplateCount(): Promise<number> {
-    // 三位一体模板系统已废弃
+  private getTriadTemplateCount(): number {
     return 0;
   }
 
@@ -688,7 +686,7 @@ export class DataManagementService {
     });
   }
 
-  private async parseImportData(content: string, fileName: string): Promise<any> {
+  private parseImportData(content: string, fileName: string): any {
     try {
       if (fileName.endsWith('.json')) {
         return JSON.parse(content);
@@ -700,38 +698,15 @@ export class DataManagementService {
     }
   }
 
-  private async validateImportData(data: any): Promise<void> {
-    // 基础数据验证
+  private validateImportData(data: any): void {
     if (!data || typeof data !== 'object') {
       throw new Error('导入数据格式无效');
     }
-    
-    // 可以添加更多验证逻辑
   }
 
-  private async executeImport(data: any, _options: ImportOptions): Promise<any> {
-    // 简化的导入实现
-    // 实际实现需要根据冲突策略处理数据
-    let imported = 0;
-    const skipped = 0;
-    const conflicts = 0;
-    
-    if (data.decks) {
-      // 导入牌组逻辑
-      imported += data.decks.length;
-    }
-    
-    if (data.cards) {
-      // 导入卡片逻辑
-      imported += data.cards.length;
-    }
-    
-    return {
-      imported,
-      skipped,
-      conflicts,
-      conflictDetails: []
-    };
+  private async executeImport(_data: any, _options: ImportOptions): Promise<any> {
+    // TODO: 实现实际的数据导入逻辑（牌组/卡片写入、冲突策略处理）
+    throw new Error('数据导入功能尚未实现，请使用备份恢复功能');
   }
 
   private detectDataTypes(data: any): DataType[] {
@@ -793,8 +768,8 @@ export class DataManagementService {
 
     try {
       const pluginPaths = getPluginPaths(this.plugin.app);
-      if (await adapter.exists(pluginPaths.config.userProfile)) {
-        await adapter.remove(pluginPaths.config.userProfile);
+      if (await adapter.exists(pluginPaths.userProfile)) {
+        await adapter.remove(pluginPaths.userProfile);
       }
     } catch {
     }

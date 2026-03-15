@@ -102,6 +102,9 @@
   // v3.0: 移除旧的 IRScheduler 导入，改用 getServices 中的 schedulingFacade
   // 增量阅读专用卡片组件
   import IRDeckCard from './IRDeckCard.svelte';
+  import DeckGridCard from '../deck-views/DeckGridCard.svelte';
+  import type { DeckCardStyle } from '../../types/plugin-settings.d';
+  import { getColorSchemeForDeck } from '../../config/card-color-schemes';
   import IRNoBlocksAvailableModal from './IRNoBlocksAvailableModal.svelte';
   import IRTemporaryLearnAheadModal from './IRTemporaryLearnAheadModal.svelte';
   import { resolveIRImportFolder } from '../../config/paths';
@@ -128,6 +131,10 @@
   }
 
   let { plugin, onStartReading }: Props = $props();
+
+  const deckCardStyle = $derived<DeckCardStyle>(
+    (plugin.settings.deckCardStyle as DeckCardStyle) || 'default'
+  );
 
   // v6.0: 获取模块级别的服务实例
   const services = getServices(plugin.app, plugin.settings?.incrementalReading?.importFolder);
@@ -404,9 +411,9 @@
   // 将 IRDeckStats 转换为 DeckStats 格式（适配卡片组件）
   function toMemoryStats(irStats: IRDeckStats): DeckStats {
     return {
-      newCards: irStats.newCount,
-      learningCards: irStats.learningCount,
-      reviewCards: irStats.reviewCount,
+      newCards: irStats.dueToday,
+      learningCards: Math.max(0, (irStats.dueWithinDays ?? irStats.dueToday) - irStats.dueToday),
+      reviewCards: irStats.questionCount,
       totalCards: irStats.totalCount,
       memoryRate: 0,
       todayNew: 0,
@@ -988,15 +995,28 @@
         {@const irStats = getStats(deckId)}
         {@const colorVariant = ((index % 4) + 1) as 1 | 2 | 3 | 4}
         
-        <!-- 增量阅读专用卡片：显示未读/待读/提问 -->
-        <IRDeckCard
-          deck={irDeck}
-          stats={irStats}
-          {colorVariant}
-          compact={false}
-          onStudy={() => handleStartReading(deckId)}
-          onMenu={(e) => showDeckMenu(e, irDeck)}
-        />
+        {#if deckCardStyle === 'chinese-elegant'}
+          <!-- 典雅风格卡片 -->
+          <IRDeckCard
+            deck={irDeck}
+            stats={irStats}
+            {colorVariant}
+            compact={false}
+            onStudy={() => handleStartReading(deckId)}
+            onMenu={(e) => showDeckMenu(e, irDeck)}
+          />
+        {:else}
+          <!-- 默认风格卡片 -->
+          {@const colorScheme = getColorSchemeForDeck(deckId)}
+          <DeckGridCard
+            deck={toMemoryDeck(irDeck)}
+            stats={toMemoryStats(irStats)}
+            {colorScheme}
+            deckMode="incremental-reading"
+            onStudy={() => handleStartReading(deckId)}
+            onMenu={(e) => showDeckMenu(e, irDeck)}
+          />
+        {/if}
       {/each}
     </div>
   {/if}

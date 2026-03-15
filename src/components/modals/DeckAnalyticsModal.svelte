@@ -2307,12 +2307,6 @@
     gap: 2px;
   }
   
-  .deck-card-count {
-    font-size: 11px;
-    color: var(--text-muted);
-    flex-shrink: 0;
-  }
-  
   .tab-btn {
     display: flex;
     align-items: center;
@@ -2529,51 +2523,6 @@
   }
   
   /* 🆕 空状态样式 */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 40px;
-    text-align: center;
-    flex: 1;
-    min-height: 400px;
-    pointer-events: none;
-  }
-  
-  .empty-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-normal);
-    margin-bottom: 12px;
-  }
-  
-  .empty-desc {
-    font-size: 14px;
-    color: var(--text-muted);
-    line-height: 1.6;
-    max-width: 400px;
-  }
-  
-  /* 🆕 数据警告样式 */
-  .data-warning {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    background: rgba(255, 200, 87, 0.1);
-    border: 1px solid rgba(255, 200, 87, 0.3);
-    border-radius: 6px;
-    color: var(--text-normal);
-    font-size: 13px;
-  }
-  
-  .data-warning svg {
-    flex-shrink: 0;
-    color: #feca57;
-  }
-  
   /* 更新指示器样式 */
   .updating-indicator {
     position: absolute;
@@ -2690,24 +2639,6 @@
     
     .chart-container {
       min-height: 300px;
-    }
-    
-    .empty-state {
-      padding: 40px 20px;
-      min-height: 300px;
-    }
-    
-    .empty-title {
-      font-size: 18px;
-    }
-    
-    .empty-desc {
-      font-size: 13px;
-    }
-    
-    .data-warning {
-      padding: 10px 12px;
-      font-size: 12px;
     }
     
     .toolbar {

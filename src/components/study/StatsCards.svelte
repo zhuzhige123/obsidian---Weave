@@ -3,6 +3,7 @@
 
   import type { Card } from "../../data/types";
   import type { FSRS } from "../../algorithms/fsrs";
+  import { tr } from '../../utils/i18n';
 
   interface Props {
     card: Card;
@@ -20,6 +21,8 @@
   }
 
   let { card, fsrs, sessionStats }: Props = $props();
+
+  let t = $derived($tr);
 
   // 🆕 移动端点击显示标签功能
   let activeStatIndex = $state<number | null>(null);
@@ -61,12 +64,12 @@
         retentionChange: 0,
         memoryRetention: 0,              //  添加缺少的字段
         stability: 0,                    //  添加缺少的字段
-        stabilityState: '未知',
+        stabilityState: t('study.statsCards.unknown'),
         difficulty: 0,                   //  添加缺少的字段
-        difficultyLevel: '未知',
-        nextReview: '今日',             //  添加缺少的字段
+        difficultyLevel: t('study.statsCards.unknown'),
+        nextReview: t('study.statsCards.today'),
         nextReviewDays: 0,
-        nextReviewDate: '今日',         //  修改为字符串类型
+        nextReviewDate: t('study.statsCards.today'),
         memoryRate: 0,
         predictionAccuracy: 0
       };
@@ -77,16 +80,16 @@
     const stability = card.fsrs.stability ?? 0;        //  添加默认值
     const difficulty = card.fsrs.difficulty ?? 5;     //  添加默认值
     
-    let difficultyLevel = "中等";
-    if (difficulty < 5) difficultyLevel = "简单";
-    else if (difficulty < 7) difficultyLevel = "中等";
-    else if (difficulty < 8.5) difficultyLevel = "困难";
-    else difficultyLevel = "极难";
+    let difficultyLevel = t('study.statsCards.diffMedium');
+    if (difficulty < 5) difficultyLevel = t('study.statsCards.diffEasy');
+    else if (difficulty < 7) difficultyLevel = t('study.statsCards.diffMedium');
+    else if (difficulty < 8.5) difficultyLevel = t('study.statsCards.diffHard');
+    else difficultyLevel = t('study.statsCards.diffVeryHard');
 
-    let stabilityState = "稳定";
-    if (stability < 1) stabilityState = "不稳定";
-    else if (stability < 7) stabilityState = "较稳定";
-    else stabilityState = "稳定";
+    let stabilityState = t('study.statsCards.stabStable');
+    if (stability < 1) stabilityState = t('study.statsCards.stabUnstable');
+    else if (stability < 7) stabilityState = t('study.statsCards.stabSomewhat');
+    else stabilityState = t('study.statsCards.stabStable');
 
     const now = new Date();
     // 安全的时间计算，增加错误处理
@@ -106,7 +109,7 @@
     // 格式化日期为 YYYY.MM.DD HH:MM:SS 格式
     const formatDateTime = (date: Date) => {
       if (!date || isNaN(date.getTime())) {
-        return '今日';
+        return t('study.statsCards.today');
       }
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -126,7 +129,7 @@
       stabilityState: stabilityState,
       difficulty: difficulty,
       difficultyLevel: difficultyLevel,
-      nextReview: (nextReviewDays > 0 && !isNaN(nextReviewDays)) ? `${nextReviewDays}天后` : "今日",
+      nextReview: (nextReviewDays > 0 && !isNaN(nextReviewDays)) ? t('study.statsCards.nDaysLater', { n: String(nextReviewDays) }) : t('study.statsCards.today'),
       nextReviewDays: nextReviewDays,
       nextReviewDate: nextReviewDate,
       memoryRate: card.stats?.memoryRate ?? 0,
@@ -142,10 +145,10 @@
 
   function getDifficultyColor(level: string): string {
     switch (level) {
-      case "简单": return "var(--weave-success)";
-      case "中等": return "var(--weave-warning)";
-      case "困难": return "var(--weave-error)";
-      case "极难": return "var(--weave-error)";
+      case t('study.statsCards.diffEasy'): return "var(--weave-success)";
+      case t('study.statsCards.diffMedium'): return "var(--weave-warning)";
+      case t('study.statsCards.diffHard'): return "var(--weave-error)";
+      case t('study.statsCards.diffVeryHard'): return "var(--weave-error)";
       default: return "var(--weave-warning)";
     }
   }
@@ -162,7 +165,7 @@
     tabindex="0"
   >
     <div class="stat-header">
-      <span class="stat-title">记忆保留率</span>
+      <span class="stat-title">{t('study.statsCards.retention')}</span>
       <span class="stat-change" class:positive={stats().retentionChange > 0} class:negative={stats().retentionChange < 0}>
         {stats().retentionChange > 0 ? '+' : ''}{stats().retentionChange.toFixed(1)}%
       </span>
@@ -173,7 +176,7 @@
       </span>
     </div>
     <!-- 🆕 移动端标签提示 -->
-    <span class="stat-label-tooltip">保留率</span>
+    <span class="stat-label-tooltip">{t('study.statsCards.retentionTooltip')}</span>
   </div>
 
   <!-- 记忆稳定性 -->
@@ -186,15 +189,15 @@
     tabindex="0"
   >
     <div class="stat-header">
-      <span class="stat-title">记忆稳定性</span>
+      <span class="stat-title">{t('study.statsCards.stability')}</span>
       <span class="stat-status">{stats().stabilityState}</span>
     </div>
     <div class="stat-content">
       <span class="stat-value">
-        {stats().stability.toFixed(1)}<span class="stat-unit">天</span>
+        {stats().stability.toFixed(1)}<span class="stat-unit">{t('study.statsCards.unitDays')}</span>
       </span>
     </div>
-    <span class="stat-label-tooltip">稳定性</span>
+    <span class="stat-label-tooltip">{t('study.statsCards.stabilityTooltip')}</span>
   </div>
 
   <!-- 卡片难度 -->
@@ -207,7 +210,7 @@
     tabindex="0"
   >
     <div class="stat-header">
-      <span class="stat-title">卡片难度</span>
+      <span class="stat-title">{t('study.statsCards.difficulty')}</span>
       <span class="stat-status" style="color: {getDifficultyColor(stats().difficultyLevel)}">
         {stats().difficultyLevel}
       </span>
@@ -218,7 +221,7 @@
         <span class="stat-unit">/10</span>
       </span>
     </div>
-    <span class="stat-label-tooltip">难度</span>
+    <span class="stat-label-tooltip">{t('study.statsCards.difficultyTooltip')}</span>
   </div>
 
   <!-- 下次复习 -->
@@ -231,20 +234,15 @@
     tabindex="0"
   >
     <div class="stat-header">
-      <span class="stat-title">下次复习</span>
+      <span class="stat-title">{t('study.statsCards.nextReview')}</span>
       <span class="stat-status">{stats().nextReviewDate}</span>
     </div>
     <div class="stat-content">
       <span class="stat-value">
-        {#if stats().nextReview === "今日"}
-          今日
-        {:else}
-          {(stats().nextReview || "").replace("天后", "")}
-          <span class="stat-unit">天后</span>
-        {/if}
+        {stats().nextReview}
       </span>
     </div>
-    <span class="stat-label-tooltip">下次复习</span>
+    <span class="stat-label-tooltip">{t('study.statsCards.nextReviewTooltip')}</span>
   </div>
 </div>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { logger } from '../../../utils/logger';
-
+  import { tr } from '../../../utils/i18n';
   import type { PluginExtended, LicenseInfo } from '../types/settings-types';
   import { licenseManager } from '../../../utils/licenseManager';
   import { PremiumFeatureGuard } from '../../../services/premium/PremiumFeatureGuard';
@@ -14,6 +14,8 @@
   import EnhancedLicenseStatusCard from '../components/EnhancedLicenseStatusCard.svelte';
   import EnhancedActivationForm from '../components/EnhancedActivationForm.svelte';
   import { showObsidianConfirm } from '../../../utils/obsidian-confirm';
+
+  let t = $derived($tr);
 
   interface Props {
     plugin: PluginExtended;
@@ -35,24 +37,24 @@
 
       if (validation.isValid) {
         showNotification({
-          message: '许可证验证成功',
+          message: t('licenseNotices.verifySuccess'),
           type: 'success'
         });
         return;
       }
 
       showNotification({
-        message: validation.error ? `许可证验证失败: ${validation.error}` : '许可证验证失败',
+        message: validation.error ? t('licenseNotices.verifyFailedDetail', { error: validation.error }) : t('licenseNotices.verifyFailed'),
         type: 'error'
       });
     } catch (error) {
-      handleError(error, '许可证验证');
+      handleError(error, 'license verification');
     }
   }
 
   // 重置许可证
   async function resetLicense() {
-    const confirmed = await showObsidianConfirm(plugin.app, '确定要重置许可证吗？这将清除当前的激活状态。', { title: '确认重置' });
+    const confirmed = await showObsidianConfirm(plugin.app, t('licenseNotices.resetConfirm'), { title: t('common.confirmReset') });
     if (confirmed) {
       plugin.settings.license = {
         activationCode: "",
@@ -67,7 +69,7 @@
       await onSave();
       
       showNotification({
-        message: "许可证已重置",
+        message: t('licenseNotices.resetSuccess'),
         type: 'success'
       });
     }
@@ -85,7 +87,7 @@
 </script>
 
 <section class={CSS_CLASSES.LICENSE_SECTION}>
-  <h2 class="section-title">许可证状态</h2>
+  <h2 class="section-title">{t('licenseNotices.sectionTitle')}</h2>
 
   <!-- 使用增强的许可证状态卡片 -->
   <EnhancedLicenseStatusCard

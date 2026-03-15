@@ -214,7 +214,7 @@ export class FileTypeDetector {
           check: () => this.isUserProfileFile(content), 
           type: 'user-profile', 
           confidence: 'high',
-          getTarget: () => getPluginPaths(this.app).config.userProfile
+          getTarget: () => getPluginPaths(this.app).userProfile
         },
       ];
 

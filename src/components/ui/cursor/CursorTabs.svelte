@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   // 简单的标签页组件占位符
   interface TabItem {
     id: string;
@@ -10,12 +12,14 @@
     items: TabItem[];
     activeTab?: string;
     onTabChange?: (tabId: string) => void;
+    children?: Snippet;
   }
 
   let {
     items = [],
     activeTab = items[0]?.id,
-    onTabChange
+    onTabChange,
+    children
   }: Props = $props();
 </script>
 
@@ -36,7 +40,7 @@
     {/each}
   </div>
   <div class="tab-content">
-    <slot />
+    {@render children?.()}
   </div>
 </div>
 

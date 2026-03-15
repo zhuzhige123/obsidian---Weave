@@ -185,11 +185,17 @@
       fileTree = buildFileTree();
     }
   });
+
+  function handleOverlayPointerDown(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  }
 </script>
 
 {#if open}
-  <div class="ir-import-overlay" onclick={onClose}>
-    <div class="ir-import-modal" onclick={(e) => e.stopPropagation()}>
+  <div class="ir-import-overlay" onmousedown={handleOverlayPointerDown} role="presentation">
+    <div class="ir-import-modal" role="dialog" aria-modal="true" aria-label="导入阅读材料">
       <!-- 头部 -->
       <header class="ir-import-header">
         <div class="ir-import-title">

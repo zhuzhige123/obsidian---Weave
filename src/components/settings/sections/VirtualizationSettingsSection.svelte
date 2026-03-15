@@ -44,7 +44,7 @@
   
   // 重置为默认值
   async function resetToDefaults() {
-    const confirmed = await showObsidianConfirm(app, t('virtualization.resetConfirm'), { title: '确认重置' });
+    const confirmed = await showObsidianConfirm(app, t('virtualization.resetConfirm'), { title: t('common.confirmReset') });
     if (confirmed) {
       VirtualizationConfigManager.resetToDefaults();
       kanbanConfig = VirtualizationConfigManager.getKanbanConfig();

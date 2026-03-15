@@ -1,5 +1,8 @@
 <script lang="ts">
   import { logger } from '../../../utils/logger';
+  import { tr } from '../../../utils/i18n';
+
+  let t = $derived($tr);
 
   /**
    * 增强的激活表单组件
@@ -139,7 +142,7 @@
     // 检查激活尝试限制
     const attemptCheck = await ActivationAttemptLimiter.canAttemptActivation();
     if (!attemptCheck.canAttempt) {
-      activationError = attemptCheck.error || '激活尝试次数过多';
+      activationError = attemptCheck.error || t('about.license.activation.tooManyAttempts');
       validationState = 'invalid';
       return;
     }
@@ -181,7 +184,7 @@
         showSuccessNotification();
       } else {
         // 激活失败
-        activationError = result.error || '激活失败';
+        activationError = result.error || t('about.license.activation.activationFailed');
         validationState = 'invalid';
         
         // 调用错误回调
@@ -194,7 +197,7 @@
       }
     } catch (error) {
       // 未预期的错误
-      activationError = error instanceof Error ? error.message : '激活过程中发生未知错误';
+      activationError = error instanceof Error ? error.message : t('about.license.activation.unknownError');
       validationState = 'invalid';
       
       // 记录失败
@@ -249,7 +252,7 @@
     
     try {
       await navigator.clipboard.writeText(currentLicenseInfo.activationCode);
-      showNotification('激活码已复制到剪贴板', 'success');
+      showNotification(t('about.license.activation.codeCopied'), 'success');
     } catch (error) {
       logger.error('复制失败:', error);
       // 回退到创建临时输入框的方式
@@ -260,10 +263,10 @@
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        showNotification('激活码已复制到剪贴板', 'success');
+        showNotification(t('about.license.activation.codeCopied'), 'success');
       } catch (fallbackError) {
         logger.error('复制失败（回退方式也失败）:', fallbackError);
-        showNotification('复制失败，请手动复制', 'error');
+        showNotification(t('about.license.activation.copyFailed'), 'error');
       }
     }
   }
@@ -286,8 +289,8 @@
   async function handleDeactivation() {
     const confirmed = await showObsidianConfirm(
       plugin.app,
-      '确定要移除激活状态吗？移除后需要重新激活才能使用高级功能。',
-      { title: '确认移除激活' }
+      t('about.license.activation.confirmDeactivate'),
+      { title: t('about.license.activation.confirmDeactivateTitle') }
     );
     if (!confirmed) {
       return;
@@ -302,7 +305,7 @@
         await onSave();
         
         // 显示成功消息
-        showNotification(result.message || '激活状态已移除', 'success');
+        showNotification(result.message || t('about.license.activation.deactivated'), 'success');
         
         // 修复失焦问题：延迟恢复焦点到激活码输入框
         setTimeout(() => {
@@ -316,11 +319,11 @@
           }
         }, 100);
       } else {
-        showNotification(result.error || '移除激活状态失败', 'error');
+        showNotification(result.error || t('about.license.activation.deactivateFailed'), 'error');
       }
     } catch (error) {
       logger.error('移除激活状态出错:', error);
-      showNotification('移除激活状态时发生错误', 'error');
+      showNotification(t('about.license.activation.deactivateError'), 'error');
     }
   }
 
@@ -337,10 +340,10 @@
   <!-- 表单标题 -->
   <div class="form-header">
     <h3 class="form-title">
-      许可证激活
+      {t('about.license.activation.formTitle')}
     </h3>
     <p class="form-description">
-      输入激活码和邮箱以解锁高级功能
+      {t('about.license.activation.formDesc')}
     </p>
   </div>
 
@@ -348,22 +351,22 @@
     <!-- 已激活状态 -->
     <div class="activation-success-state">
       <div class="success-content">
-        <h4 class="success-title">许可证已激活</h4>
+        <h4 class="success-title">{t('about.license.activation.licensed')}</h4>
         {#if currentLicenseInfo}
           <p class="success-details">
-            激活时间: {new Date(currentLicenseInfo.activatedAt).toLocaleString()}
+            {t('about.license.activation.activatedAt')}{new Date(currentLicenseInfo.activatedAt).toLocaleString()}
           </p>
           <p class="success-details">
-            许可证类型: {currentLicenseInfo.licenseType === 'lifetime' ? '终身许可' : '订阅许可'}
+            {t('about.license.activation.licenseType')}{currentLicenseInfo.licenseType === 'lifetime' ? t('about.license.activation.lifetime') : t('about.license.activation.subscription')}
           </p>
           {#if currentLicenseInfo.boundEmail}
             <p class="success-details">
-              绑定邮箱: {currentLicenseInfo.boundEmail}
+              {t('about.license.activation.boundEmail')}{currentLicenseInfo.boundEmail}
             </p>
           {/if}
           {#if currentLicenseInfo.cloudSync?.devicesUsed}
             <p class="success-details">
-              已激活设备: {currentLicenseInfo.cloudSync.devicesUsed}/{currentLicenseInfo.cloudSync.devicesMax || 5}
+              {t('about.license.activation.activatedDevices')}{currentLicenseInfo.cloudSync.devicesUsed}/{currentLicenseInfo.cloudSync.devicesMax || 5}
             </p>
           {/if}
           
@@ -371,19 +374,19 @@
           {#if currentLicenseInfo.activationCode}
             <div class="activation-code-section">
               <div class="activation-code-header">
-                <span class="code-label">激活码</span>
+                <span class="code-label">{t('about.license.activation.codeLabel')}</span>
                 <div class="code-actions">
                   <button
                     class="action-button"
                     onclick={() => showActivationCodeFull = !showActivationCodeFull}
-                    title={showActivationCodeFull ? "收起" : "查看激活码"}
+                    title={showActivationCodeFull ? t('about.license.activation.collapseCode') : t('about.license.activation.viewCode')}
                   >
                     <!-- /skip {@html} renders trusted internal SVG icon strings -->{@html showActivationCodeFull ? createSvgIconString('file', { size: 14 }) : createSvgIconString('eye', { size: 14 })}
                   </button>
                   <button
                     class="action-button"
                     onclick={handleCopyActivationCode}
-                    title="复制激活码"
+                    title={t('about.license.activation.copyCode')}
                   >
                     <!-- /skip {@html} renders trusted internal SVG icon strings -->{@html createSvgIconString('copy', { size: 14 })}
                   </button>
@@ -404,7 +407,7 @@
               class="deactivate-button"
               onclick={handleDeactivation}
             >
-              移除激活
+              {t('about.license.activation.deactivate')}
             </button>
           </div>
         {/if}
@@ -416,8 +419,8 @@
       <!-- 激活码输入区域 -->
       <div class="input-section">
         <label for="activation-code" class="input-label">
-          激活码
-          <span class="input-hint">请粘贴完整的激活码</span>
+          {t('about.license.activation.codeLabel')}
+          <span class="input-hint">{t('about.license.activation.codeHint')}</span>
         </label>
         
         <div class="input-container" 
@@ -440,11 +443,11 @@
           <!-- 验证状态指示器 -->
           <div class="validation-indicator">
             {#if validationState === 'validating'}
-              <span class="indicator validating">验证中...</span>
+              <span class="indicator validating">{t('about.license.activation.validating')}</span>
             {:else if validationState === 'valid'}
-              <span class="indicator valid">格式正确</span>
+              <span class="indicator valid">{t('about.license.activation.formatValid')}</span>
             {:else if validationState === 'invalid'}
-              <span class="indicator invalid">格式错误</span>
+              <span class="indicator invalid">{t('about.license.activation.formatInvalid')}</span>
             {/if}
           </div>
           
@@ -454,9 +457,9 @@
               class="clear-button" 
               onclick={clearInput}
               disabled={isActivating}
-              title="清除输入"
+              title={t('about.license.activation.clearInput')}
             >
-              清除
+              {t('about.license.activation.clear')}
             </button>
           {/if}
         </div>
@@ -465,16 +468,16 @@
         {#if ACTIVATION_CODE_UI.FEEDBACK.SHOW_CHARACTER_COUNT}
           <div class="input-feedback">
             <span class="character-count" class:optimal={isInOptimalRange}>
-              {characterCount} / {ACTIVATION_CODE_FORMAT.MAX_LENGTH} 字符
+              {characterCount} / {ACTIVATION_CODE_FORMAT.MAX_LENGTH} {t('about.license.activation.chars')}
             </span>
             {#if ACTIVATION_CODE_UI.FEEDBACK.SHOW_FORMAT_HINTS && cleanedCode}
               <span class="format-hint">
                 {#if isValidLength && isValidFormat}
-                  格式正确
+                  {t('about.license.activation.formatValid')}
                 {:else if !isValidLength}
-                  长度不符合要求
+                  {t('about.license.activation.lengthInvalid')}
                 {:else if !isValidFormat}
-                  格式不正确
+                  {t('about.license.activation.formatIncorrect')}
                 {/if}
               </span>
             {/if}
@@ -485,8 +488,8 @@
       <!-- 邮箱输入区域 -->
       <div class="input-section">
         <label for="email" class="input-label">
-          邮箱地址
-          <span class="input-hint">此邮箱将绑定到激活码</span>
+          {t('about.license.activation.emailLabel')}
+          <span class="input-hint">{t('about.license.activation.emailHint')}</span>
         </label>
         
         <input
@@ -495,7 +498,7 @@
           class="email-input"
           class:valid={emailValidationState === 'valid'}
           class:invalid={emailValidationState === 'invalid'}
-          placeholder="请输入您的邮箱"
+          placeholder={t('about.license.activation.emailPlaceholder')}
           bind:value={email}
           oninput={validateEmail}
           disabled={isActivating}
@@ -505,9 +508,9 @@
         {#if email}
           <p class="email-hint">
             {#if isEmailValid}
-              <span class="hint-valid">邮箱格式正确</span>
+              <span class="hint-valid">{t('about.license.activation.emailValid')}</span>
             {:else}
-              <span class="hint-invalid">请输入有效的邮箱地址</span>
+              <span class="hint-invalid">{t('about.license.activation.emailInvalid')}</span>
             {/if}
           </p>
         {/if}
@@ -516,8 +519,8 @@
       <!-- 确认邮箱输入区域 -->
       <div class="input-section">
         <label for="email-confirm" class="input-label">
-          确认邮箱
-          <span class="input-hint">请再次输入邮箱</span>
+          {t('about.license.activation.confirmEmail')}
+          <span class="input-hint">{t('about.license.activation.confirmEmailHint')}</span>
         </label>
         
         <input
@@ -526,7 +529,7 @@
           class="email-input"
           class:valid={isEmailMatching}
           class:invalid={emailConfirm && !isEmailMatching}
-          placeholder="请再次输入邮箱"
+          placeholder={t('about.license.activation.emailPlaceholder')}
           bind:value={emailConfirm}
           disabled={isActivating}
           autocomplete="email"
@@ -535,9 +538,9 @@
         {#if emailConfirm}
           <p class="email-hint">
             {#if isEmailMatching}
-              <span class="hint-valid">邮箱匹配</span>
+              <span class="hint-valid">{t('about.license.activation.emailMatch')}</span>
             {:else}
-              <span class="hint-invalid">两次输入的邮箱不一致</span>
+              <span class="hint-invalid">{t('about.license.activation.emailMismatch')}</span>
             {/if}
           </p>
         {/if}
@@ -553,9 +556,9 @@
         >
           {#if isActivating}
             <span class="loading-spinner"></span>
-            激活中...
+            {t('about.license.activation.activating')}
           {:else}
-            激活许可证
+            {t('about.license.activation.activateLicense')}
           {/if}
         </button>
         
@@ -564,7 +567,7 @@
           onclick={toggleHelp}
           disabled={isActivating}
         >
-          {showHelp ? '隐藏帮助' : '显示帮助'}
+          {showHelp ? t('about.license.activation.hideHelp') : t('about.license.activation.showHelp')}
         </button>
       </div>
     </div>
@@ -574,26 +577,26 @@
   {#if showHelp}
     <div class="help-section">
       <div class="help-content">
-        <h4>激活码格式说明</h4>
+        <h4>{t('about.license.activation.helpFormatTitle')}</h4>
         <p>{ACTIVATION_HELP_TEXT.FORMAT_HELP}</p>
 
-        <h4>输入提示</h4>
+        <h4>{t('about.license.activation.helpInputTitle')}</h4>
         <ul>
           {#each ACTIVATION_HELP_TEXT.INPUT_TIPS as tip}
             <li>{tip}</li>
           {/each}
         </ul>
 
-        <h4>故障排除</h4>
+        <h4>{t('about.license.activation.helpTroubleshootTitle')}</h4>
         <ul>
           {#each ACTIVATION_HELP_TEXT.TROUBLESHOOTING as tip}
             <li>{tip}</li>
           {/each}
         </ul>
 
-        <h4>联系支持</h4>
+        <h4>{t('about.license.activation.helpContactTitle')}</h4>
         <p>
-          如需帮助，请联系：
+          {t('about.license.activation.helpContactMsg')}
           <a href="mailto:{ACTIVATION_HELP_TEXT.CONTACT_INFO.email}?subject={ACTIVATION_HELP_TEXT.CONTACT_INFO.subject}">
             {ACTIVATION_HELP_TEXT.CONTACT_INFO.email}
           </a>
@@ -606,12 +609,12 @@
   {#if activationError}
     <div class="error-section">
       <div class="error-header">
-        <span class="error-title">激活失败</span>
+        <span class="error-title">{t('about.license.activation.errorTitle')}</span>
       </div>
       <div class="error-message">{activationError}</div>
       {#if remainingAttempts !== null && remainingAttempts > 0}
         <div class="remaining-attempts">
-          剩余尝试次数：{remainingAttempts}
+          {t('about.license.activation.remainingAttempts', { count: remainingAttempts })}
         </div>
       {/if}
     </div>
@@ -621,17 +624,17 @@
   {#if activationSuccess}
     <div class="success-section">
       <div class="success-header">
-        <span class="success-title">激活成功</span>
+        <span class="success-title">{t('about.license.activation.successTitle')}</span>
       </div>
-      <div class="success-message">许可证已成功激活，高级功能已启用</div>
+      <div class="success-message">{t('about.license.activation.successMsg')}</div>
       {#if cloudInfo?.replacedOldDevice}
         <div class="cloud-notice">
-          由于设备数量已满，已自动移除最久未使用的设备
+          {t('about.license.activation.deviceReplaced')}
         </div>
       {/if}
       {#if cloudInfo?.devicesUsed !== undefined}
         <div class="cloud-notice">
-          当前已激活设备：{cloudInfo.devicesUsed}/{cloudInfo.devicesMax || 5}
+          {t('about.license.activation.activatedDevices')}{cloudInfo.devicesUsed}/{cloudInfo.devicesMax || 5}
         </div>
       {/if}
     </div>

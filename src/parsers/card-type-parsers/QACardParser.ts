@@ -59,7 +59,7 @@ export class QACardParser extends MarkdownFieldsConverter {
         front = cleanContent;
         back = '';
       }
-      
+
       // 构建标准fields对象（只有front和back）
       const fields: Record<string, string> = {
         front,
@@ -119,3 +119,4 @@ export class QACardParser extends MarkdownFieldsConverter {
     }
   }
 }
+

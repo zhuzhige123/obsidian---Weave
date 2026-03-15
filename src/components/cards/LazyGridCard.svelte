@@ -6,17 +6,17 @@
 <script lang="ts">
   import { logger } from '../../utils/logger';
 
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
   import { MarkdownRenderer, Component, Platform } from 'obsidian';
   import type { Card } from '../../data/types';
   import type { WeavePlugin } from '../../main';
   import EnhancedIcon from '../ui/EnhancedIcon.svelte';
-  // 🆕 导入挖空处理工具
+  // 导入挖空处理工具
   import { stripClozeForDisplay } from '../../utils/cloze-utils';
-  // 🆕 导入 YAML 解析工具（用于获取来源文档）
+  // 导入 YAML 解析工具（用于获取来源文档）
   import { parseSourceInfo } from '../../utils/yaml-utils';
 
-  type GridCardAttributeType = 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified';
+  type GridCardAttributeType = 'none' | 'uuid' | 'source' | 'priority' | 'retention' | 'modified' | 'accuracy' | 'question_type' | 'ir_state' | 'ir_priority';
   
   interface Props {
     card: Card;
@@ -24,13 +24,13 @@
     plugin: WeavePlugin;
     layoutMode?: 'fixed' | 'masonry';
     attributeType?: GridCardAttributeType;
-    isMobile?: boolean; // 🆕 从父组件传递移动端状态
+    isMobile?: boolean; // 从父组件传递移动端状态
     onClick?: (card: Card) => void;
     onEdit?: (card: Card) => void;
     onDelete?: (card: Card) => void;
     onView?: (card: Card) => void;
-    onSourceJump?: (card: Card) => void; // 🆕 源文档跳转
-    onLongPress?: (card: Card) => void; // 🆕 长按触发多选
+    onSourceJump?: (card: Card) => void; // 源文档跳转
+    onLongPress?: (card: Card) => void; // 长按触发多选
   }
 
   let {
@@ -39,7 +39,7 @@
     plugin,
     layoutMode = 'fixed',
     attributeType = 'uuid',
-    isMobile: isMobileProp = false, // 🆕 接收父组件传递的移动端状态
+    isMobile: isMobileProp = false, // 接收父组件传递的移动端状态
     onClick,
     onEdit,
     onDelete,
@@ -48,7 +48,7 @@
     onLongPress
   }: Props = $props();
   
-  // 🆕 移动端检测函数 - 必须在使用前定义
+  // 移动端检测函数 - 必须在使用前定义
   function detectMobile(): boolean {
     // 1. 如果 prop 已经是 true，直接返回
     if (isMobileProp) {
@@ -71,10 +71,11 @@
     if (typeof window !== 'undefined' && 'ontouchstart' in window) {
       return true;
     }
-    // 5. 用户代理检测（最后手段）
-    if (typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      return true;
-    }
+    // 5. Platform API 检测（最后手段）
+    try {
+      const { Platform } = require('obsidian');
+      if (Platform.isMobile) return true;
+    } catch {}
     // 6. 屏幕宽度检测（移动端通常 < 768px）
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       return true;
@@ -86,7 +87,7 @@
   // 这样可以确保在组件渲染时就有正确的 isMobile 值
   let isMobile = $state(detectMobile());
   
-  // 🆕 监听 prop 变化
+  // 监听 prop 变化
   $effect(() => {
     if (isMobileProp) {
       isMobile = true;
@@ -105,12 +106,12 @@
   let contentComponent: Component | null = null;
   let observer: IntersectionObserver | null = null;
   
-  // 🆕 长按检测状态
+  // 长按检测状态
   let longPressTimer: NodeJS.Timeout | null = null;
   let isLongPressTriggered = $state(false);
   const LONG_PRESS_DURATION = 500; // 长按阈值：500ms
   
-  // 🆕 移动端功能键显示状态（单击显示/隐藏）
+  // 移动端功能键显示状态（单击显示/隐藏）
   let showMobileActions = $state(false);
 
   // 计算属性
@@ -195,7 +196,7 @@
     return uuid;
   });
   
-  // 🆕 根据属性类型获取显示内容
+  // 根据属性类型获取显示内容
   const attributeDisplay = $derived.by(() => {
     if (attributeType === 'none') return null;
     
@@ -222,6 +223,28 @@
         const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`;
         return { label: '修改', value: formattedDate, icon: 'clock' };
       
+      case 'accuracy':
+        const testStats = card.stats?.testStats as { accuracy?: number } | undefined;
+        if (!testStats) return { label: '正确率', value: '-', icon: 'target' };
+        const percent = Math.round((testStats.accuracy ?? 0) * 100);
+        return { label: '正确率', value: `${percent}%`, icon: 'target' };
+      
+      case 'question_type':
+        const qMeta = card.metadata?.questionMetadata as { type?: string } | undefined;
+        const qType = qMeta?.type || '';
+        const qTypeMap: Record<string, string> = { 'single_choice': '单选', 'multiple_choice': '多选', 'choice': '选择', 'cloze': '填空', 'short_answer': '问答' };
+        return { label: '题型', value: qTypeMap[qType] || qType || '-', icon: 'list-checks' };
+      
+      case 'ir_state':
+        const irState = (card as any).ir_state || '';
+        const stateMap: Record<string, string> = { 'new': '新', 'queued': '排队', 'active': '学习中', 'suspended': '暂停', 'done': '完成' };
+        return { label: '状态', value: stateMap[irState] || irState || '-', icon: 'book-open' };
+      
+      case 'ir_priority':
+        const irPri = (card as any).ir_priority;
+        const irPriText = irPri === 1 ? '低' : irPri === 2 ? '中' : irPri === 3 ? '高' : irPri != null ? String(irPri) : '-';
+        return { label: 'IR优先级', value: irPriText, icon: 'signal' };
+      
       default:
         return null;
     }
@@ -241,8 +264,8 @@
       contentElement.innerHTML = '';
       
       const component = new Component();
+      component.load();
       
-      //  获取内容（已在 fullContent 中处理挖空语法）
       const content = fullContent;
       
       await MarkdownRenderer.render(
@@ -253,7 +276,6 @@
         component
       );
       
-      component.load();
       contentComponent = component;
       
     } catch (error) {
@@ -278,7 +300,7 @@
       return;
     }
     
-    // 🆕 如果刚触发了长按，忽略这次点击
+    // 如果刚触发了长按，忽略这次点击
     if (isLongPressTriggered) {
       isLongPressTriggered = false;
       return;
@@ -318,7 +340,7 @@
   }
   
   /**
-   * 🆕 监听其他卡片的功能键隐藏事件
+   * 监听其他卡片的功能键隐藏事件
    */
   function handleHideOtherCardActions(event: CustomEvent<{ cardUuid: string }>) {
     // 如果不是当前卡片触发的事件，隐藏本卡片的功能键
@@ -336,27 +358,27 @@
   }
   
   function handleEdit(event: MouseEvent) {
-    // Svelte 5: 编辑操作不需要 stopPropagation
+    event.stopPropagation();
     onEdit?.(card);
   }
   
   function handleDelete(event: MouseEvent) {
-    // Svelte 5: 删除操作不需要 stopPropagation
+    event.stopPropagation();
     onDelete?.(card);
   }
   
   function handleView(event: MouseEvent) {
-    // Svelte 5: 查看操作不需要 stopPropagation
+    event.stopPropagation();
     onView?.(card);
   }
   
-  // 🆕 处理源文档跳转
+  // 处理源文档跳转
   function handleSourceJump(event: MouseEvent) {
     event.stopPropagation();
     onSourceJump?.(card);
   }
   
-  // 🆕 长按开始（触摸开始）
+  // 长按开始（触摸开始）
   function handleTouchStart(event: TouchEvent) {
     if (!isMobile || !onLongPress) return;
     
@@ -373,7 +395,7 @@
     }, LONG_PRESS_DURATION);
   }
   
-  // 🆕 长按结束（触摸结束/取消）
+  // 长按结束（触摸结束/取消）
   function handleTouchEnd() {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
@@ -381,7 +403,7 @@
     }
   }
   
-  // 🆕 触摸移动时取消长按
+  // 触摸移动时取消长按
   function handleTouchMove() {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
@@ -407,13 +429,13 @@
   onMount(() => {
     if (!cardElement) return;
     
-    // 🆕 重新检测移动端状态
+    // 重新检测移动端状态
     // 优先使用父组件传递的值，否则自行检测
     if (!isMobile) {
       isMobile = detectMobile();
     }
     
-    // 🆕 监听其他卡片的功能键隐藏事件
+    // 监听其他卡片的功能键隐藏事件
     window.addEventListener('Weave:hide-other-card-actions', handleHideOtherCardActions as EventListener);
     
     // 创建专属于这张卡片的Observer
@@ -448,18 +470,12 @@
       if (longPressTimer) {
         clearTimeout(longPressTimer);
       }
-      // 🆕 移除事件监听
+      // 移除事件监听
       window.removeEventListener('Weave:hide-other-card-actions', handleHideOtherCardActions as EventListener);
     };
   });
   
-  /**
-   * 组件销毁时清理
-   */
-  onDestroy(() => {
-    observer?.disconnect();
-    contentComponent?.unload();
-  });
+  // 清理逻辑已在 onMount return 中统一处理
 </script>
 
 <div
@@ -490,7 +506,7 @@
     </div>
   {/if}
 
-  <!-- 🆕 动态属性显示（左上角） -->
+  <!-- 动态属性显示（左上角） -->
   {#if attributeDisplay}
     <div class="card-attribute" title={attributeDisplay?.label}>
       {#if attributeDisplay?.icon}
@@ -500,7 +516,7 @@
     </div>
   {/if}
 
-  <!-- 🆕 功能菜单（右上角） -->
+  <!-- 功能菜单（右上角） -->
   <!-- 桌面端：悬停显示 -->
   <!-- 移动端：单击卡片显示/隐藏 -->
   <div 
@@ -642,7 +658,7 @@
     transform: translateY(-1px);
   }
   
-  /* 🆕 移动端禁用 hover 效果 - 避免触摸时触发浮动动画 */
+  /* 移动端禁用 hover 效果 - 避免触摸时触发浮动动画 */
   :global(body.is-mobile) .lazy-grid-card:hover,
   :global(body.is-phone) .lazy-grid-card:hover,
   :global(body.is-tablet) .lazy-grid-card:hover {
@@ -696,7 +712,7 @@
     z-index: 1;
   }
 
-  /* 🆕 卡片属性显示（左上角） */
+  /* 卡片属性显示（左上角） */
   .card-attribute {
     position: absolute;
     top: 8px;
@@ -724,7 +740,7 @@
     color: var(--interactive-accent);
   }
 
-  /* 🆕 功能菜单（右上角） */
+  /* 功能菜单（右上角） */
   .card-actions {
     position: absolute;
     top: 8px;
@@ -744,6 +760,12 @@
   /*  桌面端：悬停时显示功能键 */
   .lazy-grid-card:hover .card-actions:not(.mobile),
   .card-actions.hovered:not(.mobile) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* 移动端：单击卡片后显示功能键 */
+  .card-actions.mobile-visible {
     opacity: 1;
     pointer-events: auto;
   }

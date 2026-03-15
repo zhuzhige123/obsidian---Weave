@@ -348,7 +348,7 @@ export class UnifiedStateManager {
    */
   addError(error: Omit<AppError, 'id'> & { id?: string }): void {
     const errorWithId: AppError = {
-      id: error.id || `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: error.id || `error-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       ...error
     };
 

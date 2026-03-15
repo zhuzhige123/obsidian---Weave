@@ -71,7 +71,7 @@ export class CategoryStorage {
     
     const newCategory: DeckCategory = {
       ...category,
-      id: `category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `category_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       created: new Date().toISOString(),
       modified: new Date().toISOString()
     };

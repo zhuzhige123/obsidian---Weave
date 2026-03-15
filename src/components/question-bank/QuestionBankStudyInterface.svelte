@@ -20,14 +20,14 @@
   import { logger } from "../../utils/logger";
   import { extractBodyContent } from "../../utils/yaml-utils";
   
-  // 🆕 选择题渲染支持
+  // 选择题渲染支持
   import ChoiceOptionRenderer from "../atoms/ChoiceOptionRenderer.svelte";
   import ObsidianRenderer from "../atoms/ObsidianRenderer.svelte";
   import type { ChoiceQuestion } from "../../parsing/choice-question-parser";
   import { parseCardContent } from "../../parsing/card-content-parser";
   import CardContentView from "../content/CardContentView.svelte";
   
-  // 🆕 重要程度贴纸
+  // 重要程度贴纸
   import ImportanceIndicator from "./ImportanceIndicator.svelte";
   
   //  移动端组件
@@ -64,7 +64,7 @@
   let hasSubmitted = $state(false);
   let statsCollapsed = $state(false);
   let showSidebar = $state(true);
-  let showNavigator = $state(true);  // 🆕 题目导航栏显示状态
+  let showNavigator = $state(true);  // 题目导航栏显示状态
 
   // 撤销功能
   let undoCount = $state(0); // 已使用的撤销次数
@@ -92,7 +92,7 @@
   // 题目导航列数模式（持久化）
   let navColumnMode = $state<1 | 3>(3);
 
-  // 🆕 侧边栏紧凑模式
+  // 侧边栏紧凑模式
   let compactMode = $state(false);
   let compactModeSetting = $state<'auto' | 'fixed'>('auto');
 
@@ -120,7 +120,7 @@
   let elapsedSeconds = $state(0);
   let timerInterval: number | null = null;
 
-  // 🆕 考试倒计时（FlipClock）
+  // 考试倒计时（FlipClock）
   let examDuration = $state(60 * 60 * 1000);  // 默认60分钟
   let examStartTime = $state(0);
   let remainingTime = $state(0);
@@ -141,7 +141,7 @@
     new Notice(userMessage || `${operation}失败: ${errorMessage}`);
   }
 
-  // 🆕 自动解析当前题目的选择题数据（支持Obsidian渲染）
+  // 自动解析当前题目的选择题数据（支持Obsidian渲染）
   // 使用 $derived 而非 $effect 避免无限循环
   let choiceQuestionDerived = $derived.by(() => {
     if (currentQuestion?.question.content) {
@@ -213,7 +213,7 @@
 
       currentQuestion = sessionManager.getCurrentQuestion();
       startTimer();
-      initExamTimer();  // 🆕 初始化考试倒计时
+      initExamTimer();  // 初始化考试倒计时
     } catch (error) {
       handleOperationError(error, '初始化测试', '启动测试失败');
     } finally {
@@ -478,7 +478,7 @@
       if (!saveResult.success) {
         throw new Error(saveResult.error || '保存失败');
       }
-      logger.debug('[QuestionBankStudyInterface] ✅ 卡片已保存到数据库:', updatedCard.uuid);
+      logger.debug('[QuestionBankStudyInterface] 卡片已保存到数据库:', updatedCard.uuid);
       
       // 1. 同步到会话层（最重要！确保切换题目后数据不丢失）
       if (sessionManager && currentSession) {
@@ -511,7 +511,7 @@
             priority: updatedCard.priority,
             stats: updatedCard.stats
           });
-          logger.debug('[QuestionBankStudyInterface] ✅ QuestionBankService 缓存已更新');
+          logger.debug('[QuestionBankStudyInterface] QuestionBankService 缓存已更新');
         } catch (error) {
           logger.warn('[QuestionBankStudyInterface] 更新 QuestionBankService 缓存失败:', error);
           // 不阻断流程，继续执行
@@ -529,7 +529,7 @@
       }
       
     } catch (error) {
-      logger.error('[QuestionBankStudyInterface] ❌ 保存卡片到数据库失败:', error);
+      logger.error('[QuestionBankStudyInterface] 保存卡片到数据库失败:', error);
       new Notice('保存失败: ' + (error instanceof Error ? error.message : '未知错误'));
       // 发生错误时不退出编辑模式，让用户可以重试
       return;
@@ -679,7 +679,7 @@
     new Notice(`导航栏已切换为${mode === 1 ? '单列' : '三列'}显示`);
   }
 
-  // 🆕 处理紧凑模式切换
+  // 处理紧凑模式切换
   function handleCompactModeSettingChange(setting: 'auto' | 'fixed') {
     compactModeSetting = setting;
     
@@ -770,7 +770,7 @@
     }
   }
 
-  // 🆕 跳转到指定题目
+  // 跳转到指定题目
   async function handleJumpToQuestion(index: number) {
     if (!sessionManager) return;
     
@@ -802,12 +802,12 @@
     }
   }
 
-  // 🆕 暂停/继续倒计时
+  // 暂停/继续倒计时
   function handleTogglePause() {
     isPaused = !isPaused;
   }
 
-  // 🆕 初始化考试倒计时
+  // 初始化考试倒计时
   function initExamTimer() {
     if (currentSession?.mode === 'exam' || currentSession?.mode === 'quiz') {
       examStartTime = Date.now();
@@ -815,7 +815,7 @@
     }
   }
 
-  // 🆕 更新倒计时
+  // 更新倒计时
   $effect(() => {
     if ((currentSession?.mode === 'exam' || currentSession?.mode === 'quiz') && examStartTime > 0 && !isPaused) {
       const interval = setInterval(() => {
@@ -1024,7 +1024,6 @@
   });
 
   // 打开题目数据结构调试窗口
-  // 🆕 打开题目数据结构调试窗口
   function handleOpenCardDebug() {
     if (!currentQuestion) return;
     showCardDebug = true;
@@ -1120,8 +1119,14 @@
 
       <!--  移动端题目导航弹出层 - 简洁网格设计 -->
       {#if isMobile && showNavigator && currentSession}
-        <div class="mobile-navigator-overlay" onclick={() => showNavigator = false} role="presentation">
-          <div class="mobile-nav-grid-panel" onclick={(e) => e.stopPropagation()} role="dialog">
+        <div class="mobile-navigator-overlay" role="presentation">
+          <button
+            type="button"
+            class="mobile-navigator-backdrop"
+            aria-label="关闭题目导航"
+            onclick={() => showNavigator = false}
+          ></button>
+          <div class="mobile-nav-grid-panel" role="dialog" aria-modal="true" tabindex="-1">
             <div class="mobile-nav-grid-scroll">
               <div class="mobile-nav-grid">
                 {#each currentSession.questions as record, index}
@@ -1148,7 +1153,7 @@
       <!-- 主要内容区域 -->
       <div class="study-content" class:with-navigator={showNavigator} class:with-sidebar={showSidebar}>
       
-      <!-- 🆕 左侧题目导航栏 -->
+      <!-- 左侧题目导航栏 -->
       {#if showNavigator && currentSession}
         <div class="navigator-sidebar">
           <QuestionNavigator
@@ -1173,7 +1178,7 @@
         <!-- 题目学习区域 -->
         <div class="card-study-container">
           <div class="card-container">
-            <!-- 🆕 重要程度贴纸 - 显示在右上角 -->
+            <!-- 重要程度贴纸 - 显示在右上角 -->
             {#if currentQuestion?.question?.priority}
               <ImportanceIndicator 
                 importance={currentQuestion.question.priority}
@@ -1301,7 +1306,7 @@
         {/if}
       </div>
 
-      <!-- 🆕 解析区域（提交答案后显示，从content动态解析---div---后的内容） -->
+      <!-- 解析区域（提交答案后显示，从content动态解析---div---后的内容） -->
       {#if hasSubmitted && choiceQuestionDerived?.explanation}
         <div class="explanation-area">
           <div class="explanation-header">
@@ -1401,8 +1406,14 @@
 
 <!-- 优先级设置模态窗 -->
 {#if showPriorityModal}
-  <div class="modal-overlay" role="presentation" onclick={() => showPriorityModal = false}>
-    <div class="priority-modal" role="dialog" aria-modal="true" aria-labelledby="priority-modal-title" onclick={(e) => { e.stopPropagation(); }}>
+  <div class="modal-overlay" role="presentation">
+    <button
+      type="button"
+      class="modal-backdrop"
+      aria-label="关闭重要程度设置"
+      onclick={() => showPriorityModal = false}
+    ></button>
+    <div class="priority-modal" role="dialog" aria-modal="true" aria-labelledby="priority-modal-title" tabindex="-1">
       <div class="modal-header">
         <h3 id="priority-modal-title">设置重要程度</h3>
         <button class="modal-close" onclick={() => showPriorityModal = false}>×</button>
@@ -1474,7 +1485,7 @@
   </div>
 {/if}
 
-<!-- 🆕 题目数据结构调试窗口 -->
+<!-- 题目数据结构调试窗口 -->
 {#if currentQuestion && showCardDebug}
   <CardDebugModal
     card={currentQuestion.question}
@@ -1482,7 +1493,7 @@
   />
 {/if}
 
-<!-- 🆕 卡片详情模态窗 -->
+<!-- 卡片详情模态窗 -->
 {#if currentQuestion && showDetailModal}
   <QuestionBankCardDetailModal
     open={showDetailModal}
@@ -1558,7 +1569,7 @@
     min-height: 0;
   }
 
-  /* 🆕 左侧导航栏显示 */
+  /* 左侧导航栏显示 */
   .study-content.with-navigator {
     grid-template-columns: auto 1fr; /* 导航栏自适应 + 主内容 */
   }
@@ -1568,19 +1579,19 @@
     grid-template-columns: 1fr auto; /* 主内容 + 工具栏 */
   }
 
-  /* 🆕 三列布局：导航栏 + 主内容 + 工具栏 */
+  /* 三列布局：导航栏 + 主内容 + 工具栏 */
   .study-content.with-navigator.with-sidebar {
     grid-template-columns: auto 1fr auto;
   }
 
-  /* 🆕 左侧导航栏容器 */
+  /* 左侧导航栏容器 */
   .navigator-sidebar {
     grid-column: 1;
-    grid-row: 1; /* 🔧 只占据第一行，不跨越到底部 */
+    grid-row: 1;
     border-right: 1px solid var(--background-modifier-border);
     background: var(--background-secondary);
-    height: 100%; /* 🔧 填满第一行空间 */
-    overflow: hidden; /* 🔧 由子元素处理滚动 */
+    height: 100%;
+    overflow: hidden;
   }
 
   /* 主学习区域 */
@@ -1593,12 +1604,12 @@
     overflow: hidden;
   }
 
-  /* 🆕 有导航栏时，主区域在第二列 */
+  /* 有导航栏时，主区域在第二列 */
   .study-content.with-navigator .main-study-area {
     grid-column: 2;
   }
 
-  /* 🆕 有导航栏+工具栏时，主区域还是第二列 */
+  /* 有导航栏+工具栏时，主区域还是第二列 */
   .study-content.with-navigator.with-sidebar .main-study-area {
     grid-column: 2;
   }
@@ -1606,16 +1617,16 @@
   /* 侧边栏内容容器 */
   .sidebar-content {
     grid-column: 2;
-    grid-row: 1; /* 🔧 只占据第一行，与导航栏保持一致 */
+    grid-row: 1;
     display: flex;
     flex-direction: column;
     width: 70px;
     flex-shrink: 0;
-    height: 100%; /* 🔧 确保填满grid单元格 */
-    overflow: hidden; /* 🔧 由子元素处理滚动 */
+    height: 100%;
+    overflow: hidden;
   }
 
-  /* 🆕 有导航栏时，工具栏在第三列 */
+  /* 有导航栏时，工具栏在第三列 */
   .study-content.with-navigator .sidebar-content {
     grid-column: 3;
   }
@@ -1632,7 +1643,7 @@
   }
 
   .card-container {
-    position: relative;  /* 🆕 为贴纸提供定位上下文 */
+    position: relative;
     width: min(100%, 1300px);
     max-width: 100%;
     height: 100%;
@@ -1710,7 +1721,7 @@
     gap: 1rem;
   }
 
-  /* 🆕 解析区域 */
+  /* 解析区域 */
   .explanation-area {
     margin-top: 2rem;
     padding: 1.5rem;
@@ -1797,7 +1808,7 @@
     border: none;
   }
 
-  /* 🆕 有导航栏时，底部栏依然横跨所有列，保持左侧零边距 */
+  /* 有导航栏时，底部栏依然横跨所有列，保持左侧零边距 */
   .study-content.with-navigator .study-footer {
     grid-column: 1 / -1;
   }
@@ -1964,6 +1975,16 @@
     pointer-events: none;
   }
 
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: default;
+    pointer-events: auto;
+  }
+
   .priority-modal {
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
@@ -2039,8 +2060,8 @@
   }
 
   .priority-btn-item {
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: var(--background-secondary);
+    border: 2px solid var(--background-modifier-border);
     border-radius: 8px;
     padding: 14px 20px;
     cursor: pointer;
@@ -2052,13 +2073,13 @@
   }
 
   .priority-btn-item:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--background-modifier-hover);
     border-color: currentColor;
     transform: scale(1.02);
   }
 
   .priority-btn-item.selected {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--background-modifier-hover);
     border-color: currentColor;
     border-width: 2px;
   }
@@ -2265,6 +2286,15 @@
     justify-content: flex-start;
     animation: fadeIn 0.2s ease;
     padding: 0.5rem;
+  }
+
+  .mobile-navigator-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: default;
   }
 
   @keyframes fadeIn {

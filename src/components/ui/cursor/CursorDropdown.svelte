@@ -1,15 +1,17 @@
 <script lang="ts">
-  interface Props { open?: boolean; }
-  let { open = false }: Props = $props();
+  import type { Snippet } from 'svelte';
+
+  interface Props { open?: boolean; trigger?: Snippet; children?: Snippet; }
+  let { open = false, trigger, children }: Props = $props();
 </script>
 
 <div class="cursor-dropdown">
-  <button onclick={() => open = !open}>
-    <slot name="trigger" />
+  <button type="button" onclick={() => open = !open}>
+    {@render trigger?.()}
   </button>
   {#if open}
     <div class="dropdown-content">
-      <slot />
+      {@render children?.()}
     </div>
   {/if}
 </div>

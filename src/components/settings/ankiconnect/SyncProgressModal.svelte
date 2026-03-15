@@ -5,6 +5,9 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
+  import { tr } from '../../../utils/i18n';
+
+  let t = $derived($tr);
 
   type OperationType = 'fetch_models' | 'sync_to_anki' | 'sync_from_anki' | 'batch_sync';
 
@@ -127,7 +130,7 @@
         <!-- 当前处理项 -->
         {#if currentItem}
           <div class="current-item">
-            <span class="label">正在处理：</span>
+            <span class="label">{t('ankiConnect.syncProgress.processing')}</span>
             <span class="value">{currentItem}</span>
           </div>
         {/if}
@@ -135,7 +138,7 @@
         <!-- 牌组进度（批量操作时显示） -->
         {#if totalDecks > 0}
           <div class="deck-progress">
-            <span class="label">牌组进度：</span>
+            <span class="label">{t('ankiConnect.syncProgress.deckProgress')}</span>
             <span class="value">{deckIndex} / {totalDecks}</span>
           </div>
         {/if}
@@ -173,9 +176,9 @@
           <button
             class="btn-cancel"
             onclick={handleCancel}
-            aria-label="取消操作"
+            aria-label={t('ankiConnect.syncProgress.cancelLabel')}
           >
-            取消
+            {t('ankiConnect.syncProgress.cancelButton')}
           </button>
         </div>
       {/if}

@@ -498,8 +498,7 @@
 
   /* 表单输入 */
   .form-input,
-  .form-textarea,
-  .form-select {
+  .form-textarea {
     width: 100%;
     padding: 0.625rem 0.875rem;
     border: 1px solid var(--background-modifier-border);
@@ -524,16 +523,14 @@
   }
 
   .form-input:focus,
-  .form-textarea:focus,
-  .form-select:focus {
+  .form-textarea:focus {
     outline: none;
     border-color: var(--interactive-accent);
     box-shadow: 0 0 0 2px var(--interactive-accent-hover);
   }
 
   .form-input:disabled,
-  .form-textarea:disabled,
-  .form-select:disabled {
+  .form-textarea:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }

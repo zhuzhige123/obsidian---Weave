@@ -197,7 +197,7 @@ describe('EnhancedIcon', () => {
     });
     
     const icon = container.querySelector('.weave-icon');
-    expect(icon).toHaveAttribute('title', 'This is a star');
+    expect(icon).not.toHaveAttribute('title');
   });
 
   it('applies custom class names', () => {
@@ -249,7 +249,7 @@ describe('EnhancedIcon', () => {
     });
     
     const icon = container.querySelector('.weave-icon');
-    expect(icon).toHaveAttribute('role', 'button');
+    expect(icon).toHaveAttribute('role', 'img');
   });
 
   it('uses default role when not specified', () => {

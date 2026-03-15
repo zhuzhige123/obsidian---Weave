@@ -180,10 +180,10 @@
   }
 
   // 层级配置
-  const levels = [
+  const levels = $derived([
     { 
       id: 0, 
-      name: '基础级', 
+      name: t('decks.knowledgeMap.levelFoundation'), 
       englishName: 'Foundation',
       icon: '🌱',  // 保留萄芝小草emoji
       iconType: 'emoji',
@@ -192,7 +192,7 @@
     },
     { 
       id: 1, 
-      name: '中级', 
+      name: t('decks.knowledgeMap.levelIntermediate'), 
       englishName: 'Intermediate',
       icon: 'book-open',  // Obsidian图标
       iconType: 'obsidian',
@@ -201,7 +201,7 @@
     },
     { 
       id: 2, 
-      name: '高级', 
+      name: t('decks.knowledgeMap.levelAdvanced'), 
       englishName: 'Advanced',
       icon: 'zap',  // Obsidian图标
       iconType: 'obsidian',
@@ -210,14 +210,14 @@
     },
     { 
       id: 3, 
-      name: '专家级', 
+      name: t('decks.knowledgeMap.levelExpert'), 
       englishName: 'Expert',
       icon: 'crown',  // Obsidian图标
       iconType: 'obsidian',
       color: '#ec4899',
       colorRgb: '236, 72, 153'
     }
-  ];
+  ]);
 
   // 获取层级配置
   function getLevelConfig(level: number) {
@@ -292,7 +292,7 @@
     // 更改知识体系级别
     menu.addItem((item) => {
       item
-        .setTitle("更改知识体系级别")
+        .setTitle(t('decks.knowledgeMap.changeLevel'))
         .setIcon("layers");
       
       // 创建子菜单
@@ -301,7 +301,7 @@
       // 未分类选项
       submenu.addItem((subitem: any) =>
         subitem
-          .setTitle("未分类")
+          .setTitle(t('decks.knowledgeMap.uncategorized'))
           .setIcon(deck.knowledgeLevel === undefined ? "check" : "")
           .onClick(async () => {
             deck.knowledgeLevel = undefined;
@@ -312,10 +312,10 @@
       
       // 各级别选项
       const levelOptions = [
-        { value: 0, name: "🌱 基础级 Foundation" },
-        { value: 1, name: "📖 中级 Intermediate" },
-        { value: 2, name: "⚡ 高级 Advanced" },
-        { value: 3, name: "👑 专家级 Expert" }
+        { value: 0, name: `🌱 ${t('decks.knowledgeMap.levelFoundation')}` },
+        { value: 1, name: `📖 ${t('decks.knowledgeMap.levelIntermediate')}` },
+        { value: 2, name: `⚡ ${t('decks.knowledgeMap.levelAdvanced')}` },
+        { value: 3, name: `👑 ${t('decks.knowledgeMap.levelExpert')}` }
       ];
       
       levelOptions.forEach(option => {
@@ -358,9 +358,9 @@
   <div class="knowledge-map-header">
     <h1 class="knowledge-map-title">
       <ObsidianIcon name="map" size={28} />
-      知识体系路线图
+      {t('decks.knowledgeMap.title')}
     </h1>
-    <p class="knowledge-map-subtitle">系统化学习路径 · 从基础到专家</p>
+    <p class="knowledge-map-subtitle">{t('decks.knowledgeMap.subtitle')}</p>
   </div>
 
   <!-- 总体进度 -->
@@ -368,16 +368,16 @@
     <div class="panel-header">
       <h2 class="panel-title">
         <ObsidianIcon name="trending-up" size={20} />
-        学习进度总览
+        {t('decks.knowledgeMap.overviewTitle')}
       </h2>
       <div class="progress-legend">
         <span class="legend-item">
           <span class="legend-circle outer"></span>
-          学习完成度
+          {t('decks.knowledgeMap.legendCompletion')}
         </span>
         <span class="legend-item">
           <span class="legend-circle inner"></span>
-          记忆掌握率
+          {t('decks.knowledgeMap.legendMastery')}
         </span>
       </div>
     </div>
@@ -392,11 +392,11 @@
             {#if masteryRate > 0}
               <div class="progress-tooltip">
                 <div class="tooltip-item">
-                  <span class="tooltip-label">学习完成度</span>
+                  <span class="tooltip-label">{t('decks.knowledgeMap.legendCompletion')}</span>
                   <span class="tooltip-value">{progress}%</span>
                 </div>
                 <div class="tooltip-item">
-                  <span class="tooltip-label">记忆掌握率</span>
+                  <span class="tooltip-label">{t('decks.knowledgeMap.legendMastery')}</span>
                   <span class="tooltip-value highlight">{masteryRate}%</span>
                 </div>
               </div>
@@ -468,7 +468,7 @@
             {/if}
             {level.name}
           </div>
-          <div class="deck-count">{deckCount} 个牌组</div>
+          <div class="deck-count">{t('decks.knowledgeMap.deckCount', { n: String(deckCount) })}</div>
         </div>
       {/each}
     </div>
@@ -519,8 +519,8 @@
         <div class="empty-icon">
           <ObsidianIcon name="map" size={64} />
         </div>
-        <div class="empty-title">还没有知识体系牌组</div>
-        <div class="empty-desc">创建牌组时，在名称中包含"基础"、"中级"、"高级"或"专家"等关键词，系统会自动识别并组织到相应层级。</div>
+        <div class="empty-title">{t('decks.knowledgeMap.emptyTitle')}</div>
+        <div class="empty-desc">{t('decks.knowledgeMap.emptyDesc')}</div>
       </div>
     {/if}
   </div>

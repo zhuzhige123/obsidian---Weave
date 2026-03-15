@@ -116,23 +116,30 @@
   }
 
   function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      handleCancel();
+      return;
+    }
+
     if (e.key === 'Enter' && e.ctrlKey) {
       handleSave();
+    }
+  }
+
+  function handleOverlayClick(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      handleCancel();
     }
   }
 </script>
 
 {#if visible}
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="modal-overlay" onclick={handleCancel} role="presentation">
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="modal-overlay" onclick={handleOverlayClick} onkeydown={handleKeydown} role="presentation" tabindex="-1">
     <div 
       class="save-filter-modal" 
-      onclick={(e) => { e.stopPropagation(); }}
-      onkeydown={handleKeydown}
       role="dialog"
       aria-modal="true"
+      tabindex="-1"
     >
       <!-- 头部 -->
       <header class="modal-header">

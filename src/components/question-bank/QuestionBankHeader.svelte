@@ -11,15 +11,15 @@
     totalQuestions: number;
     statsCollapsed: boolean;
     showSidebar: boolean;
-    showNavigator?: boolean; // 🆕 导航栏显示状态
+    showNavigator?: boolean; // 导航栏显示状态
     showStatsBar?: boolean; //  答题情况信息栏显示状态
     onToggleStats: () => void;
     onToggleSidebar: () => void;
-    onToggleNavigator?: () => void; // 🆕 切换导航栏
+    onToggleNavigator?: () => void; // 切换导航栏
     onToggleStatsBar?: () => void; //  切换答题情况信息栏
     onShowMobileMenu?: () => void; //  显示移动端多功能菜单
     onClose: () => void;
-    // 🆕 倒计时相关
+    // 倒计时相关
     mode?: 'practice' | 'exam' | 'quiz';
     remainingTime?: number;
     isPaused?: boolean;
@@ -63,7 +63,7 @@
       <span class="progress-text">{currentIndex} / {totalQuestions}</span>
     </div>
     
-    <!-- 🆕 翻页时钟 -->
+    <!-- 翻页时钟 -->
     {#if mode === 'exam' || mode === 'quiz'}
       <div class="clock-container">
         <FlipClock 

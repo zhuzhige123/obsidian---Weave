@@ -4,6 +4,7 @@
  */
 
 import type { SettingsTab } from '../types/settings-types';
+import { t } from '../../../utils/i18n';
 
 //  标签页配置 - 使用i18n键
 // 注意：label字段现在是i18n翻译键，需要在使用时调用t()函数
@@ -17,7 +18,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
   { id: "data-management", label: "settings.categories.dataManagement" },
   { id: "ai-config", label: "settings.categories.aiConfig" },
   { id: "virtualization", label: "settings.categories.virtualization" },
-  { id: "plugin-system", label: "settings.categories.pluginSystem" },
+
   { id: "about", label: "settings.categories.about" }
 ];
 
@@ -42,19 +43,22 @@ export const LINK_PATHS = {
   ABSOLUTE: 'absolute'
 } as const;
 
-export const LINK_PATH_OPTIONS = [
-  { id: 'short', label: '最短路径（文件名）' },
-  { id: 'relative', label: '相对路径' },
-  { id: 'absolute', label: '绝对路径' }
-];
+export function getLinkPathOptions() {
+  return [
+    { id: 'short', label: t('settingsConstants.linkPath.short') },
+    { id: 'relative', label: t('settingsConstants.linkPath.relative') },
+    { id: 'absolute', label: t('settingsConstants.linkPath.absolute') }
+  ];
+}
 
-// 链接路径显示文本映射
-// @deprecated 已废弃 - 请使用 i18n 的 settings.editor.linkPathDisplay 代替
-export const LINK_PATH_DISPLAY_MAP: Record<string, string> = {
-  short: '最短',
-  relative: '相对',
-  absolute: '绝对'
-};
+// @deprecated - use i18n settings.editor.linkPathDisplay instead
+export function getLinkPathDisplayMap(): Record<string, string> {
+  return {
+    short: t('settings.editor.linkPathDisplay.short'),
+    relative: t('settings.editor.linkPathDisplay.relative'),
+    absolute: t('settings.editor.linkPathDisplay.absolute')
+  };
+}
 
 
 
@@ -93,14 +97,15 @@ export const DEFAULT_SETTINGS = {
   BATCH_TAG_MARKER: '#weave'
 } as const;
 
-// 编辑器模态窗尺寸预设
-export const MODAL_SIZE_PRESETS = {
-  small: { width: 600, height: 400, label: '小 (600×400)' },
-  medium: { width: 700, height: 500, label: '中 (700×500)' },
-  large: { width: 800, height: 600, label: '大 (800×600)' },
-  'extra-large': { width: 1000, height: 700, label: '超大 (1000×700)' },
-  custom: { width: 800, height: 600, label: '自定义' }
-} as const;
+export function getModalSizePresets() {
+  return {
+    small: { width: 600, height: 400, label: t('settingsConstants.modalSize.small') },
+    medium: { width: 700, height: 500, label: t('settingsConstants.modalSize.medium') },
+    large: { width: 800, height: 600, label: t('settingsConstants.modalSize.large') },
+    'extra-large': { width: 1000, height: 700, label: t('settingsConstants.modalSize.extraLarge') },
+    custom: { width: 800, height: 600, label: t('settingsConstants.modalSize.custom') }
+  };
+}
 
 // 模态窗尺寸限制
 export const MODAL_SIZE_LIMITS = {
@@ -111,21 +116,27 @@ export const MODAL_SIZE_LIMITS = {
   RESIZE_HANDLE_SIZE: 8 // 拖拽手柄大小(px)
 } as const;
 
-// 产品信息
+export function getProductInfo() {
+  return {
+    NAME: t('settingsConstants.productInfo.name'),
+    VERSION: 'v0.7.6.4',
+    ALGORITHM: t('settingsConstants.productInfo.algorithm'),
+    PLATFORM: 'Obsidian',
+    DEVELOPER: 'Rabbit',
+    LICENSE_MODEL: t('settingsConstants.productInfo.licenseModel')
+  };
+}
 export const PRODUCT_INFO = {
-  NAME: 'Weave - 阅读摘录、卡片记忆、考试测试插件',
-  VERSION: 'v0.7.6',
-  ALGORITHM: '增量阅读（TVP-DS） 记忆牌组（FSRS6） 考试测试（EWMA）',
+  NAME: 'Weave',
+  VERSION: 'v0.7.6.4',
   PLATFORM: 'Obsidian',
-  DEVELOPER: 'Robbit（zhuzhige）',
-  LICENSE_MODEL: '免费插件 + 高级功能许可证'
+  DEVELOPER: 'Rabbit'
 } as const;
 
-// 联系信息
 export const CONTACT_INFO = {
   GITHUB_URL: 'https://github.com/zhuzhige123/obsidian---Weave',
   EMAIL: 'tutaoyuan8@outlook.com',
-  SUPPORT_EMAIL_SUBJECT: 'Weave插件许可证购买咨询'
+  get SUPPORT_EMAIL_SUBJECT() { return t('settingsConstants.contactInfo.supportSubject'); }
 } as const;
 
 // CSS 类名常量
@@ -206,32 +217,22 @@ export const VALIDATION_RULES = {
 
 
 
-// 功能特性列表
-export const FEATURES = {
-  FREE: [
-    '基础间隔重复学习',
-    'FSRS6 智能算法',
-    '卡片创建和编辑',
-    '学习进度跟踪',
-    '数据本地存储',
-    '基础统计分析'
-  ],
-  PREMIUM: [
-    '高级学习模式',
-    '详细数据分析',
-    'AI 批量制卡（开发中）',
-    '考试模式（开发中）'
-  ]
-} as const;
+export function getFeatures() {
+  return {
+    FREE: (t('settingsConstants.features.free') as unknown as string[]),
+    PREMIUM: (t('settingsConstants.features.premium') as unknown as string[])
+  };
+}
 
-// 开发状态标记
-export const DEV_STATUS = {
-  STABLE: '稳定',
-  BETA: '测试版',
-  ALPHA: '内测版',
-  DEVELOPMENT: '开发中',
-  PLANNED: '计划中'
-} as const;
+export function getDevStatus() {
+  return {
+    STABLE: t('settingsConstants.devStatus.stable'),
+    BETA: t('settingsConstants.devStatus.beta'),
+    ALPHA: t('settingsConstants.devStatus.alpha'),
+    DEVELOPMENT: t('settingsConstants.devStatus.development'),
+    PLANNED: t('settingsConstants.devStatus.planned')
+  };
+}
 
 // ================================
 // AI配置相关常量
@@ -251,12 +252,12 @@ export const DEFAULT_API_URLS = {
 // AI配置默认值
 export const DEFAULT_AI_CONFIG = {
   apiKeys: {
-    openai: { apiKey: '', model: 'gpt-4o-mini', verified: false, baseUrl: undefined },
-    gemini: { apiKey: '', model: 'gemini-1.5-pro', verified: false, baseUrl: undefined },
-    anthropic: { apiKey: '', model: 'claude-3-5-sonnet-20241022', verified: false, baseUrl: undefined },
+    openai: { apiKey: '', model: 'gpt-5-mini', verified: false, baseUrl: undefined },
+    gemini: { apiKey: '', model: 'gemini-2.5-flash', verified: false, baseUrl: undefined },
+    anthropic: { apiKey: '', model: 'claude-3-7-sonnet-latest', verified: false, baseUrl: undefined },
     deepseek: { apiKey: '', model: 'deepseek-chat', verified: false, baseUrl: undefined },
     zhipu: { apiKey: '', model: 'glm-4-flash', verified: false, baseUrl: undefined },
-    siliconflow: { apiKey: '', model: 'Qwen/Qwen2.5-7B-Instruct', verified: false, baseUrl: undefined },
+    siliconflow: { apiKey: '', model: 'Qwen/Qwen3-32B', verified: false, baseUrl: undefined },
     xai: { apiKey: '', model: 'grok-3', verified: false, baseUrl: undefined }
   },
   defaultProvider: 'zhipu' as const,
@@ -324,35 +325,7 @@ export const DEFAULT_AI_CONFIG = {
     ],
     custom: []
   },
-  imageGeneration: {
-    defaultSyntax: 'wiki' as const,
-    attachmentDir: 'attachments/ai-generated',
-    autoCreateSubfolders: true,
-    includeTimestamp: true,
-    includeCaption: true
-  },
-  history: {
-    enabled: true,
-    retentionDays: 30,
-    showCostStats: true,
-    autoCleanFailures: true
-  },
-  statistics: {
-    totalGenerations: 0,
-    totalCards: 0,
-    successfulImports: 0,
-    totalCost: 0,
-    monthlyCost: 0
-  },
-  security: {
-    encryptApiKeys: true,
-    enableContentFilter: true,
-    anonymousStats: false
-  },
-  shortcuts: {
-    // 默认不设置快捷键，由用户自行配置
-  },
-  // 🆕 AI拆分卡片配置
+  // AI拆分卡片配置
   cardSplitting: {
     enabled: true,
     defaultTargetCount: 0,  // 0表示让AI自动决定，通常生成2-5张
@@ -366,117 +339,180 @@ export const DEFAULT_AI_CONFIG = {
   
   // 自定义AI功能列表
   customFormatActions: [],
-  customTestGenActions: []
+  customTestGenActions: [],
+  customSplitActions: [],
+  officialFormatActions: {
+    choice: { enabled: true },
+    mathFormula: { enabled: true },
+    memoryAid: { enabled: true }
+  }
 };
 
 // AI模型选项
 export const AI_MODEL_OPTIONS = {
   openai: [
-    { id: 'gpt-5', label: 'GPT-5', description: '2025年最新旗舰模型，27万tokens上下文' },
-    { id: 'gpt-4.1', label: 'GPT-4.1', description: '100万tokens上下文，通用问题解决' },
-    { id: 'o3-mini', label: 'o3-mini', description: '推理专用模型，数学和编程优化' },
+    { id: 'gpt-5', label: 'GPT-5', description: 'OpenAI 新一代旗舰通用模型' },
+    { id: 'gpt-5-mini', label: 'GPT-5 Mini', description: '更均衡的成本/速度选择，适合作为默认模型' },
+    { id: 'gpt-5-nano', label: 'GPT-5 Nano', description: '超低成本轻量模型' },
+    { id: 'gpt-4.1', label: 'GPT-4.1', description: '成熟稳定的高质量通用模型' },
+    { id: 'gpt-4.1-mini', label: 'GPT-4.1 Mini', description: '轻量通用模型' },
     { id: 'gpt-4o', label: 'GPT-4o', description: '经典多模态模型' },
-    { id: 'gpt-4-turbo', label: 'GPT-4 Turbo', description: '高性能版本' },
-    { id: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: '经济型选择' }
+    { id: 'o3', label: 'o3', description: '高强度推理模型' },
+    { id: 'o4-mini', label: 'o4-mini', description: '轻量推理模型' }
   ],
   gemini: [
-    { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', description: '2025最新版，深度思考模式，100万tokens' },
-    { id: 'gemini-2.0-flash-thinking', label: 'Gemini 2.0 Flash Thinking', description: '推理增强版，快速响应' },
-    { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', description: '经典版本' },
-    { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: '快速响应' }
+    { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', description: '高质量通用/推理模型' },
+    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: '速度与质量平衡，适合作为默认模型' },
+    { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', description: '更低成本的轻量模型' },
+    { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', description: '成熟稳定的快速模型' },
+    { id: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash-Lite', description: '轻量快速模型' }
   ],
   anthropic: [
-    { id: 'claude-4-opus-20250522', label: 'Claude 4 Opus', description: '2025最新旗舰，代码能力世界第一，20万tokens' },
-    { id: 'claude-4-sonnet-20250522', label: 'Claude 4 Sonnet', description: '2025平衡版，高效处理复杂任务' },
-    { id: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet', description: '经典高性能版本' },
-    { id: 'claude-3-opus-20240229', label: 'Claude 3 Opus', description: '传统最强性能' }
+    { id: 'claude-opus-4-1', label: 'Claude Opus 4.1', description: 'Claude 高端旗舰模型' },
+    { id: 'claude-sonnet-4', label: 'Claude Sonnet 4', description: 'Claude 主力均衡模型' },
+    { id: 'claude-3-7-sonnet-latest', label: 'Claude 3.7 Sonnet', description: '成熟稳定，兼顾推理与写作' },
+    { id: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet', description: '经典稳定版本' }
   ],
   deepseek: [
-    { id: 'deepseek-r1-0528', label: 'DeepSeek R1 0528', description: '2025最新推理模型，数学能力大幅提升' },
-    { id: 'deepseek-v3', label: 'DeepSeek V3', description: '67.1B参数MoE架构，成本极低' },
     { id: 'deepseek-chat', label: 'DeepSeek Chat', description: '通用对话模型' },
-    { id: 'deepseek-coder', label: 'DeepSeek Coder', description: '代码专用模型' }
+    { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner', description: '推理增强模型' }
   ],
   zhipu: [
-    { id: 'glm-4-plus', label: 'GLM-4 Plus', description: '2025增强版，性能全面提升' },
-    { id: 'glm-4-flash', label: 'GLM-4 Flash', description: '快速响应，免费使用' },
-    { id: 'glm-4-air', label: 'GLM-4 Air', description: '轻量版本，经济实惠' },
-    { id: 'glm-4', label: 'GLM-4', description: '标准版本，性能均衡' }
+    { id: 'glm-4-plus', label: 'GLM-4 Plus', description: '智谱高性能通用模型' },
+    { id: 'glm-4-air', label: 'GLM-4 Air', description: '平衡成本与性能' },
+    { id: 'glm-4-flash', label: 'GLM-4 Flash', description: '快速响应，适合作为默认模型' },
+    { id: 'glm-4', label: 'GLM-4', description: '标准版本' }
   ],
   siliconflow: [
-    // 通义千问系列 - 2025更新
-    { id: 'Qwen/Qwen3-235B-A22B-Thinking-2507', label: 'Qwen3 235B Thinking', description: '2025年7月最新推理模型' },
-    { id: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen2.5 72B', description: '通义千问 - 高性能' },
-    { id: 'Qwen/Qwen2.5-7B-Instruct', label: 'Qwen2.5 7B', description: '通义千问 - 快速响应' },
-    
-    // DeepSeek系列 - 2025更新
-    { id: 'deepseek-ai/DeepSeek-V3', label: 'DeepSeek V3', description: '深度求索2025最新版' },
-    { id: 'deepseek-ai/DeepSeek-R1-0528', label: 'DeepSeek R1 0528', description: '2025年5月推理增强版' },
-    
-    // GLM系列
-    { id: 'THUDM/glm-4-9b-chat', label: 'GLM-4 9B', description: '智谱清言' },
-    
-    // Meta Llama系列 - 2025更新
-    { id: 'meta-llama/Llama-3.3-70B-Instruct', label: 'Llama 3.3 70B', description: 'Meta开源最新版' },
-    
-    // Google Gemma系列
-    { id: 'google/gemma-2-9b-it', label: 'Gemma 2 9B', description: 'Google轻量版' },
-    
-    // 01-ai系列
-    { id: 'Pro/01-ai/Yi-Lightning', label: 'Yi Lightning', description: '零一万物 - 极速版' },
+    { id: 'Qwen/Qwen3-32B', label: 'Qwen3 32B', description: '通义千问新一代通用模型' },
+    { id: 'Qwen/Qwen3-235B-A22B', label: 'Qwen3 235B A22B', description: '高性能大模型' },
+    { id: 'deepseek-ai/DeepSeek-V3', label: 'DeepSeek V3', description: 'DeepSeek 通用模型' },
+    { id: 'deepseek-ai/DeepSeek-R1', label: 'DeepSeek R1', description: 'DeepSeek 推理模型' },
+    { id: 'meta-llama/Llama-3.3-70B-Instruct', label: 'Llama 3.3 70B', description: 'Meta 开源高性能模型' },
+    { id: 'THUDM/GLM-4-9B-Chat', label: 'GLM-4 9B Chat', description: '智谱开源轻量模型' },
+    { id: 'google/gemma-2-9b-it', label: 'Gemma 2 9B', description: 'Google 轻量模型' }
   ],
   xai: [
-    { id: 'grok-4', label: 'Grok 4', description: '2025年7月发布，xAI最新模型，25.6万tokens' },
-    { id: 'grok-3', label: 'Grok 3', description: 'xAI推理革新模型' }
+    { id: 'grok-4', label: 'Grok 4', description: 'xAI 新一代旗舰模型' },
+    { id: 'grok-3', label: 'Grok 3', description: '成熟稳定版本' }
   ]
 } as const;
 
-// AI提供商标签
+export function getAIProviderLabels() {
+  return {
+    openai: 'OpenAI',
+    gemini: 'Google Gemini',
+    anthropic: 'Anthropic Claude',
+    deepseek: 'DeepSeek',
+    zhipu: t('settingsConstants.aiProviderLabels.zhipu'),
+    siliconflow: t('settingsConstants.aiProviderLabels.siliconflow'),
+    xai: 'xAI Grok'
+  };
+}
 export const AI_PROVIDER_LABELS = {
   openai: 'OpenAI',
   gemini: 'Google Gemini',
   anthropic: 'Anthropic Claude',
   deepseek: 'DeepSeek',
-  zhipu: '智谱清言',
-  siliconflow: '硅基流动',
+  zhipu: 'Zhipu AI',
+  siliconflow: 'SiliconFlow',
   xai: 'xAI Grok'
 } as const;
 
 // AI提供商类型
 export type AIProvider = 'openai' | 'gemini' | 'anthropic' | 'deepseek' | 'zhipu' | 'siliconflow' | 'xai';
 
+export function getAIProviderCapabilities(): Record<AIProvider, {
+  keyPlaceholder: string;
+  openaiCompatible: boolean;
+  description: string;
+}> {
+  return {
+    openai: {
+      keyPlaceholder: 'sk-...',
+      openaiCompatible: true,
+      description: t('settingsConstants.aiProviderDesc.openai')
+    },
+    gemini: {
+      keyPlaceholder: 'AIza...',
+      openaiCompatible: false,
+      description: t('settingsConstants.aiProviderDesc.gemini')
+    },
+    anthropic: {
+      keyPlaceholder: 'sk-ant-...',
+      openaiCompatible: false,
+      description: t('settingsConstants.aiProviderDesc.anthropic')
+    },
+    deepseek: {
+      keyPlaceholder: 'sk-...',
+      openaiCompatible: true,
+      description: t('settingsConstants.aiProviderDesc.deepseek')
+    },
+    zhipu: {
+      keyPlaceholder: t('settingsConstants.aiKeyPlaceholder.zhipu'),
+      openaiCompatible: true,
+      description: t('settingsConstants.aiProviderDesc.zhipu')
+    },
+    siliconflow: {
+      keyPlaceholder: 'sk-...',
+      openaiCompatible: true,
+      description: t('settingsConstants.aiProviderDesc.siliconflow')
+    },
+    xai: {
+      keyPlaceholder: 'xai-...',
+      openaiCompatible: true,
+      description: t('settingsConstants.aiProviderDesc.xai')
+    }
+  };
+}
+export const AI_PROVIDER_CAPABILITIES: Record<AIProvider, {
+  keyPlaceholder: string;
+  openaiCompatible: boolean;
+  description: string;
+}> = {
+  openai: { keyPlaceholder: 'sk-...', openaiCompatible: true, description: 'OpenAI Official API' },
+  gemini: { keyPlaceholder: 'AIza...', openaiCompatible: false, description: 'Google AI' },
+  anthropic: { keyPlaceholder: 'sk-ant-...', openaiCompatible: false, description: 'Anthropic Claude' },
+  deepseek: { keyPlaceholder: 'sk-...', openaiCompatible: true, description: 'DeepSeek' },
+  zhipu: { keyPlaceholder: 'Enter API Key', openaiCompatible: true, description: 'Zhipu AI' },
+  siliconflow: { keyPlaceholder: 'sk-...', openaiCompatible: true, description: 'SiliconFlow' },
+  xai: { keyPlaceholder: 'xai-...', openaiCompatible: true, description: 'xAI Grok' }
+};
+
 // ================================
 // 致谢信息配置
 // ================================
 
 // 致谢对象列表
-export const ACKNOWLEDGMENTS = [
-  {
-    id: 'fsrs',
-    name: 'FSRS算法',
-    icon: '🧠',
-    description: '科学的间隔重复算法',
-    url: 'https://github.com/open-spaced-repetition/fsrs4anki'
-  },
-  {
-    id: 'obsidian',
-    name: 'Obsidian',
-    icon: '💎',
-    description: '优秀的知识管理平台',
-    url: 'https://obsidian.md/'
-  },
-  {
-    id: 'anki',
-    name: 'Anki',
-    icon: '🎴',
-    description: '间隔重复学习先驱',
-    url: 'https://apps.ankiweb.net/'
-  },
-  {
-    id: 'samdagreatwzzz',
-    name: 'SamdaGreatzzz',
-    icon: '🎬',
-    description: 'AI制卡设计灵感',
-    url: 'https://space.bilibili.com/22291849/'
-  }
-] as const;
+export function getAcknowledgments() {
+  return [
+    {
+      id: 'fsrs',
+      name: t('settingsConstants.acknowledgments.fsrs.name'),
+      icon: '',
+      description: t('settingsConstants.acknowledgments.fsrs.description'),
+      url: 'https://github.com/open-spaced-repetition/fsrs4anki'
+    },
+    {
+      id: 'obsidian',
+      name: t('settingsConstants.acknowledgments.obsidian.name'),
+      icon: '',
+      description: t('settingsConstants.acknowledgments.obsidian.description'),
+      url: 'https://obsidian.md/'
+    },
+    {
+      id: 'anki',
+      name: t('settingsConstants.acknowledgments.anki.name'),
+      icon: '',
+      description: t('settingsConstants.acknowledgments.anki.description'),
+      url: 'https://apps.ankiweb.net/'
+    },
+    {
+      id: 'samdagreatwzzz',
+      name: t('settingsConstants.acknowledgments.samdagreatwzzz.name'),
+      icon: '',
+      description: t('settingsConstants.acknowledgments.samdagreatwzzz.description'),
+      url: 'https://space.bilibili.com/22291849/'
+    }
+  ];
+}

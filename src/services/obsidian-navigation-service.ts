@@ -480,7 +480,7 @@ export class ObsidianNavigationService {
   /**
    * 检查文件是否可以导航
    */
-  async canNavigateToFile(filePath: string): Promise<boolean> {
+  canNavigateToFile(filePath: string): boolean {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
       return file instanceof TFile;

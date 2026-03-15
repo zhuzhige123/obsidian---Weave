@@ -1,5 +1,5 @@
 import { logger } from '../utils/logger';
-import { PATHS } from '../config/paths';
+import { getMediaFolder } from '../config/paths';
 /**
  * 媒体文件调试助手
  * 用于调试和测试媒体文件路径转换问题
@@ -156,7 +156,8 @@ export class MediaDebugHelper {
    */
   async generateMediaReport(deckId: string): Promise<string[]> {
     const report: string[] = [];
-    const mediaPath = `${PATHS.media}/decks/${deckId}`;
+    const parentFolder = (this.plugin as any).settings?.weaveParentFolder as string | undefined;
+    const mediaPath = `${getMediaFolder(parentFolder)}/decks/${deckId}`;
     
     try {
       const folder = this.plugin.app.vault.getAbstractFileByPath(mediaPath);

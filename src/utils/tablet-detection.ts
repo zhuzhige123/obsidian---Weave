@@ -3,6 +3,8 @@
  * 用于识别平板设备并提供相应的UI适配
  */
 
+import { Platform } from 'obsidian';
+
 export interface DeviceInfo {
   isTablet: boolean;
   isMobile: boolean;
@@ -17,7 +19,6 @@ export interface DeviceInfo {
  * 检测当前设备类型
  */
 export function detectDevice(): DeviceInfo {
-  const userAgent = navigator.userAgent.toLowerCase();
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   
   // 屏幕尺寸检测
@@ -25,21 +26,10 @@ export function detectDevice(): DeviceInfo {
   const screenHeight = window.innerHeight;
   const isLandscape = screenWidth > screenHeight;
   
-  // 设备类型检测
-  const isTablet = (
-    (screenWidth >= 768 && screenWidth <= 1024) ||
-    (screenHeight >= 768 && screenHeight <= 1024) ||
-    /ipad|android(?!.*mobile)|tablet|kindle|silk/i.test(userAgent)
-  );
-  
-  const isMobile = (
-    !isTablet && (
-      screenWidth < 768 ||
-      /mobile|phone|android.*mobile|iphone|ipod|blackberry|windows phone/i.test(userAgent)
-    )
-  );
-  
-  const isDesktop = !isTablet && !isMobile;
+  // 使用 Obsidian Platform API 检测设备类型
+  const isMobile = Platform.isMobile;
+  const isDesktop = Platform.isDesktop;
+  const isTablet = isMobile && (screenWidth >= 768 || screenHeight >= 768);
   
   // 屏幕尺寸分类
   let screenSize: 'small' | 'medium' | 'large';
@@ -51,17 +41,17 @@ export function detectDevice(): DeviceInfo {
     screenSize = 'large';
   }
   
-  // 平台检测
+  // 平台检测 - 使用 Obsidian Platform API
   let platform: DeviceInfo['platform'] = 'unknown';
-  if (/ipad|iphone|ipod/i.test(userAgent)) {
+  if ((Platform as any).isIosApp) {
     platform = 'ios';
-  } else if (/android/i.test(userAgent)) {
+  } else if ((Platform as any).isAndroidApp) {
     platform = 'android';
-  } else if (/windows/i.test(userAgent)) {
+  } else if ((Platform as any).isWin) {
     platform = 'windows';
-  } else if (/mac/i.test(userAgent)) {
+  } else if ((Platform as any).isMacOS) {
     platform = 'macos';
-  } else if (/linux/i.test(userAgent)) {
+  } else if ((Platform as any).isLinux) {
     platform = 'linux';
   }
   

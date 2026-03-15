@@ -387,7 +387,8 @@ export class GlobalResourceManager {
    * 获取或创建编辑器资源管理器
    */
   getEditorManager(editorId: string): EditorResourceManager {
-    if (!this.editorManagers.has(editorId)) {
+    const existingManager = this.editorManagers.get(editorId);
+    if (!existingManager || existingManager.isDestroyed_()) {
       this.editorManagers.set(editorId, new EditorResourceManager(editorId));
     }
     return this.editorManagers.get(editorId)!;

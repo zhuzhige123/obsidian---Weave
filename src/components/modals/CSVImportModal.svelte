@@ -5,8 +5,8 @@
 -->
 <script lang="ts">
   import { logger } from '../../utils/logger';
-  import { onMount } from 'svelte';
-  import { Notice, Menu } from 'obsidian';
+  import { onMount, onDestroy } from 'svelte';
+  import { Notice, Menu, AbstractInputSuggest, TFile } from 'obsidian';
   import EnhancedModal from '../ui/EnhancedModal.svelte';
   import type { WeavePlugin } from '../../main';
   import type { WeaveDataStorage } from '../../data/storage';
@@ -75,6 +75,10 @@
   let cardType = $state<ImportCardType>('basic-qa');
   let allowAutoCreate = $state(false);
 
+  // ===== Step 1: 粘贴导入 =====
+  let pasteCSVText = $state('');
+  let isPasteMode = $state(false);
+
   // ===== Step 3: 预览与导入 =====
   let previewCards = $state<PreviewCard[]>([]);
   let importStats = $state<ImportStats | null>(null);
@@ -84,12 +88,44 @@
   let batchTags = $state('');
   let isImporting = $state(false);
   let importProgress = $state(0);
+  let sourceLink = $state('');
+  let sourceInputEl = $state<HTMLInputElement | null>(null);
+  let fileSuggest: AbstractInputSuggest<TFile> | null = null;
 
   // ===== 牌组列表 =====
   let decks = $state<Deck[]>([]);
 
   // ===== 用户自定义YAML属性 =====
   let userYamlProperties = $state<string[]>([]);
+
+  // ===== 溯源文件建议器 =====
+  class SourceFileSuggest extends AbstractInputSuggest<TFile> {
+    getSuggestions(inputStr: string): TFile[] {
+      const files = this.app.vault.getMarkdownFiles();
+      const lower = inputStr.toLowerCase();
+      if (!lower) return files.slice(0, 30);
+      return files.filter(f => f.path.toLowerCase().includes(lower)).slice(0, 30);
+    }
+
+    renderSuggestion(file: TFile, el: HTMLElement): void {
+      el.setText(file.path);
+    }
+
+    selectSuggestion(file: TFile): void {
+      const name = file.path.replace(/\.md$/, '');
+      sourceLink = `![[${name}]]`;
+      if (sourceInputEl) {
+        sourceInputEl.value = sourceLink;
+      }
+      this.close();
+    }
+  }
+
+  $effect(() => {
+    if (sourceInputEl && !fileSuggest) {
+      fileSuggest = new SourceFileSuggest(plugin.app, sourceInputEl);
+    }
+  });
 
   onMount(async () => {
     try {
@@ -104,6 +140,13 @@
       logger.info('[CSVImport] 用户自定义YAML属性:', userYamlProperties);
     } catch (e) {
       logger.error('[CSVImport] 初始化失败:', e);
+    }
+  });
+
+  onDestroy(() => {
+    if (fileSuggest) {
+      fileSuggest.close();
+      fileSuggest = null;
     }
   });
 
@@ -134,6 +177,8 @@
         // 解析预览
         reparseFile();
         fileLoaded = true;
+        isPasteMode = false;
+        pasteCSVText = '';
 
         logger.info('[CSVImport] 文件已加载:', {
           fileName,
@@ -189,6 +234,45 @@
   function onHasHeaderChange(value: boolean) {
     hasHeader = value;
     reparseFile();
+  }
+
+  // ===== 粘贴CSV内容处理 =====
+  function handlePasteCSV(text: string) {
+    pasteCSVText = text;
+    if (!text.trim()) {
+      if (isPasteMode) {
+        fileLoaded = false;
+        fileText = '';
+        previewRows = [];
+        allRows = [];
+        headers = [];
+      }
+      return;
+    }
+
+    isPasteMode = true;
+    fileName = '';
+    fileText = text;
+    fileEncoding = 'UTF-8';
+
+    const detection = detectSeparator(text);
+    separator = detection.separator;
+    hasHeader = detection.hasHeader;
+    detectionConfidence = detection.confidence;
+
+    reparseFile();
+    fileLoaded = true;
+
+    if (!newDeckName.trim()) {
+      newDeckName = 'CSV粘贴导入';
+    }
+
+    logger.info('[CSVImport] 粘贴内容已解析:', {
+      separator: separator === '\t' ? 'TAB' : separator,
+      hasHeader,
+      rows: allRows.length,
+      cols: headers.length,
+    });
   }
 
   // ===== Step 2: 列映射操作 =====
@@ -325,11 +409,11 @@
 
       // 创建新牌组
       if (createNewDeck) {
-        const trimmedName = newDeckName.trim() || fileName.replace(/\.(csv|tsv|txt)$/i, '');
+        const trimmedName = newDeckName.trim() || (isPasteMode ? 'CSV粘贴导入' : fileName.replace(/\.(csv|tsv|txt)$/i, ''));
         const newDeck: Deck = {
           id: generateId(),
           name: trimmedName,
-          description: `CSV导入: ${fileName}`,
+          description: isPasteMode ? 'CSV粘贴导入' : `CSV导入: ${fileName}`,
           category: 'imported',
           path: trimmedName,
           level: 0,
@@ -403,6 +487,11 @@
           yamlMetadata.tags = allTags;
         }
 
+        // 写入溯源文件
+        if (sourceLink.trim()) {
+          yamlMetadata.we_source = sourceLink.trim();
+        }
+
         // 写入所有额外字段到YAML frontmatter
         for (const [key, value] of Object.entries(generated.extraFields)) {
           if (!value) continue;
@@ -449,7 +538,7 @@
           created: new Date().toISOString(),
           modified: new Date().toISOString(),
           metadata: {
-            importedFrom: fileName,
+            importedFrom: isPasteMode ? 'clipboard-csv' : fileName,
             importBatchId,
           },
         };
@@ -463,7 +552,7 @@
       const successCount = allCards.length;
       importProgress = 100;
 
-      new Notice(`CSV导入完成: ${successCount} 张卡片已导入到 "${deckName}"`);
+      new Notice(`${isPasteMode ? 'CSV粘贴' : 'CSV'}导入完成: ${successCount} 张卡片已导入到 "${deckName}"`);
       logger.info('[CSVImport] 导入完成:', { successCount, deckName, deckId });
 
       onImportComplete?.(deckId, successCount);
@@ -507,6 +596,7 @@
   onClose={handleClose}
   size="lg"
   title="CSV导入向导"
+  accentColor="orange"
   maskClosable={!isImporting}
   keyboard={!isImporting}
 >
@@ -536,12 +626,35 @@
           <!-- 文件选择 -->
           <div class="csv-section">
             <div class="csv-section-title">选择文件</div>
-            <button class="csv-file-btn" onclick={handleFileSelect}>
+            <button class="csv-file-btn" class:csv-file-btn-active={!isPasteMode && fileName} onclick={handleFileSelect}>
               {fileName || '点击选择 CSV/TSV 文件...'}
             </button>
-            {#if fileLoaded}
+            {#if fileLoaded && !isPasteMode}
               <div class="csv-file-info">
                 <span>编码: {fileEncoding}</span>
+                <span>数据行: {allRows.length}</span>
+                <span>列数: {headers.length}</span>
+              </div>
+            {/if}
+          </div>
+
+          <!-- 分隔线 -->
+          <div class="csv-or-divider">
+            <span class="csv-or-text">或</span>
+          </div>
+
+          <!-- 粘贴CSV内容 -->
+          <div class="csv-section">
+            <div class="csv-section-title">粘贴 CSV 内容</div>
+            <textarea
+              class="csv-paste-textarea"
+              class:csv-paste-active={isPasteMode && fileLoaded}
+              value={pasteCSVText}
+              oninput={(e) => handlePasteCSV((e.target as HTMLTextAreaElement).value)}
+              placeholder={"front,back,tags\n什么是间隔重复,基于遗忘曲线的学习方法,学习方法\nJava基本类型,int boolean char double,Java"}
+            ></textarea>
+            {#if fileLoaded && isPasteMode}
+              <div class="csv-file-info">
                 <span>数据行: {allRows.length}</span>
                 <span>列数: {headers.length}</span>
               </div>
@@ -553,8 +666,9 @@
             <div class="csv-section">
               <div class="csv-section-title">解析配置</div>
               <div class="csv-config-row">
-                <label class="csv-config-label">分隔符</label>
+                <label class="csv-config-label" for="csv-separator-select">分隔符</label>
                 <select
+                  id="csv-separator-select"
                   class="csv-config-select"
                   value={separator}
                   onchange={(e) => onSeparatorChange((e.target as HTMLSelectElement).value as Separator)}
@@ -705,6 +819,22 @@
               {/if}
             </div>
           {/if}
+
+          <!-- 溯源文件（可选） -->
+          <div class="csv-section">
+            <div class="csv-section-title">溯源文件（可选）</div>
+            <input
+              bind:this={sourceInputEl}
+              type="text"
+              class="csv-config-input"
+              value={sourceLink}
+              oninput={(e) => sourceLink = (e.target as HTMLInputElement).value}
+              placeholder="输入文件名搜索或手动填写 ![[文档路径]]"
+            />
+            {#if sourceLink.trim()}
+              <div class="csv-source-preview">来源: {sourceLink}</div>
+            {/if}
+          </div>
 
           <!-- 目标牌组 -->
           <div class="csv-section">
@@ -919,6 +1049,12 @@
     color: var(--text-normal);
   }
 
+  .csv-file-btn-active {
+    border-color: var(--interactive-accent);
+    border-style: solid;
+    color: var(--text-normal);
+  }
+
   .csv-file-info {
     display: flex;
     gap: 16px;
@@ -962,6 +1098,69 @@
     background: var(--background-primary);
     color: var(--text-normal);
     font-size: 13px;
+  }
+
+  /* 分隔线 */
+  .csv-or-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 0;
+  }
+
+  .csv-or-divider::before,
+  .csv-or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--background-modifier-border);
+  }
+
+  .csv-or-text {
+    font-size: 12px;
+    color: var(--text-faint);
+    flex-shrink: 0;
+  }
+
+  /* 粘贴区 */
+  .csv-paste-textarea {
+    width: 100%;
+    min-height: 120px;
+    max-height: 240px;
+    padding: 10px 12px;
+    border: 2px dashed var(--background-modifier-border);
+    border-radius: 8px;
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    font-size: 12px;
+    font-family: var(--font-monospace);
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 0.2s ease;
+  }
+
+  .csv-paste-textarea:focus {
+    border-color: var(--interactive-accent);
+    outline: none;
+  }
+
+  .csv-paste-textarea::placeholder {
+    color: var(--text-faint);
+    font-size: 12px;
+  }
+
+  .csv-paste-active {
+    border-color: var(--interactive-accent);
+    border-style: solid;
+  }
+
+  /* 溯源文件预览 */
+  .csv-source-preview {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 4px 8px;
+    background: var(--background-secondary);
+    border-radius: 4px;
   }
 
   .csv-auto-tag {

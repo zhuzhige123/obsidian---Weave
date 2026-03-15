@@ -181,6 +181,37 @@ export interface AIConfig {
    * 最大生成长度
    */
   maxTokens?: number;
+
+  /**
+   * 系统提示词配置
+   */
+  systemPromptConfig?: import('./ai-types').SystemPromptConfig;
+
+  /**
+   * 提示词模板
+   */
+  promptTemplates?: {
+    official: import('./ai-types').PromptTemplate[];
+    custom: import('./ai-types').PromptTemplate[];
+  };
+
+  /**
+   * 持久化的AI制卡生成配置
+   * 保存用户上次的卡片数量、难度、题型分布等设置
+   */
+  savedGenerationConfig?: {
+    cardCount?: number;
+    difficulty?: 'easy' | 'medium' | 'hard' | 'mixed';
+    typeDistribution?: {
+      qa: number;
+      cloze: number;
+      choice: number;
+    };
+    autoTags?: string[];
+    enableHints?: boolean;
+    temperature?: number;
+    maxTokens?: number;
+  };
 }
 
 // ============================================================================
@@ -722,13 +753,6 @@ export interface WeaveSettings {
   showPerformanceSettings?: boolean;
 
   /**
-   * 是否启用第三方插件系统
-   * 关闭时不加载插件、不显示插件标签页
-   * @default false
-   */
-  enableThirdPartyPlugins?: boolean;
-
-  /**
    * 是否启用预览
    */
   enablePreview?: boolean;
@@ -782,6 +806,19 @@ export interface WeaveSettings {
    * @default false
    */
   skipGuideDeck?: boolean;
+
+  /**
+   * 超时自动暂停计时（秒）
+   * 单张卡片计时超过此值后自动暂停，防止离开时计时虚高
+   * @default 60
+   */
+  timerAutoPauseSeconds?: number;
+
+  /**
+   * 提示功能每次学习会话最大使用次数
+   * @default 5
+   */
+  hintMaxUses?: number;
 }
 
 /**

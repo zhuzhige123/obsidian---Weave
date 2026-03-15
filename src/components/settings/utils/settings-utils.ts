@@ -1,4 +1,5 @@
 import { logger } from '../../../utils/logger';
+import { t } from '../../../utils/i18n';
 /**
  * 设置界面相关的工具函数
  * 提取公共逻辑，消除代码重复
@@ -39,7 +40,7 @@ export function showNotification(options: NotificationOptions): void {
  * 统一的错误处理函数
  */
 export function handleError(error: unknown, context: string, fallbackMessage?: string): ErrorResult {
-  const message = error instanceof Error ? error.message : (fallbackMessage || '操作失败');
+  const message = error instanceof Error ? error.message : (fallbackMessage || t('settingsUtils.operationFailed'));
   const fullMessage = `${context}: ${message}`;
   
   showNotification({
@@ -60,7 +61,7 @@ export function getLicenseStatusInfo(license?: LicenseInfo): LicenseStatus {
   if (!license?.isActivated) {
     return { 
       status: 'inactive', 
-      text: '未激活', 
+      text: t('settingsUtils.licenseStatus.inactive'), 
       color: 'orange', 
       icon: '[!]'
     };
@@ -68,24 +69,22 @@ export function getLicenseStatusInfo(license?: LicenseInfo): LicenseStatus {
 
   const now = new Date();
   
-  // 检查是否过期
   if (license.expiresAt) {
     const expiryDate = new Date(license.expiresAt);
     if (now > expiryDate) {
       return { 
         status: 'expired', 
-        text: '已过期', 
+        text: t('settingsUtils.licenseStatus.expired'), 
         color: 'red', 
         icon: '[X]'
       };
     }
     
-    // 检查是否即将过期（30天内）
     const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     if (daysUntilExpiry <= 30) {
       return { 
         status: 'trial', 
-        text: `${daysUntilExpiry}天后过期`, 
+        text: t('settingsUtils.licenseStatus.expiringIn', { days: daysUntilExpiry }), 
         color: 'yellow', 
         icon: '[~]'
       };
@@ -94,7 +93,7 @@ export function getLicenseStatusInfo(license?: LicenseInfo): LicenseStatus {
 
   return { 
     status: 'active', 
-    text: '已激活', 
+    text: t('settingsUtils.licenseStatus.active'), 
     color: 'green', 
     icon: '[OK]'
   };
@@ -104,11 +103,11 @@ export function getLicenseStatusInfo(license?: LicenseInfo): LicenseStatus {
  * 获取错误类型对应的图标
  */
 export function getErrorIcon(error: string): string {
-  if (error.includes('格式') || error.includes('验证失败')) return '[FMT]';
-  if (error.includes('过期')) return '[EXP]';
-  if (error.includes('设备') || error.includes('绑定')) return '[DEV]';
-  if (error.includes('网络') || error.includes('连接')) return '[NET]';
-  if (error.includes('权限')) return '[PERM]';
+  if (error.includes('format') || error.includes('格式') || error.includes('validation') || error.includes('验证失败')) return '[FMT]';
+  if (error.includes('expir') || error.includes('过期')) return '[EXP]';
+  if (error.includes('device') || error.includes('设备') || error.includes('bind') || error.includes('绑定')) return '[DEV]';
+  if (error.includes('network') || error.includes('网络') || error.includes('connect') || error.includes('连接')) return '[NET]';
+  if (error.includes('permission') || error.includes('权限')) return '[PERM]';
   return '[ERR]';
 }
 
@@ -152,31 +151,27 @@ export function validateActivationCode(code: string): ActivationValidation {
   };
 
   if (!code.trim()) {
-    result.errors.push('激活码不能为空');
+    result.errors.push(t('settingsUtils.validation.codeEmpty'));
     return result;
   }
 
   const { MIN_LENGTH, PATTERN } = VALIDATION_RULES.ACTIVATION_CODE;
 
-  // 检查长度
   if (code.length < MIN_LENGTH) {
-    result.warnings.push(`激活码长度不足，至少需要 ${MIN_LENGTH} 个字符`);
+    result.warnings.push(t('settingsUtils.validation.codeTooShort', { min: MIN_LENGTH }));
   }
 
-  // 检查格式
   if (!PATTERN.test(code)) {
-    result.errors.push('激活码包含无效字符，只允许字母、数字、连字符和点号');
+    result.errors.push(t('settingsUtils.validation.codeInvalidChars'));
     return result;
   }
 
-  // 基本格式正确
   result.isValid = true;
 
-  // 检查是否完整（这里可以根据实际的激活码规则调整）
-  if (code.length >= 32) { // 假设完整激活码至少32位
+  if (code.length >= 32) {
     result.isComplete = true;
   } else {
-    result.warnings.push('激活码可能不完整，请确保复制了完整的激活码');
+    result.warnings.push(t('settingsUtils.validation.codeIncomplete'));
   }
 
   return result;
@@ -186,34 +181,27 @@ export function validateActivationCode(code: string): ActivationValidation {
  * 获取详细的错误信息和解决方案
  */
 export function getDetailedErrorMessage(error: string): string {
-  const errorMap: Record<string, { message: string; solution?: string }> = {
-    激活码格式无效: {
-      message: '激活码格式不正确',
-      solution: '请确保完整复制激活码，包括所有字符和点号分隔符'
-    },
-    激活码已过期: {
-      message: '激活码已过期',
-      solution: '请联系客服获取新的激活码'
-    },
-    设备绑定超限: {
-      message: '设备绑定数量已达上限',
-      solution: '请在其他设备上解绑后重试，或联系客服增加设备数量'
-    },
-    网络连接失败: {
-      message: '无法连接到激活服务器',
-      solution: '请检查网络连接，或稍后重试'
-    },
-    服务器错误: {
-      message: '激活服务器暂时不可用',
-      solution: '请稍后重试，如问题持续请联系客服'
-    }
+  const errorKeyMap: Record<string, { messageKey: string; solutionKey?: string }> = {
+    '激活码格式无效': { messageKey: 'settingsUtils.errors.invalidFormat', solutionKey: 'settingsUtils.errors.invalidFormatSolution' },
+    'Invalid activation code': { messageKey: 'settingsUtils.errors.invalidFormat', solutionKey: 'settingsUtils.errors.invalidFormatSolution' },
+    '激活码已过期': { messageKey: 'settingsUtils.errors.codeExpired', solutionKey: 'settingsUtils.errors.codeExpiredSolution' },
+    'Activation code expired': { messageKey: 'settingsUtils.errors.codeExpired', solutionKey: 'settingsUtils.errors.codeExpiredSolution' },
+    '设备绑定超限': { messageKey: 'settingsUtils.errors.deviceLimit', solutionKey: 'settingsUtils.errors.deviceLimitSolution' },
+    'Device limit exceeded': { messageKey: 'settingsUtils.errors.deviceLimit', solutionKey: 'settingsUtils.errors.deviceLimitSolution' },
+    '网络连接失败': { messageKey: 'settingsUtils.errors.networkFailed', solutionKey: 'settingsUtils.errors.networkFailedSolution' },
+    'Network connection failed': { messageKey: 'settingsUtils.errors.networkFailed', solutionKey: 'settingsUtils.errors.networkFailedSolution' },
+    '服务器错误': { messageKey: 'settingsUtils.errors.serverError', solutionKey: 'settingsUtils.errors.serverErrorSolution' },
+    'Server error': { messageKey: 'settingsUtils.errors.serverError', solutionKey: 'settingsUtils.errors.serverErrorSolution' }
   };
 
-  const errorInfo = errorMap[error];
+  const errorInfo = errorKeyMap[error];
   if (errorInfo) {
-    return errorInfo.solution ? 
-      `${errorInfo.message}。${errorInfo.solution}` : 
-      errorInfo.message;
+    const msg = t(errorInfo.messageKey);
+    if (errorInfo.solutionKey) {
+      const solution = t(errorInfo.solutionKey);
+      return `${msg}. ${solution}`;
+    }
+    return msg;
   }
 
   return error;

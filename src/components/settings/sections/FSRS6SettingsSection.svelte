@@ -189,7 +189,7 @@
   async function startOptimization() {
     if (!personalizationManager) {
       new Notice(
-        '优化服务未初始化，请稍后再试或重新加载插件',
+        t('fsrs6Notices.serviceNotReady'),
         4000
       );
       return;
@@ -211,7 +211,7 @@
       // 检查数据量是否足够
       if (allReviews.length < 50) {
         new Notice(
-          `数据量不足，需要至少50次复习记录才能优化参数，当前只有 ${allReviews.length} 次复习`,
+          t('fsrs6Notices.insufficientData', { count: allReviews.length }),
           8000
         );
         fsrs6State.isOptimizing = false;
@@ -265,7 +265,7 @@
       const errorMessage = error instanceof Error ? error.message : String(error);
       
       new Notice(
-        `参数优化失败: ${errorMessage}`,
+        t('fsrs6Notices.optimizationFailed') + errorMessage,
         6000
       );
     } finally {
@@ -337,7 +337,7 @@
     //  更新响应式引用，触发UI刷新
     optimizationHistory = [...settings.fsrsParams.optimizationHistory];
     
-    new Notice('优化参数已应用', 3000);
+    new Notice(t('fsrs6Notices.optimizationApplied'), 3000);
   }
   
   // 拒绝优化建议
@@ -376,7 +376,7 @@
     //  更新响应式引用，触发UI刷新
     optimizationHistory = [...settings.fsrsParams.optimizationHistory];
     
-    new Notice('已拒绝优化建议，保持当前参数', 3000);
+    new Notice(t('fsrs6Notices.optimizationRejected'), 3000);
   }
   
   // 刷新性能指标（重新加载优化数据）
@@ -384,7 +384,7 @@
     await loadOptimizationData();
     
     new Notice(
-      `优化数据已刷新，复习记录: ${optimizationData.dataPoints} 条`,
+      t('fsrs6Notices.dataRefreshed', { count: optimizationData.dataPoints }),
       2000
     );
   }
@@ -506,7 +506,7 @@
       {#if optimizationData.isLoading}
         <div class="optimization-loading">
           <EnhancedIcon name="loader" size="20" />
-          <span>加载优化数据中...</span>
+          <span>{t('fsrs6Notices.loadingData')}</span>
         </div>
       {:else}
         <div class="optimization-status">
@@ -531,21 +531,21 @@
       {#if optimizationHistory && optimizationHistory.length > 0}
         <div class="history-section">
           <h4 class="history-title with-accent-bar accent-purple">
-            优化历史记录
-            <span class="history-count-badge">{optimizationHistory.length} 条</span>
+            {t('fsrs6Notices.historyTitle')}
+            <span class="history-count-badge">{t('fsrs6Notices.historyCount', { count: optimizationHistory.length })}</span>
           </h4>
 
           <div class="history-table-container">
               <table class="history-table">
                 <thead>
                   <tr>
-                    <th class="th-status">状态</th>
-                    <th class="th-time">优化时间</th>
-                    <th class="th-phase">阶段</th>
-                    <th class="th-reviews">复习记录</th>
-                    <th class="th-accuracy">准确性</th>
-                    <th class="th-changes">参数变化</th>
-                    <th class="th-note">备注</th>
+                    <th class="th-status">{t('fsrs6Notices.colStatus')}</th>
+                    <th class="th-time">{t('fsrs6Notices.colTime')}</th>
+                    <th class="th-phase">{t('fsrs6Notices.colPhase')}</th>
+                    <th class="th-reviews">{t('fsrs6Notices.colReviews')}</th>
+                    <th class="th-accuracy">{t('fsrs6Notices.colAccuracy')}</th>
+                    <th class="th-changes">{t('fsrs6Notices.colChanges')}</th>
+                    <th class="th-note">{t('fsrs6Notices.colNote')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -554,7 +554,7 @@
                       <!-- 状态 -->
                       <td class="td-status">
                         <span class="status-badge" class:success={entry.accepted} class:muted={!entry.accepted}>
-                          {entry.accepted ? '已接受' : '已拒绝'}
+                          {entry.accepted ? t('fsrs6Notices.statusAccepted') : t('fsrs6Notices.statusRejected')}
                         </span>
                       </td>
                       
@@ -610,10 +610,10 @@
                                 `w${p.index}: ${p.old.toFixed(4)} → ${p.new.toFixed(4)} (${p.diff > 0 ? '+' : ''}${p.diff.toFixed(4)})`
                               ).join('\n')}
                             >
-                              {changedParams.length} 个参数
+                              {t('fsrs6Notices.paramCount', { count: changedParams.length })}
                             </span>
                           {:else}
-                            <span class="na-text">无变化</span>
+                            <span class="na-text">{t('fsrs6Notices.noChanges')}</span>
                           {/if}
                         {/each}
                       </td>

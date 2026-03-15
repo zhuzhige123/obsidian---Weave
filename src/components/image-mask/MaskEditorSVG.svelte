@@ -492,29 +492,23 @@ function handleSvgClick(e: MouseEvent) {
       <p>{error}</p>
     </div>
   {:else}
-    <div
+    <button
+      type="button"
       class="mask-editor-canvas"
-      role="application"
-      tabindex="0"
+      class:drawing={!!drawMode}
+      class:has-active={!!storeActiveDrawing}
       onmousedown={handleSvgMouseDown}
       onmousemove={handleSvgMouseMove}
       onmouseup={handleSvgMouseUp}
       onclick={handleSvgClick}
+      ondragstart={(e) => { e.preventDefault(); }}
+      oncontextmenu={(e) => { e.preventDefault(); }}
       onkeydown={(e) => {
-        if (false) {
-          e.preventDefault();
-          store.clearSelection();
-          syncStoreToState();
-          drawMode = null;
-        } else if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedId) {
+        if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedId) {
           e.preventDefault();
           handleMaskDelete(store.selectedId);
         }
       }}
-      ondragstart={(e) => { e.preventDefault(); }}
-      oncontextmenu={(e) => { e.preventDefault(); }}
-      class:drawing={!!drawMode}
-      class:has-active={!!storeActiveDrawing}
     >
     <svg
       bind:this={svgElement}
@@ -558,7 +552,7 @@ function handleSvgClick(e: MouseEvent) {
         />
       {/if}
     </svg>
-    </div>
+    </button>
     
     <!-- 提示信息 -->
     <div class="hint">
@@ -591,6 +585,7 @@ function handleSvgClick(e: MouseEvent) {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     cursor: default;
     outline: none;
+    padding: 0;
   }
   
   .mask-editor-canvas.drawing {

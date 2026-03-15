@@ -24,6 +24,7 @@
   import CreateDeckModal from "../modals/CreateDeckModal.svelte";
   import APKGImportModal from "../modals/APKGImportModal.svelte";
   import CSVImportModal from "../modals/CSVImportModal.svelte";
+  import ClipboardImportModal from "../modals/ClipboardImportModal.svelte";
   // MoveDeckModal 已移除 - 不再支持父子牌组层级结构
   import type { ImportResult } from "../../domain/apkg/types";
   import { Menu, Modal, Notice, Setting } from "obsidian";
@@ -92,6 +93,7 @@
   let createSubdeckParentId = $state<string | null>(null);
   let showAPKGImportModal = $state(false);
   let showCSVImportModal = $state(false);
+  let showClipboardImportModal = $state(false);
   
   //  加载状态
   let isLoading = $state(true);
@@ -338,8 +340,8 @@
     
     //  只保留网格卡片和看板视图
     const views = [
-      { id: 'grid', label: '网格卡片', icon: 'grid', desc: '色卡风格，多彩展示' },
-      { id: 'kanban', label: '看板视图', icon: 'columns', desc: '按阶段组织，可视化流程' }
+      { id: 'grid', label: t('deckStudyPage.views.grid'), icon: 'grid', desc: t('deckStudyPage.views.gridDesc') },
+      { id: 'kanban', label: t('deckStudyPage.views.kanban'), icon: 'columns', desc: t('deckStudyPage.views.kanbanDesc') }
     ] as const;
     
     views.forEach(view => {
@@ -374,7 +376,7 @@
     if (selectedFilter === 'incremental-reading') {
       menu.addItem((item) => {
         item
-          .setTitle("导入文件夹")
+          .setTitle(t('deckStudyPage.menu.importFolder'))
           .setIcon("folder-plus")
           .onClick(() => {
             document.dispatchEvent(new CustomEvent('ir-import-folder'));
@@ -388,21 +390,28 @@
     // 记忆牌组模式的菜单
     menu.addItem((item) => {
       item
-        .setTitle("旧版APKG格式导入")
+        .setTitle(t('deckStudyPage.menu.importAPKG'))
         .setIcon("package")
         .onClick(() => { showAPKGImportModal = true; });
     });
     
     menu.addItem((item) => {
       item
-        .setTitle("导入CSV文件")
+        .setTitle(t('deckStudyPage.menu.importCSV'))
         .setIcon("file-text")
         .onClick(() => { showCSVImportModal = true; });
+    });
+
+    menu.addItem((item) => {
+      item
+        .setTitle(t('deckStudyPage.menu.importClipboard'))
+        .setIcon('clipboard-paste')
+        .onClick(() => { showClipboardImportModal = true; });
     });
     
     menu.addItem((item) => {
       item
-        .setTitle("导出JSON数据")
+        .setTitle(t('deckStudyPage.menu.exportJSON'))
         .setIcon("download")
         .setDisabled(decks.length === 0)
         .onClick(exportDeck);
@@ -593,7 +602,7 @@
     // 功能切换分组
     menu.addItem((item) => {
       item
-        .setTitle('牌组学习')
+        .setTitle(t('navigation.deckStudy'))
         .setIcon('graduation-cap')
         .setChecked(true)
         .onClick(() => {
@@ -603,7 +612,7 @@
     
     menu.addItem((item) => {
       item
-        .setTitle('卡片管理')
+        .setTitle(t('navigation.cardManagement'))
         .setIcon('list')
         .onClick(() => {
           window.dispatchEvent(new CustomEvent('Weave:navigate', { 
@@ -614,7 +623,7 @@
     
     menu.addItem((item) => {
       item
-        .setTitle('AI助手')
+        .setTitle(t('navigation.aiAssistant'))
         .setIcon('bot')
         .onClick(() => {
           window.dispatchEvent(new CustomEvent('Weave:navigate', { 
@@ -628,7 +637,7 @@
     // 视图切换分组
     menu.addItem((item) => {
       item
-        .setTitle('切换视图')
+        .setTitle(t('navigation.switchView'))
         .setIcon('layout-grid')
         .onClick(() => {
           const viewEvent = new MouseEvent('click', { bubbles: true, clientX: evt.clientX, clientY: evt.clientY });
@@ -638,7 +647,7 @@
     
     menu.addItem((item) => {
       item
-        .setTitle('新建牌组')
+        .setTitle(t('navigation.createDeck'))
         .setIcon('folder-plus')
         .onClick(() => {
           showCreateDeckModal = true;
@@ -650,16 +659,23 @@
     // 导入功能
     menu.addItem((item) => {
       item
-        .setTitle('旧版APKG格式导入')
+        .setTitle(t('deckStudyPage.menu.importAPKG'))
         .setIcon('package')
         .onClick(() => { showAPKGImportModal = true; });
     });
     
     menu.addItem((item) => {
       item
-        .setTitle('导入CSV文件')
+        .setTitle(t('deckStudyPage.menu.importCSV'))
         .setIcon('file-text')
         .onClick(() => { showCSVImportModal = true; });
+    });
+
+    menu.addItem((item) => {
+      item
+        .setTitle(t('deckStudyPage.menu.importClipboard'))
+        .setIcon('clipboard-paste')
+        .onClick(() => { showClipboardImportModal = true; });
     });
     
     menu.addSeparator();
@@ -667,20 +683,20 @@
     // 更多操作子菜单
     menu.addItem((item) => {
       const submenu = (item as any).setSubmenu();
-      item.setTitle('操作管理').setIcon('more-horizontal');
+      item.setTitle(t('deckStudyPage.menu.management')).setIcon('more-horizontal');
       
       submenu.addItem((subItem: any) => {
         subItem
-          .setTitle('恢复官方教程牌组')
+          .setTitle(t('deckStudyPage.menu.restoreTutorialDeck'))
           .setIcon('book-open')
           .onClick(async () => {
             const success = await dataStorage.restoreGuideDeck();
             if (success) {
               await refreshData();
               plugin.app.workspace.trigger('Weave:data-changed');
-              new Notice('官方教程牌组已恢复');
+              new Notice(t('deckStudyPage.notices.tutorialRestored'));
             } else {
-              new Notice('恢复教程牌组失败');
+              new Notice(t('deckStudyPage.notices.tutorialRestoreFailed'));
             }
           });
       });
@@ -688,44 +704,13 @@
     
     menu.addItem((item) => {
       item
-        .setTitle('设置')
+        .setTitle(t('navigation.settings'))
         .setIcon('settings')
         .onClick(() => {
           safeOpenSettings(plugin.app, 'weave');
         });
     });
 
-    // 插件管理（如果有已安装的第三方插件）
-    try {
-      const { WeaveMenuRegistry } = await import('../../services/plugin-system/WeaveMenuRegistry');
-      const installedPlugins = WeaveMenuRegistry.getInstalledPlugins();
-      if (installedPlugins.length > 0) {
-        menu.addSeparator();
-        menu.addItem((item) => {
-          item.setTitle('插件管理').setIcon('puzzle');
-          const sub = (item as any).setSubmenu();
-          for (const p of installedPlugins) {
-            sub.addItem((pluginItem: any) => {
-              const label = p.name + (p.state === 'enabled' ? '' : ' (已禁用)');
-              pluginItem.setTitle(label).setIcon(p.configurable ? 'settings' : 'puzzle');
-              if (p.state !== 'enabled') {
-                pluginItem.setDisabled(true);
-                return;
-              }
-              if (p.configurable) {
-                pluginItem.onClick(() => {
-                  document.dispatchEvent(new CustomEvent('Weave:open-plugin-config', { detail: { pluginId: p.id } }));
-                });
-              } else {
-                pluginItem.setDisabled(true);
-              }
-            });
-          }
-        });
-      }
-    } catch (e) {
-      logger.debug('[DeckStudyPage] 插件管理菜单加载失败:', e);
-    }
     
     menu.showAtMouseEvent(evt);
   }
@@ -827,11 +812,11 @@
       if (targetDeckId) {
         await startStudy(targetDeckId);
       } else {
-        new Notice('没有需要学习的卡片');
+        new Notice(t('deckStudyPage.study.noDeckAvailable'));
       }
     } catch (error) {
       logger.error('[DeckStudyPage] 继续学习失败:', error);
-      new Notice('启动学习时出错，请重试');
+      new Notice(t('notifications.error.startStudy'));
     }
   }
 
@@ -966,7 +951,7 @@
   // 处理APKG导入完成
   async function handleAPKGImportComplete(result: ImportResult) {
     if (result.success) {
-      const message = `导入成功！牌组: ${result.deckName || '未知'}, 导入: ${result.stats.importedCards} 张卡片`;
+      const message = t('deckStudyPage.import.success', { deckName: result.deckName || t('common.unknown'), count: String(result.stats.importedCards) });
       const N = (plugin as any).app?.plugins?.plugins?.obsidian?.Notice ||
                  (globalThis as any).Notice || ((...args: any[]) => logger.info(args.join(' ')));
       if (typeof N === 'function') {
@@ -981,7 +966,7 @@
     } else {
       const errorMessage = result.errors && result.errors.length > 0
         ? result.errors[0].message
-        : '导入失败';
+        : t('notifications.error.importFailed');
       const N = (plugin as any).app?.plugins?.plugins?.obsidian?.Notice ||
                  (globalThis as any).Notice || ((...args: any[]) => logger.error(args.join(' ')));
       if (typeof N === 'function') {
@@ -1005,7 +990,7 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e) {
-      logger.error('导出失败', e);
+      logger.error(t('deckStudyPage.notices.exportFailed'), e);
     }
   }
 
@@ -1023,7 +1008,7 @@
         const allBlocksV4 = await storageAdapter.getBlocksByDeckV4Fast(deckId);
         
         if (allBlocksV4.length === 0) {
-          new Notice('该牌组暂无内容块');
+          new Notice(t('deckStudyPage.notices.noBlocks'));
           return;
         }
         
@@ -1043,10 +1028,10 @@
         const irStorage = new IRStorageService(plugin.app);
         await irStorage.initialize();
         const irDeck = await irStorage.getDeckById(deckId);
-        const deckName = irDeck?.name || '增量阅读';
+        const deckName = irDeck?.name || t('deckStudyPage.fallback.incrementalReading');
         
         if (queueResult.queue.length === 0) {
-          new Notice(`"${deckName}" 暂无到期内容块`);
+          new Notice(t('deckStudyPage.notices.noDueBlocks', { name: deckName }));
           return;
         }
         
@@ -1062,31 +1047,31 @@
         await plugin.openIRFocusView(deckId, queueResult.queue, deckName, focusStats);
       } catch (error) {
         logger.error('[DeckStudyPage] IR kanban 开始阅读失败:', error);
-        new Notice('开始阅读失败');
+        new Notice(t('deckStudyPage.notices.startReadingFailed'));
       }
     } else if (selectedFilter === 'question-bank') {
       // QB牌组：打开考试界面
       try {
         if (!plugin.questionBankService) {
-          new Notice('题库服务未初始化');
+          new Notice(t('deckStudyPage.notices.qbServiceNotInit'));
           return;
         }
         const questions = await plugin.questionBankService.getQuestionsByBank(deckId);
         const bank = await plugin.questionBankService.getBankById(deckId);
         
         if (questions.length === 0) {
-          new Notice('该题库暂无题目');
+          new Notice(t('deckStudyPage.notices.noQuestions'));
           return;
         }
         
         await plugin.openQuestionBankSession({
           bankId: deckId,
-          bankName: bank?.name || '未知题库',
+          bankName: bank?.name || t('deckStudyPage.fallback.unknownBank'),
           mode: 'exam'
         });
       } catch (error) {
         logger.error('[DeckStudyPage] QB kanban 开始考试失败:', error);
-        new Notice('开始考试失败');
+        new Notice(t('deckStudyPage.notices.startExamFailed'));
       }
     } else {
       // 记忆牌组：原有逻辑
@@ -1103,18 +1088,18 @@
         const irStorage = new IRStorageService(plugin.app);
         await irStorage.initialize();
         const deck = await irStorage.getDeckById(deckId);
-        if (!deck) { new Notice('牌组不存在'); return; }
+        if (!deck) { new Notice(t('deckStudyPage.notices.deckNotFound')); return; }
         
         const modal = new Modal(plugin.app);
-        modal.titleEl.setText('编辑牌组');
+        modal.titleEl.setText(t('deckStudyPage.edit.title'));
         let newName = deck.name;
         let newTag = (deck.tags && deck.tags.length > 0) ? deck.tags[0] : '';
         
-        new Setting(modal.contentEl).setName('名称').addText((text: any) => {
+        new Setting(modal.contentEl).setName(t('deckStudyPage.edit.name')).addText((text: any) => {
           text.setValue(newName).onChange((v: string) => { newName = v; });
           text.inputEl.style.width = '100%';
         });
-        new Setting(modal.contentEl).setName('牌组标签(单选)').setDesc('标签用于牌组分类，仅可选择一个标签');
+        new Setting(modal.contentEl).setName(t('deckStudyPage.edit.tag')).setDesc(t('deckStudyPage.edit.tagDesc'));
         const tagContainer = modal.contentEl.createDiv({ cls: 'weave-tag-input-container' });
         const tagDisplay = tagContainer.createDiv({ cls: 'weave-tag-display' });
         function renderTag() {
@@ -1125,7 +1110,7 @@
           }
         }
         renderTag();
-        const tagInput = tagContainer.createEl('input', { type: 'text', placeholder: '输入标签后按回车添加' });
+        const tagInput = tagContainer.createEl('input', { type: 'text', placeholder: t('deckStudyPage.edit.tagPlaceholder') });
         tagInput.style.width = '100%';
         tagInput.addEventListener('keydown', (e: KeyboardEvent) => {
           if (e.key === 'Enter' && tagInput.value.trim()) { e.preventDefault(); newTag = tagInput.value.trim(); tagInput.value = ''; renderTag(); }
@@ -1133,8 +1118,8 @@
         
         const btnContainer = modal.contentEl.createDiv({ cls: 'modal-button-container' });
         btnContainer.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-top:16px';
-        btnContainer.createEl('button', { text: '取消' }).onclick = () => modal.close();
-        const saveBtn = btnContainer.createEl('button', { text: '保存', cls: 'mod-cta' });
+        btnContainer.createEl('button', { text: t('common.cancel') }).onclick = () => modal.close();
+        const saveBtn = btnContainer.createEl('button', { text: t('common.save'), cls: 'mod-cta' });
         saveBtn.onclick = async () => {
           if (!newName.trim()) return;
           try {
@@ -1144,19 +1129,19 @@
             deck.updatedAt = new Date().toISOString();
             await irStorage.saveDeck(deck);
             if (oldName !== deck.name) {
-              try { await irStorage.migrateChunkDeckNameInYAML(oldName, deck.name); } catch (e) { logger.warn('[kanbanEditDeck] IR YAML迁移失败:', e); }
+              try { await irStorage.migrateChunkDeckNameInYAML(oldName, deck.name); } catch (e) { logger.warn('[kanbanEditDeck] IR YAML migration failed:', e); }
               try {
                 const outputRoot = plugin.settings?.incrementalReading?.importFolder;
                 const chunkFileService = new IRChunkFileService(plugin.app, outputRoot);
                 await chunkFileService.renameDeckIndexCard(oldName, deck.name);
-              } catch (e) { logger.warn('[kanbanEditDeck] IR索引卡片重命名失败:', e); }
+              } catch (e) { logger.warn('[kanbanEditDeck] IR index card rename failed:', e); }
             }
             await loadIRDeckTree();
             window.dispatchEvent(new CustomEvent('Weave:ir-data-updated'));
             plugin.app.workspace.trigger('Weave:data-changed');
-            new Notice('牌组已更新');
+            new Notice(t('deckStudyPage.notices.deckUpdated'));
             modal.close();
-          } catch (error) { logger.error('[kanbanEditDeck] IR编辑失败:', error); new Notice('编辑失败'); }
+          } catch (error) { logger.error('[kanbanEditDeck] IR edit failed:', error); new Notice(t('deckStudyPage.notices.editFailed')); }
         };
         modal.open();
       } catch (error) { logger.error('[kanbanEditDeck] IR编辑模态窗创建失败:', error); }
@@ -1164,18 +1149,18 @@
       // QB牌组编辑
       try {
         const bank = decks.find(d => d.id === deckId) || (await dataStorage.getDeck(deckId));
-        if (!bank) { new Notice('牌组不存在'); return; }
+        if (!bank) { new Notice(t('deckStudyPage.notices.deckNotFound')); return; }
         
         const modal = new Modal(plugin.app);
-        modal.titleEl.setText('编辑牌组');
+        modal.titleEl.setText(t('deckStudyPage.edit.title'));
         let newName = bank.name;
         let newTag = (bank.tags && bank.tags.length > 0) ? bank.tags[0] : '';
         
-        new Setting(modal.contentEl).setName('名称').addText((text: any) => {
+        new Setting(modal.contentEl).setName(t('deckStudyPage.edit.name')).addText((text: any) => {
           text.setValue(newName).onChange((v: string) => { newName = v; });
           text.inputEl.style.width = '100%';
         });
-        new Setting(modal.contentEl).setName('牌组标签(单选)').setDesc('标签用于牌组分类，仅可选择一个标签');
+        new Setting(modal.contentEl).setName(t('deckStudyPage.edit.tag')).setDesc(t('deckStudyPage.edit.tagDesc'));
         const tagContainer = modal.contentEl.createDiv({ cls: 'weave-tag-input-container' });
         const tagDisplay = tagContainer.createDiv({ cls: 'weave-tag-display' });
         function renderTag() {
@@ -1186,7 +1171,7 @@
           }
         }
         renderTag();
-        const tagInput = tagContainer.createEl('input', { type: 'text', placeholder: '输入标签后按回车添加' });
+        const tagInput = tagContainer.createEl('input', { type: 'text', placeholder: t('deckStudyPage.edit.tagPlaceholder') });
         tagInput.style.width = '100%';
         tagInput.addEventListener('keydown', (e: KeyboardEvent) => {
           if (e.key === 'Enter' && tagInput.value.trim()) { e.preventDefault(); newTag = tagInput.value.trim(); tagInput.value = ''; renderTag(); }
@@ -1194,8 +1179,8 @@
         
         const btnContainer = modal.contentEl.createDiv({ cls: 'modal-button-container' });
         btnContainer.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-top:16px';
-        btnContainer.createEl('button', { text: '取消' }).onclick = () => modal.close();
-        const saveBtn = btnContainer.createEl('button', { text: '保存', cls: 'mod-cta' });
+        btnContainer.createEl('button', { text: t('common.cancel') }).onclick = () => modal.close();
+        const saveBtn = btnContainer.createEl('button', { text: t('common.save'), cls: 'mod-cta' });
         saveBtn.onclick = async () => {
           if (!newName.trim()) return;
           try {
@@ -1203,9 +1188,9 @@
             await dataStorage.saveDeck(updated);
             await loadQBDeckTree();
             plugin.app.workspace.trigger('Weave:data-changed');
-            new Notice('牌组已更新');
+            new Notice(t('deckStudyPage.notices.deckUpdated'));
             modal.close();
-          } catch (error) { logger.error('[kanbanEditDeck] QB编辑失败:', error); new Notice('编辑失败'); }
+          } catch (error) { logger.error('[kanbanEditDeck] QB edit failed:', error); new Notice(t('deckStudyPage.notices.editFailed')); }
         };
         modal.open();
       } catch (error) { logger.error('[kanbanEditDeck] QB编辑模态窗创建失败:', error); }
@@ -1222,27 +1207,27 @@
         const irStorage = new IRStorageService(plugin.app);
         await irStorage.initialize();
         const deck = await irStorage.getDeckById(deckId);
-        if (!deck) { new Notice('牌组不存在'); return; }
-        const confirmed = await showObsidianConfirm(plugin.app, `确定要删除增量阅读牌组"${deck.name}"吗？`, { title: '确认删除' });
+        if (!deck) { new Notice(t('deckStudyPage.notices.deckNotFound')); return; }
+        const confirmed = await showObsidianConfirm(plugin.app, `${t('common.confirmDelete')}: "${deck.name}"?`, { title: t('common.confirmDelete') });
         if (!confirmed) return;
         await irStorage.deleteDeck(deckId);
         await loadIRDeckTree();
         window.dispatchEvent(new CustomEvent('Weave:ir-data-updated'));
         plugin.app.workspace.trigger('Weave:data-changed');
-        new Notice('牌组已删除');
-      } catch (error) { logger.error('[kanbanDeleteDeck] IR删除失败:', error); new Notice('删除失败'); }
+        new Notice(t('notifications.success.cardDeleted'));
+      } catch (error) { logger.error('[kanbanDeleteDeck] IR delete failed:', error); new Notice(t('notifications.error.deleteFailed')); }
     } else if (selectedFilter === 'question-bank') {
       try {
         const { showObsidianConfirm } = await import('../../utils/obsidian-confirm');
         const bank = decks.find(d => d.id === deckId) || (await dataStorage.getDeck(deckId));
-        if (!bank) { new Notice('牌组不存在'); return; }
-        const confirmed = await showObsidianConfirm(plugin.app, `确定要删除考试牌组"${bank.name}"吗？`, { title: '确认删除' });
+        if (!bank) { new Notice(t('deckStudyPage.notices.deckNotFound')); return; }
+        const confirmed = await showObsidianConfirm(plugin.app, `${t('common.confirmDelete')}: "${bank.name}"?`, { title: t('common.confirmDelete') });
         if (!confirmed) return;
         await dataStorage.deleteDeck(deckId);
         await loadQBDeckTree();
         plugin.app.workspace.trigger('Weave:data-changed');
-        new Notice('牌组已删除');
-      } catch (error) { logger.error('[kanbanDeleteDeck] QB删除失败:', error); new Notice('删除失败'); }
+        new Notice(t('notifications.success.cardDeleted'));
+      } catch (error) { logger.error('[kanbanDeleteDeck] QB delete failed:', error); new Notice(t('notifications.error.deleteFailed')); }
     } else {
       await deleteDeck(deckId);
     }
@@ -1403,7 +1388,7 @@
         
         if (physicalTotalCards === 0) {
           //  场景1：真正的空牌组（物理上没有卡片）
-          noCardsDeckName = deck?.name || '牌组';
+          noCardsDeckName = deck?.name || t('deckStudyPage.fallback.deck');
           noCardsReason = 'empty';
           noCardsStats = undefined;  // 空牌组无需统计
           noCardsCurrentDeckId = deckId;
@@ -1434,7 +1419,7 @@
             const todayStudyTime = todaySessions.reduce((sum, s) => sum + (s.totalTime || 0), 0) / 1000; // 秒
             const todayReviewed = todaySessions.reduce((sum, s) => sum + (s.cardsReviewed || 0), 0);
             
-            celebrationDeckName = deck?.name || '牌组';
+            celebrationDeckName = deck?.name || t('deckStudyPage.fallback.deck');
             celebrationDeckId = deckId;
             celebrationStats = {
               reviewed: todayReviewed,
@@ -1462,7 +1447,7 @@
             const todayStudyTime = todaySessions.reduce((sum, s) => sum + (s.totalTime || 0), 0) / 1000;
             const todayReviewed = todaySessions.reduce((sum, s) => sum + (s.cardsReviewed || 0), 0);
             
-            celebrationDeckName = deck?.name || '牌组';
+            celebrationDeckName = deck?.name || t('deckStudyPage.fallback.deck');
             celebrationDeckId = deckId;
             celebrationStats = {
               reviewed: todayReviewed,
@@ -1474,7 +1459,7 @@
           }
         } else if (newCards > 0 && learnedNewCardsToday >= newCardsPerDay) {
           //  场景3：新卡片配额已用完
-          noCardsDeckName = deck?.name || '牌组';
+          noCardsDeckName = deck?.name || t('deckStudyPage.fallback.deck');
           noCardsReason = 'all-learned';  // 使用 'all-learned' 表示今日目标达成
           
           //  计算最近到期时间
@@ -1496,7 +1481,7 @@
           showNoCardsModal = true;
         } else {
           //  场景4：有卡片但都还没到期
-          noCardsDeckName = deck?.name || '牌组';
+          noCardsDeckName = deck?.name || t('deckStudyPage.fallback.deck');
           noCardsReason = 'no-due';
           
           //  计算最近到期时间
@@ -1522,7 +1507,7 @@
       logger.error('Error starting study:', error);
       const N = (plugin as any).app?.plugins?.plugins?.obsidian?.Notice || (globalThis as any).Notice;
       if (typeof N === 'function') {
-        new N('启动学习时出错，请重试。', 3000);
+        new N(t('deckStudyPage.studyActions.startError'), 3000);
       }
     } finally {
       //  释放锁
@@ -1593,7 +1578,7 @@
       const advanceCards = getAdvanceStudyCards(allDeckCards, 20, maxAdvanceDays);
       
       if (advanceCards.length === 0) {
-        new Notice('暂无可提前学习的卡片');
+        new Notice(t('deckStudyPage.studyActions.noAdvanceCards'));
         return;
       }
       
@@ -1626,10 +1611,10 @@
         cardIds
       });
       
-      new Notice(`开始提前学习（${advanceCards.length} 张未到期卡片）`);
+      new Notice(t('deckStudyPage.studyActions.advanceStudyStarted', { count: String(advanceCards.length) }));
     } catch (error) {
       logger.error('[DeckStudyPage] 启动提前学习失败:', error);
-      new Notice('启动提前学习失败');
+      new Notice(t('deckStudyPage.studyActions.advanceStudyFailed'));
     }
   }
 
@@ -1654,17 +1639,17 @@
     
     if (!deckId) {
       logger.error('[DeckStudyPage] 无法开始考试：缺少牌组ID');
-      new Notice('无法开始考试：缺少牌组信息');
+      new Notice(t('deckStudyPage.exam.missingDeckInfo'));
       return;
     }
     
     try {
-      logger.info('[DeckStudyPage] 从庆祝模态窗开始考试模式，牌组ID:', deckId);
+      logger.info('[DeckStudyPage] Starting exam mode from celebration modal, deckId:', deckId);
       
-      // 检查题库服务是否可用
+      // Check if question bank service is available
       if (!plugin.questionBankService) {
-        logger.error('[DeckStudyPage] 题库服务未初始化');
-        new Notice('题库功能未启用');
+        logger.error('[DeckStudyPage] Question bank service not initialized');
+        new Notice(t('deckStudyPage.exam.qbNotEnabled'));
         return;
       }
       
@@ -1720,37 +1705,36 @@
       if (!questionBank) {
         // 没有对应的考试牌组
         logger.info('[DeckStudyPage] 暂无该记忆牌组对应的考试牌组');
-        new Notice('暂无该记忆牌组对应的考试牌组');
+        new Notice(t('deckStudyPage.exam.noPairedBank'));
         return;
       }
       
-      // 打开考试学习会话
-      logger.info('[DeckStudyPage] 打开考试牌组:', questionBank.id, questionBank.name);
+      // Open exam session
+      logger.info('[DeckStudyPage] Opening question bank:', questionBank.id, questionBank.name);
       await plugin.openQuestionBankSession({
         bankId: questionBank.id,
         bankName: questionBank.name
       });
       
     } catch (error) {
-      logger.error('[DeckStudyPage] 开始考试失败:', error);
-      new Notice('开始考试失败');
+      logger.error('[DeckStudyPage] Failed to start exam:', error);
+      new Notice(t('deckStudyPage.exam.startFailed'));
     }
   }
   
-  // 🆕 关闭无卡片提示模态窗
+  // Close no-cards modal
   function handleCloseNoCardsModal() {
     showNoCardsModal = false;
   }
   
-  // 🆕 从无卡片模态窗开始考试
+  // Start exam from no-cards modal
   async function handleStartPracticeFromNoCards() {
-    // 关闭无卡片模态窗
     showNoCardsModal = false;
     const deckId = noCardsCurrentDeckId;
     
     if (!deckId) {
-      logger.error('[DeckStudyPage] 无法开始考试：缺少牌组ID');
-      new Notice('无法开始考试：缺少牌组信息');
+      logger.error('[DeckStudyPage] Cannot start exam: missing deck ID');
+      new Notice(t('deckStudyPage.exam.missingDeckInfo'));
       return;
     }
     
@@ -1760,7 +1744,7 @@
       // 检查题库服务是否可用
       if (!plugin.questionBankService) {
         logger.error('[DeckStudyPage] 题库服务未初始化');
-        new Notice('题库功能未启用');
+        new Notice(t('deckStudyPage.exam.qbNotEnabled'));
         return;
       }
       
@@ -1816,20 +1800,20 @@
       if (!questionBank) {
         // 没有对应的考试牌组
         logger.info('[DeckStudyPage] 暂无该记忆牌组对应的考试牌组');
-        new Notice('暂无该记忆牌组对应的考试牌组');
+        new Notice(t('deckStudyPage.exam.noPairedBank'));
         return;
       }
       
-      // 打开考试学习会话
-      logger.info('[DeckStudyPage] 打开考试牌组:', questionBank.id, questionBank.name);
+      // Open exam session
+      logger.info('[DeckStudyPage] Opening question bank:', questionBank.id, questionBank.name);
       await plugin.openQuestionBankSession({
         bankId: questionBank.id,
         bankName: questionBank.name
       });
       
     } catch (error) {
-      logger.error('[DeckStudyPage] 开始考试失败:', error);
-      new Notice('开始考试失败');
+      logger.error('[DeckStudyPage] Failed to start exam:', error);
+      new Notice(t('deckStudyPage.exam.startFailed'));
     }
   }
   
@@ -1862,12 +1846,12 @@
       return `${dateStr} ${timeStr}`;
     } else if (days === 1) {
       const timeStr = `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}`;
-      return `明天 ${timeStr}`;
+      return `${t('deckStudyPage.time.tomorrow')} ${timeStr}`;
     } else if (hours > 0) {
-      return `${hours} 小时后`;
+      return t('deckStudyPage.time.hoursLater', { hours: String(hours) });
     } else {
       const minutes = Math.floor(diff / (1000 * 60));
-      return `${minutes} 分钟后`;
+      return t('deckStudyPage.time.minutesLater', { minutes: String(minutes) });
     }
   }
 
@@ -1927,20 +1911,17 @@
   function showEditDeckModalWithObsidianAPI(deck: Deck) {
     const modal = new Modal(plugin.app);
     
-    modal.titleEl.setText('编辑牌组');
+    modal.titleEl.setText(t('deckStudyPage.edit.title'));
     
-    // 牌组名称
     let newName = deck.name;
-    // 标签列表（复制一份避免直接修改原数据）
     let selectedTags = [...(deck.tags || [])];
     
-    // 名称输入
     new Setting(modal.contentEl)
-      .setName('牌组名称')
-      .setDesc('输入牌组的显示名称')
+      .setName(t('deckStudyPage.editModal.deckName'))
+      .setDesc(t('deckStudyPage.editModal.deckNameDesc'))
       .addText((text: any) => {
         text
-          .setPlaceholder('输入牌组名称')
+          .setPlaceholder(t('deckStudyPage.editModal.deckNamePlaceholder'))
           .setValue(newName)
           .onChange((value: string) => {
             newName = value;
@@ -1960,12 +1941,12 @@
     tagHeader.style.alignItems = 'center';
     tagHeader.style.marginBottom = '8px';
     
-    const tagTitle = tagHeader.createEl('span', { text: '标签' });
+    const tagTitle = tagHeader.createEl('span', { text: t('deckStudyPage.editModal.tags') });
     tagTitle.style.fontWeight = '500';
     tagTitle.style.color = 'var(--text-normal)';
     
     // 添加标签按钮
-    const addTagBtn = tagHeader.createEl('button', { text: '+ 添加' });
+    const addTagBtn = tagHeader.createEl('button', { text: t('deckStudyPage.editModal.addTag') });
     addTagBtn.style.fontSize = '12px';
     addTagBtn.style.padding = '4px 8px';
     addTagBtn.style.borderRadius = '4px';
@@ -1988,7 +1969,7 @@
       tagListContainer.empty();
       
       if (selectedTags.length === 0) {
-        const emptyHint = tagListContainer.createEl('span', { text: '暂无标签' });
+        const emptyHint = tagListContainer.createEl('span', { text: t('deckStudyPage.editModal.noTags') });
         emptyHint.style.color = 'var(--text-muted)';
         emptyHint.style.fontSize = '13px';
         return;
@@ -2032,7 +2013,7 @@
       
       const tagInput = inputContainer.createEl('input', { 
         type: 'text',
-        placeholder: '输入标签名称'
+        placeholder: t('deckStudyPage.editModal.tagNamePlaceholder')
       });
       tagInput.style.flex = '1';
       tagInput.style.padding = '6px 10px';
@@ -2040,7 +2021,7 @@
       tagInput.style.border = '1px solid var(--background-modifier-border)';
       tagInput.style.background = 'var(--background-primary)';
       
-      const confirmBtn = inputContainer.createEl('button', { text: '确定' });
+      const confirmBtn = inputContainer.createEl('button', { text: t('deckStudyPage.editModal.confirm') });
       confirmBtn.style.padding = '6px 12px';
       confirmBtn.style.borderRadius = '4px';
       confirmBtn.style.border = 'none';
@@ -2048,7 +2029,7 @@
       confirmBtn.style.color = 'var(--text-on-accent)';
       confirmBtn.style.cursor = 'pointer';
       
-      const cancelInputBtn = inputContainer.createEl('button', { text: '取消' });
+      const cancelInputBtn = inputContainer.createEl('button', { text: t('common.cancel') });
       cancelInputBtn.style.padding = '6px 12px';
       cancelInputBtn.style.borderRadius = '4px';
       cancelInputBtn.style.border = '1px solid var(--background-modifier-border)';
@@ -2085,20 +2066,19 @@
     buttonContainer.style.marginTop = '16px';
     
     // 取消按钮
-    const cancelButton = buttonContainer.createEl('button', { text: '取消' });
+    const cancelButton = buttonContainer.createEl('button', { text: t('common.cancel') });
     cancelButton.onclick = () => {
       modal.close();
     };
     
-    // 保存按钮
     const saveButton = buttonContainer.createEl('button', { 
-      text: '保存',
+      text: t('common.save'),
       cls: 'mod-cta'
     });
     saveButton.onclick = async () => {
       // 验证名称
       if (!newName.trim()) {
-        new Notice('牌组名称不能为空');
+        new Notice(t('deckStudyPage.editModal.deckNameRequired'));
         return;
       }
       
@@ -2133,11 +2113,11 @@
         // 通知全局侧边栏刷新
         plugin.app.workspace.trigger('Weave:data-changed');
         
-        new Notice('牌组已更新');
+        new Notice(t('deckStudyPage.notices.deckUpdated'));
         modal.close();
       } catch (error) {
-        logger.error('[DeckStudyPage] 更新牌组失败:', error);
-        new Notice(`更新失败: ${error instanceof Error ? error.message : '未知错误'}`);
+        logger.error('[DeckStudyPage] Failed to update deck:', error);
+        new Notice(`${t('deckStudyPage.editModal.updateFailed')}: ${error instanceof Error ? error.message : t('common.unknown')}`);
       }
     };
     
@@ -2156,23 +2136,21 @@
       // 获取牌组信息
       const deck = decks.find(d => d.id === deckId);
       if (!deck) {
-        new Notice('牌组不存在');
+        new Notice(t('deckStudyPage.notices.deckNotFound'));
         return;
       }
       
       const cardUUIDs = deck.cardUUIDs || [];
       const cardCount = cardUUIDs.length;
       
-      // 构建确认消息
-      let confirmMessage = `确定要删除牌组"${deck.name}"吗？`;
+      let confirmMessage = t('deckStudyPage.deleteModal.confirmMessage', { name: deck.name });
       if (cardCount > 0) {
-        confirmMessage += `\n\n该牌组引用了 ${cardCount} 张卡片，删除牌组将同时删除所有引用的卡片（即使被其他牌组引用）。`;
+        confirmMessage += `\n\n${t('deckStudyPage.deleteModal.cardWarning', { count: String(cardCount) })}`;
       }
-      confirmMessage += '\n\n此操作不可撤销！';
+      confirmMessage += `\n\n${t('deckStudyPage.deleteModal.irreversible')}`;
       
-      //  使用 Obsidian Modal 代替 confirm()，避免焦点劫持问题
       const modal = new Modal(plugin.app);
-      modal.titleEl.setText('确认删除');
+      modal.titleEl.setText(t('deckStudyPage.deleteModal.title'));
       
       // 创建消息内容（支持多行）
       const messageEl = modal.contentEl.createDiv({ cls: 'delete-confirm-message' });
@@ -2189,13 +2167,13 @@
       
       let shouldDelete = false;
       
-      const cancelButton = buttonContainer.createEl('button', { text: '取消' });
+      const cancelButton = buttonContainer.createEl('button', { text: t('common.cancel') });
       cancelButton.onclick = () => {
         modal.close();
       };
       
       const deleteButton = buttonContainer.createEl('button', { 
-        text: '确认删除',
+        text: t('deckStudyPage.deleteModal.confirmButton'),
         cls: 'mod-warning'
       });
       deleteButton.onclick = () => {
@@ -2214,8 +2192,8 @@
             
             const { ProgressModal } = await import('../../utils/progress-modal');
             const progress = new ProgressModal(plugin.app, {
-              title: '删除牌组卡片',
-              description: `正在删除牌组"${deck.name}"中的 ${cardCount} 张卡片...`,
+              title: t('deckStudyPage.deleteModal.progressTitle'),
+              description: t('deckStudyPage.deleteModal.progressDesc', { name: deck.name, count: String(cardCount) }),
               total: 3, // 三个阶段
               cancellable: false
             });
@@ -2224,7 +2202,7 @@
             const cardUUIDSet = new Set(cardUUIDs);
             
             // 阶段 1/3: 从其他牌组批量移除对这些卡片的引用
-            progress.updateProgress(0, '清理其他牌组的引用...');
+            progress.updateProgress(0, t('deckStudyPage.deleteModal.cleaningRefs'));
             const otherDecks = await dataStorage.getDecks();
             for (const otherDeck of otherDecks) {
               if (otherDeck.id === deckId) continue;
@@ -2237,30 +2215,17 @@
                 logger.debug(`[DeckStudyPage] 从牌组"${otherDeck.name}"移除了 ${before - otherDeck.cardUUIDs.length} 个引用`);
               }
             }
-            progress.increment('引用清理完成');
+            progress.increment(t('deckStudyPage.deleteModal.refsCleaned'));
             
-            // 阶段 2/3: 通过 CardFileService 批量删除卡片数据（按分片一次读写）
-            progress.updateProgress(1, '删除卡片数据...');
-            let deletedCount = 0;
-            if (plugin.cardFileService) {
-              const batchResult = await plugin.cardFileService.deleteCardsBatch(cardUUIDs);
-              deletedCount = batchResult.deleted.length;
-              logger.info(`[DeckStudyPage] CardFileService批量删除: 成功${batchResult.deleted.length}, 未找到${batchResult.notFound.length}`);
-            } else {
-              logger.warn('[DeckStudyPage] cardFileService 不可用，回退到逐卡删除');
-              for (const uuid of cardUUIDs) {
-                try {
-                  const res = await dataStorage.deleteCard(uuid);
-                  if (res.success && res.data) deletedCount++;
-                } catch (e) {
-                  logger.warn(`[DeckStudyPage] 回退删除卡片失败: ${uuid}`, e);
-                }
-              }
-            }
-            progress.increment('卡片数据已删除');
+            // 阶段 2/3: 统一通过 dataStorage 删除，确保触发源文档清理
+            progress.updateProgress(1, t('deckStudyPage.deleteModal.deletingCards'));
+            const deleteResult = await dataStorage.deleteCards(cardUUIDs);
+            const deletedCount = deleteResult.deleted.length;
+            logger.info(`[DeckStudyPage] 统一批量删除完成: 成功${deleteResult.deleted.length}, 失败${deleteResult.failed.length}`);
+            progress.increment(t('deckStudyPage.deleteModal.cardsDeleted'));
             
             // 阶段 3/3: 清理缓存和索引
-            progress.updateProgress(2, '清理缓存...');
+            progress.updateProgress(2, t('deckStudyPage.deleteModal.cleaningCache'));
             if (plugin.cardMetadataCache) {
               for (const uuid of cardUUIDs) {
                 plugin.cardMetadataCache.invalidate(uuid);
@@ -2275,9 +2240,9 @@
             for (const uuid of cardUUIDs) {
               plugin.app.workspace.trigger('Weave:card-deleted', uuid);
             }
-            progress.increment('清理完成');
+            progress.increment(t('deckStudyPage.deleteModal.cacheCleaned'));
             
-            progress.setComplete(`已删除 ${deletedCount} 张卡片`);
+            progress.setComplete(t('deckStudyPage.deleteModal.deletedCount', { count: String(deletedCount) }));
             
             logger.info(`[DeckStudyPage] 删除牌组卡片完成: ${deletedCount}/${cardCount}`);
           }
@@ -2300,17 +2265,20 @@
           // 通知全局侧边栏刷新
           plugin.app.workspace.trigger('Weave:data-changed');
           
-          new Notice(`成功删除牌组"${deck.name}"${cardCount > 0 ? `及其 ${cardCount} 张卡片` : ''}`);
+          const successMsg = cardCount > 0
+            ? t('deckStudyPage.deleteModal.successWithCards', { name: deck.name, count: String(cardCount) })
+            : t('deckStudyPage.deleteModal.success', { name: deck.name });
+          new Notice(successMsg);
         } catch (error) {
-          logger.error('[DeckStudyPage] 删除牌组失败:', error);
-          new Notice(`删除失败: ${error instanceof Error ? error.message : '未知错误'}`);
+          logger.error('[DeckStudyPage] Delete deck failed:', error);
+          new Notice(`${t('deckStudyPage.deleteModal.failed')}: ${error instanceof Error ? error.message : t('common.unknown')}`);
         }
       };
       
       modal.open();
     } catch (error) {
-      logger.error('[DeckStudyPage] 删除牌组失败:', error);
-      new Notice(`删除失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      logger.error('[DeckStudyPage] Delete deck failed:', error);
+      new Notice(`${t('deckStudyPage.deleteModal.failed')}: ${error instanceof Error ? error.message : t('common.unknown')}`);
     }
   }
 
@@ -2321,14 +2289,13 @@
     try {
       // 检查引用式牌组服务是否可用
       if (!plugin.referenceDeckService) {
-        new Notice('引用式牌组服务未初始化');
+        new Notice(t('deckStudyPage.dissolve.serviceNotInit'));
         return;
       }
       
-      // 获取牌组信息
       const deck = decks.find(d => d.id === deckId);
       if (!deck) {
-        new Notice('牌组不存在');
+        new Notice(t('deckStudyPage.notices.deckNotFound'));
         return;
       }
       
@@ -2336,17 +2303,17 @@
       
       // 使用 Obsidian Modal 确认
       const modal = new Modal(plugin.app);
-      modal.titleEl.setText('解散牌组');
+      modal.titleEl.setText(t('deckStudyPage.dissolve.title'));
       
       // 创建消息内容
       const messageEl = modal.contentEl.createDiv({ cls: 'dissolve-confirm-message' });
-      messageEl.createEl('p', { text: `确定要解散牌组"${deck.name}"吗？` });
+      messageEl.createEl('p', { text: t('deckStudyPage.dissolve.confirmMessage', { name: deck.name }) });
       messageEl.createEl('p', { 
-        text: `该牌组引用了 ${cardCount} 张卡片。`,
+        text: t('deckStudyPage.dissolve.cardCount', { count: String(cardCount) }),
         cls: 'dissolve-card-count'
       });
       messageEl.createEl('p', { 
-        text: '⚠️ 解散后，牌组将被删除，但卡片数据会保留。',
+        text: t('deckStudyPage.dissolve.warning'),
         cls: 'dissolve-warning'
       });
       
@@ -2359,13 +2326,13 @@
       
       let shouldDissolve = false;
       
-      const cancelButton = buttonContainer.createEl('button', { text: '取消' });
+      const cancelButton = buttonContainer.createEl('button', { text: t('common.cancel') });
       cancelButton.onclick = () => {
         modal.close();
       };
       
       const dissolveButton = buttonContainer.createEl('button', { 
-        text: '确认解散',
+        text: t('deckStudyPage.dissolve.confirmButton'),
         cls: 'mod-warning'
       });
       dissolveButton.onclick = () => {
@@ -2377,12 +2344,12 @@
         if (!shouldDissolve) return;
         
         try {
-          new Notice('正在解散牌组...');
+          new Notice(t('deckStudyPage.dissolve.inProgress'));
           
           const result = await plugin.referenceDeckService!.dissolveDeck(deckId);
           
           if (!result.success) {
-            throw new Error(result.error || '解散失败');
+            throw new Error(result.error || t('deckStudyPage.dissolve.failed'));
           }
           
           // 刷新数据
@@ -2392,22 +2359,21 @@
           // 通知全局侧边栏刷新
           plugin.app.workspace.trigger('Weave:data-changed');
           
-          // 显示成功消息
-          let message = `牌组"${deck.name}"已解散`;
+          let message = t('deckStudyPage.dissolve.success', { name: deck.name });
           if (result.orphanedCards.length > 0) {
-            message += `，${result.orphanedCards.length} 张卡片变为孤儿卡片`;
+            message += t('deckStudyPage.dissolve.orphanedCards', { count: String(result.orphanedCards.length) });
           }
           new Notice(message);
         } catch (error) {
-          logger.error('[DeckStudyPage] 解散牌组失败:', error);
-          new Notice(`解散失败: ${error instanceof Error ? error.message : '未知错误'}`);
+          logger.error('[DeckStudyPage] Dissolve deck failed:', error);
+          new Notice(`${t('deckStudyPage.dissolve.failed')}: ${error instanceof Error ? error.message : t('common.unknown')}`);
         }
       };
       
       modal.open();
     } catch (error) {
-      logger.error('[DeckStudyPage] 解散牌组失败:', error);
-      new Notice(`解散失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      logger.error('[DeckStudyPage] Dissolve deck failed:', error);
+      new Notice(`${t('deckStudyPage.dissolve.failed')}: ${error instanceof Error ? error.message : t('common.unknown')}`);
     }
   }
 
@@ -2437,7 +2403,7 @@
       logger.debug('[DeckStudyPage] 打开牌组分析:', { deckId, cardCount: deckCards.length });
     } catch (error) {
       logger.error('[DeckStudyPage] 打开牌组分析失败:', error);
-      new Notice('打开牌组分析失败');
+      new Notice(t('deckStudyPage.analyticsAction.openFailed'));
     }
   }
 
@@ -2460,7 +2426,7 @@
     // 🆕 提前学习功能
     menu.addItem((item) =>
       item
-        .setTitle("提前学习")
+        .setTitle(t('deckStudyPage.contextMenu.advanceStudy'))
         .setIcon("fast-forward")
         .onClick(async () => await startAdvanceStudy(deckId))
     );
@@ -2471,7 +2437,7 @@
     //  牌组分析
     menu.addItem((item) =>
       item
-        .setTitle("牌组分析")
+        .setTitle(t('deckStudyPage.contextMenu.deckAnalytics'))
         .setIcon("bar-chart-2")
         .onClick(() => openDeckAnalytics(deckId))
     );
@@ -2482,14 +2448,14 @@
 
     menu.addItem((item) =>
       item
-        .setTitle("牌组编辑")
+        .setTitle(t('deckStudyPage.contextMenu.editDeck'))
         .setIcon("edit")
         .onClick(() => editDeck(deckId))
     );
 
     menu.addItem((item) =>
       item
-        .setTitle("删除")
+        .setTitle(t('deckStudyPage.contextMenu.delete'))
         .setIcon("trash-2")
         .onClick(() => deleteDeck(deckId))
     );
@@ -2497,7 +2463,7 @@
     // 🆕 v2.0 解散牌组（引用式牌组系统）
     menu.addItem((item) =>
       item
-        .setTitle("解散牌组")
+        .setTitle(t('deckStudyPage.contextMenu.dissolveDeck'))
         .setIcon("unlink")
         .onClick(() => dissolveDeck(deckId))
     );
@@ -2646,6 +2612,11 @@
       showCSVImportModal = true;
     };
 
+    // 粘贴卡片批量导入
+    const handleClipboardImport = () => {
+      showClipboardImportModal = true;
+    };
+
     // 🆕 处理 JSON 导出
     const handleJSONExport = () => {
       exportDeck();
@@ -2657,9 +2628,9 @@
       if (success) {
         await refreshData();
         plugin.app.workspace.trigger('Weave:data-changed');
-        new Notice('官方教程牌组已恢复');
+        new Notice(t('deckStudyPage.notices.tutorialRestored'));
       } else {
-        new Notice('恢复教程牌组失败');
+        new Notice(t('deckStudyPage.notices.tutorialRestoreFailed'));
       }
     };
 
@@ -2672,6 +2643,7 @@
     document.addEventListener('more-actions', handleMoreActions);
     document.addEventListener('apkg-import', handleAPKGImport);
     document.addEventListener('csv-import', handleCSVImport);
+    document.addEventListener('clipboard-import', handleClipboardImport);
     document.addEventListener('json-export', handleJSONExport);
     document.addEventListener('Weave:restore-guide-deck', handleRestoreGuideDeck);
     document.addEventListener('Weave:open-settings', handleOpenSettings);
@@ -2681,6 +2653,7 @@
       document.removeEventListener('more-actions', handleMoreActions);
       document.removeEventListener('apkg-import', handleAPKGImport);
       document.removeEventListener('csv-import', handleCSVImport);
+      document.removeEventListener('clipboard-import', handleClipboardImport);
       document.removeEventListener('json-export', handleJSONExport);
       document.removeEventListener('Weave:restore-guide-deck', handleRestoreGuideDeck);
       document.removeEventListener('Weave:open-settings', handleOpenSettings);
@@ -2735,7 +2708,7 @@
             e.stopPropagation();
             toggleExpand(node.deck.id);
           }}
-          aria-label={expanded ? "折叠" : "展开"}
+          aria-label={expanded ? t('deckStudyPage.studyActions.collapse') : t('deckStudyPage.studyActions.expand')}
         >
           <ObsidianIcon 
             name={expanded ? "chevron-down" : "chevron-right"} 
@@ -2766,7 +2739,7 @@
           {@const subStats = getSubdeckStats(node)}
           {@const subTotal = subStats.newCards + subStats.learningCards + subStats.reviewCards}
           {#if subTotal > 0}
-            <span class="subdeck-indicator" title={`包含 ${subTotal} 张子牌组卡片 (新卡: ${subStats.newCards}, 学习: ${subStats.learningCards}, 复习: ${subStats.reviewCards})`}>
+            <span class="subdeck-indicator" title={t('deckStudyPage.subdeck.indicator', { total: String(subTotal), newCards: String(subStats.newCards), learning: String(subStats.learningCards), review: String(subStats.reviewCards) })}>
               +{subTotal}
             </span>
           {/if}
@@ -2800,7 +2773,7 @@
             onclick={() => startStudy(node.deck.id)}
           >
             <ObsidianIcon name="play" size={16} />
-            学习 ({totalDue})
+            {t('deckStudyPage.studyActions.studyButton')} ({totalDue})
           </button>
         {:else}
           <button
@@ -2808,7 +2781,7 @@
             disabled
           >
             <ObsidianIcon name="check" size={16} />
-            完成
+            {t('deckStudyPage.studyActions.completedButton')}
           </button>
         {/if}
 
@@ -2853,7 +2826,7 @@
   <!--  加载动画 - 全屏显示 -->
   {#if isLoading}
     <div class="deck-loading-overlay">
-      <BouncingBallsLoader message="正在加载牌组数据..." />
+      <BouncingBallsLoader message={t('deckStudyPage.studyActions.loading')} />
     </div>
   {:else}
   <div class="deck-study-content">
@@ -2978,6 +2951,17 @@
     {dataStorage}
     onClose={() => { showCSVImportModal = false; }}
     onImportComplete={async () => { showCSVImportModal = false; await refreshData(); plugin.app.workspace.trigger('Weave:data-changed'); }}
+  />
+{/if}
+
+<!-- 粘贴卡片批量导入模态窗 -->
+{#if showClipboardImportModal}
+  <ClipboardImportModal
+    bind:open={showClipboardImportModal}
+    {plugin}
+    {dataStorage}
+    onClose={() => { showClipboardImportModal = false; }}
+    onImportComplete={async () => { showClipboardImportModal = false; await refreshData(); plugin.app.workspace.trigger('Weave:data-changed'); }}
   />
 {/if}
 

@@ -472,7 +472,7 @@ export class CustomPatternManager {
 
   private generatePatternId(name: string): string {
     const timestamp = Date.now();
-    const random = Math.random().toString(36).substr(2, 9);
+    const random = Math.random().toString(36).substring(2, 11);
     const safeName = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     return `custom_${safeName}_${timestamp}_${random}`;
   }

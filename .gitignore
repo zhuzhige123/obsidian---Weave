@@ -1,96 +1,29 @@
+# ============================================
+# Weave 公开仓库 .gitignore
+# ============================================
+
 # Logs
 logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
 
 # Runtime data
 pids
 *.pid
 *.seed
-*.pid.lock
 
-# Coverage directory used by tools like istanbul
-coverage
-*.lcov
-
-# nyc test coverage
-.nyc_output
-
-# Dependency directories
+# Dependencies
 node_modules/
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.test
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
-dist
-
-# Gatsby files
-.cache/
-public
-!public/
-public/*
-!public/versions.json
-
-# Storybook build outputs
-.out
-.storybook-out
-
-# Temporary folders
-tmp/
-temp/
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
 
 # Build output
+dist/
 build/
-main.js
-# 只忽略根目录的构建输出 CSS，保留 src/styles/ 下的源码 CSS
+/main.js
 /styles.css
 
-# Build cache and mappings
-importMappings.json
-tsconfig.tsbuildinfo
+# Build cache
 *.tsbuildinfo
-
-# Bun
-.bun
-bun.lockb
+.vite/
 
 # OS
 .DS_Store
@@ -103,149 +36,39 @@ Thumbs.db
 *.swo
 *~
 
-# Test vault (optional - remove if you want to include it)
-test-vault/
+# Environment
+.env
+.env.local
+.env.production
+.env.test
 
 # ============================================
-# 🔒 激活码系统安全规则（最高优先级）
+# Security: activation codes and keys
 # ============================================
-
-# 私钥文件（任何可能的命名方式）
 *.pem
 *.key
 *private-key*
 *private_key*
-*privatekey*
-*-private.*
-*.private.*
-
-# 旧版本激活码生成脚本（包含私钥，必须忽略）
-scripts/generate-activation-codes.cjs
-
-# 生成的激活码文件（所有可能的格式）
 generated-*.json
 generated-*.txt
 codes-*.txt
 codes-*.json
-activation-codes*.txt
-activation-codes*.json
-*activation-code*.txt
-*activation-code*.json
-*activation-codes*.txt
-*activation-codes*.json
+*activation-code*
+*activation-codes*
 
-# 中文命名的敏感文件
-激活码*
-*激活码*
-发卡*
-*发卡*
-用户激活码/
-密钥管理*
-*密钥管理*
-
-# 激活码相关文档（包含敏感信息）
-*激活码使用说明*
-*激活码管理*
-*激活码密钥*
-*开源安全指南*
-scripts/generateMatchingCode.js
-scripts/*private*.js
-scripts/*secret*.js
-服务端激活码生成器.js
-
-# 项目外的私钥目录（防止意外添加）
-../tuanki-private/
-../../tuanki-private/
-D:/tuanki-private/
-%USERPROFILE%/tuanki-private/
-
-# 环境变量和配置
-.env.local
-.env.production
-config/private.json
-config/secrets.json
-
-# 调试和测试数据
+# ============================================
+# Development artifacts (not for public)
+# ============================================
+check.log
+type-errors*.txt
+*.backup
+*.bak
 debug-logs/
 test-activation-codes/
 *.activation
 *.license
-type-errors*.txt
-test-modal-editor.md
-test-csv-files/
+BUILD_REPORT.md
 
-# ============================================
-# 禁止推送到公开仓库的开发/设计文档
-# ============================================
-
-# AI 助手配置
-.augment/
-.mcp.json
-
-# 移动端配置
-.mobile-config.json
-
-# 后端代码
-backend/
-
-# 备份文件
-backup-before-migration/
-
-# 设计文档和原型
-design/
-heatmap-designs/
-heatmap_prototype.html
-
-# 内部文档
-docs/
-DEVELOPMENT.md
-ERROR_CHECK_REPORT.md
-HOT_RELOAD_GUIDE.md
-IMPORTANT_REMOVAL_REPORT.md
-SIMPLIFIED_CARD_PARSING_SYSTEM.md
-SPEC_MD_CARD_PARSING_V2.zh-CN.md
-SVELTE5_MIGRATION_GUIDE.md
-SVELTE5_STOPPROPAGATION_FIX_PROGRESS.md
-TROUBLESHOOTING_CASE_SVELTE5_INPUT_DISABLED.md
-TYPE_ERRORS_ANALYSIS.md
-TYPE_ERRORS_FULL_REPORT.md
-important-usage-analysis.csv
-
-# 开发工具
-platform-tools/
-public-repo-github-workflows/
-public-repo.gitignore
-start-dev.bat
-start-dev.sh
-
-# 脚本（含激活码生成等敏感工具）
-scripts/
-
-# 测试文件
-test/
-tests/
-COMMIT_MSG.txt
-
-# 非代码内部文档
-非常重要的文档*/
-
-# 庆祝消息等非必要数据
-celebration-messages.json
-
-# public 目录
-public/
-
-# 不必要的配置和文档
-CHANGELOG.md
-INSTALLATION.md
-biome.json
-uno.config.ts
-eslint.config.mjs
-.env.example
-
-# 激活码/许可证系统源码（闭源）
-src/utils/licenseManager.ts
-src/utils/cloudLicenseValidator.ts
-src/utils/security.ts
-src/config/security-config.ts
-src/components/settings/constants/activation-constants.ts
+# Temporary compilation artifacts
+.proprietary-build-temp/
+tsconfig.proprietary-temp.json

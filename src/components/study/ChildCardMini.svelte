@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Card } from "../../data/types";
+  import { tr } from '../../utils/i18n';
 
   interface Props {
     card: Card;
@@ -11,6 +12,8 @@
   }
 
   let { card, index, selected, regenerating = false, disabled = false, onclick }: Props = $props();
+
+  let t = $derived($tr);
 
   // 获取完整卡片内容（front + back，使用分隔符）
   const contentPreview = $derived.by(() => {
@@ -70,7 +73,7 @@
     <!-- 🆕 加载状态UI -->
     <div class="regenerating-indicator">
       <div class="regenerating-text">
-        <span>正在重新生成...</span>
+        <span>{t('study.childCards.regenerating')}</span>
       </div>
       <div class="regenerating-progress">
         <div class="regenerating-progress-bar"></div>
@@ -238,10 +241,6 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-  }
-
-  .regenerating-icon {
-    animation: spin 1s linear infinite;
   }
 
   /* 🆕 进度条容器 */

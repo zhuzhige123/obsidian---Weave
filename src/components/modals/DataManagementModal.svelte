@@ -72,6 +72,7 @@
   let checkResults = $state<DataCheckResult[]>([]);
   let fixResults = $state<DataFixResult[]>([]);
   let migrationResults = $state<DataCheckResult[]>([]);
+  let latestMigrationSummary = $state<{ targetRoot: string; movedFiles: number; conflicts: number; rewrittenReferences: number; remainingLegacyRoots: number; reportTime: string } | null>(null);
   let logs = $state<string[]>([]);
   let progressMessage = $state('');
   let progressCurrent = $state(0);
@@ -170,6 +171,23 @@
 
   // ===== Service =====
   const dataService = getDataManagementService(plugin);
+
+  async function refreshLatestMigrationSummary() {
+    const report = await dataService.getLatestMigrationReport();
+    if (!report) {
+      latestMigrationSummary = null;
+      return;
+    }
+
+    latestMigrationSummary = {
+      targetRoot: report.plan.targetRoot,
+      movedFiles: report.movedFiles,
+      conflicts: report.conflicts,
+      rewrittenReferences: report.rewrittenReferences,
+      remainingLegacyRoots: report.verification?.remainingLegacyRoots.length ?? report.untouchedLegacyRoots.length,
+      reportTime: report.completedAt || report.startedAt,
+    };
+  }
 
   // ===== Methods =====
   function addLog(message: string) {
@@ -297,6 +315,8 @@
       const legacyResult = await dataService.checkLegacyDirectories();
       migrationResults = [...migrationResults, legacyResult];
 
+      await refreshLatestMigrationSummary();
+
       const totalIssues = migrationResults.reduce((sum, r) => sum + r.count, 0);
       addLog(`迁移检测完成，发现 ${totalIssues} 个问题`);
     } catch (e) {
@@ -312,6 +332,7 @@
 
     try {
       const result = await dataService.executeSchemaMigration();
+      await refreshLatestMigrationSummary();
       addLog(`迁移完成: 成功 ${result.success}，失败 ${result.failed}`);
       
       // 重新检测
@@ -565,6 +586,7 @@
   onMount(() => {
     if (activeTab === 'data') {
       handleCheckAll();
+      void refreshLatestMigrationSummary();
     }
   });
 </script>
@@ -734,6 +756,24 @@
                 检测迁移状态
               </EnhancedButton>
             </div>
+            {#if latestMigrationSummary}
+              <div class="check-item ok latest-migration-summary">
+                <div class="check-icon">
+                  <EnhancedIcon name="history" size={18} />
+                </div>
+                <div class="check-info">
+                  <span class="check-name">最近一次迁移报告</span>
+                  <span class="check-message">目标路径：{latestMigrationSummary.targetRoot}</span>
+                  <div class="check-details">
+                    <span class="detail-item">迁移文件 {latestMigrationSummary.movedFiles}</span>
+                    <span class="detail-item">冲突 {latestMigrationSummary.conflicts}</span>
+                    <span class="detail-item">重写引用 {latestMigrationSummary.rewrittenReferences}</span>
+                    <span class="detail-item">剩余旧路径 {latestMigrationSummary.remainingLegacyRoots}</span>
+                    <span class="detail-item">时间 {latestMigrationSummary.reportTime}</span>
+                  </div>
+                </div>
+              </div>
+            {/if}
             <div class="check-results">
               {#each migrationResults as result}
                 <div class="check-item {getStatusClass(result.status)}">

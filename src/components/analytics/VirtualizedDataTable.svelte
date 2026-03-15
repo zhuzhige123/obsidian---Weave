@@ -188,58 +188,70 @@
         className="table-virtual-scroll"
       >
         {#snippet children(row: any, index: number)}
-          <div
-            class="table-row data-row"
-            class:clickable={!!onRowClick}
-            role={onRowClick ? "button" : undefined}
-            tabindex={onRowClick ? 0 : undefined}
-            onclick={() => handleRowClick(row, index)}
-            onkeydown={(e) => {
-              if (onRowClick && (e.key === 'Enter' || e.key === ' ')) {
-                e.preventDefault();
-                handleRowClick(row, index);
-              }
-            }}
-          >
-            {#each columns as column}
-              <div 
-                class="table-cell data-cell"
-                style="width: {column.width || 'auto'}; text-align: {column.align || 'left'};"
-                title={formatCellValue(row[column.key], row, column)}
-              >
-                {formatCellValue(row[column.key], row, column)}
-              </div>
-            {/each}
-          </div>
+          {#if onRowClick}
+            <button
+              type="button"
+              class="table-row data-row clickable"
+              onclick={() => handleRowClick(row, index)}
+            >
+              {#each columns as column}
+                <div 
+                  class="table-cell data-cell"
+                  style="width: {column.width || 'auto'}; text-align: {column.align || 'left'};"
+                  title={formatCellValue(row[column.key], row, column)}
+                >
+                  {formatCellValue(row[column.key], row, column)}
+                </div>
+              {/each}
+            </button>
+          {:else}
+            <div class="table-row data-row">
+              {#each columns as column}
+                <div 
+                  class="table-cell data-cell"
+                  style="width: {column.width || 'auto'}; text-align: {column.align || 'left'};"
+                  title={formatCellValue(row[column.key], row, column)}
+                >
+                  {formatCellValue(row[column.key], row, column)}
+                </div>
+              {/each}
+            </div>
+          {/if}
         {/snippet}
       </VirtualScroll>
     {:else}
       <!-- 自适应模式：渲染所有行 -->
       <div class="table-simple-scroll">
         {#each processedData() as row, index}
-          <div
-            class="table-row data-row"
-            class:clickable={!!onRowClick}
-            role={onRowClick ? "button" : undefined}
-            tabindex={onRowClick ? 0 : undefined}
-            onclick={() => handleRowClick(row, index)}
-            onkeydown={(e) => {
-              if (onRowClick && (e.key === 'Enter' || e.key === ' ')) {
-                e.preventDefault();
-                handleRowClick(row, index);
-              }
-            }}
-          >
-            {#each columns as column}
-              <div 
-                class="table-cell data-cell"
-                style="width: {column.width || 'auto'}; text-align: {column.align || 'left'};"
-                title={formatCellValue(row[column.key], row, column)}
-              >
-                {formatCellValue(row[column.key], row, column)}
-              </div>
-            {/each}
-          </div>
+          {#if onRowClick}
+            <button
+              type="button"
+              class="table-row data-row clickable"
+              onclick={() => handleRowClick(row, index)}
+            >
+              {#each columns as column}
+                <div 
+                  class="table-cell data-cell"
+                  style="width: {column.width || 'auto'}; text-align: {column.align || 'left'};"
+                  title={formatCellValue(row[column.key], row, column)}
+                >
+                  {formatCellValue(row[column.key], row, column)}
+                </div>
+              {/each}
+            </button>
+          {:else}
+            <div class="table-row data-row">
+              {#each columns as column}
+                <div 
+                  class="table-cell data-cell"
+                  style="width: {column.width || 'auto'}; text-align: {column.align || 'left'};"
+                  title={formatCellValue(row[column.key], row, column)}
+                >
+                  {formatCellValue(row[column.key], row, column)}
+                </div>
+              {/each}
+            </div>
+          {/if}
         {/each}
       </div>
     {/if}

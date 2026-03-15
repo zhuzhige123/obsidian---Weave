@@ -11,7 +11,7 @@ import type { WeaveDataStorage } from '../../data/storage';
 /**
  * 分组类型
  */
-export type GroupByType = 'status' | 'type' | 'priority' | 'deck' | 'createTime';
+export type GroupByType = 'status' | 'type' | 'priority' | 'deck' | 'createTime' | 'tag';
 
 /**
  * 布局模式
@@ -114,7 +114,8 @@ export const GROUP_BY_LABELS: Record<GroupByType, string> = {
   type: '题型',
   priority: '优先级',
   deck: '牌组',
-  createTime: '创建时间'
+  createTime: '创建时间',
+  tag: '标签'
 };
 
 /**

@@ -5,6 +5,25 @@
 
 /* --- notifications.ts --- */
 .weave-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 1000001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 14px;
+  font-weight: 500;
+  max-width: 400px;
+  min-width: 200px;
+  word-wrap: break-word;
+  font-family: var(--font-interface, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
   pointer-events: auto;
   user-select: none;
   backdrop-filter: blur(8px);
@@ -605,4 +624,111 @@ body.is-mobile .receipt-modal .modal-background {
 body.is-mobile .receipt-modal .printer-container {
   max-height: var(--weave-modal-max-height, calc(100vh - 130px));
   overflow-y: auto;
+}
+
+/* --- CustomApiUrlModal.ts --- */
+.weave-custom-api-url-modal .weave-url-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.weave-custom-api-url-modal .weave-url-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-normal);
+}
+
+.weave-custom-api-url-modal .weave-url-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-family: var(--font-monospace);
+  font-size: 16px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  box-sizing: border-box;
+}
+
+.weave-custom-api-url-modal .weave-url-input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15);
+}
+
+.weave-custom-api-url-modal .weave-url-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.weave-custom-api-url-modal .weave-url-examples {
+  margin-top: 1.5rem;
+}
+
+.weave-custom-api-url-modal .weave-url-examples h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.weave-custom-api-url-modal .weave-example-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+}
+
+.weave-custom-api-url-modal .weave-example-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.weave-custom-api-url-modal .weave-example-url {
+  font-family: var(--font-monospace);
+  font-size: 0.85rem;
+  color: var(--text-accent);
+  word-break: break-all;
+}
+
+.weave-custom-api-url-modal .weave-url-notes {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-left: 3px solid var(--text-error);
+  border-radius: 6px;
+}
+
+.weave-custom-api-url-modal .weave-url-notes h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-error);
+}
+
+.weave-custom-api-url-modal .weave-url-notes ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.weave-custom-api-url-modal .weave-url-notes li {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.weave-custom-api-url-modal .weave-url-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 1.5rem;
 }

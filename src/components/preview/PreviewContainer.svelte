@@ -358,7 +358,11 @@
 
     const requestId = ++renderRequestId;
 
-    isLoading = true;
+    // 切换卡片时不设置 isLoading，避免销毁/重建卡片组件导致视觉抖动
+    // 仅在首次加载（无预览数据）时显示加载状态
+    if (!currentPreviewData) {
+      isLoading = true;
+    }
     error = null;
 
     try {
@@ -667,7 +671,7 @@
         sections={currentPreviewData.sections}
         {showAnswer}
         {plugin}
-        {card}
+        card={effectiveCard || card}
         sourcePath={(currentPreviewData.metadata as any).sourcePath || ''}
         {animationController}
         {enableAnimations}
@@ -681,7 +685,7 @@
         sourcePath={(currentPreviewData.metadata as any).sourcePath || ''}
         {animationController}
         {enableAnimations}
-        {card}
+        card={effectiveCard || card}
         {activeClozeOrdinal}
       />
     {:else}

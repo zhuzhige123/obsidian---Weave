@@ -45,10 +45,6 @@ export class WeaveView extends ItemView {
 		// 直接创建主组件，无需进度条
 		this.contentEl.classList.add("weave-view-content");
 		this.contentEl.classList.add("weave-main-editor-mode");
-		//  移除底部间距（侧边栏模式下不需要额外间距）
-		this.contentEl.style.paddingBottom = "0";
-		//  设置背景色为主内容区背景色
-		this.contentEl.style.background = "var(--background-primary)";
 
 		//  性能优化：异步非阻塞加载
 		// 先显示加载占位符，不阻塞 Obsidian 主界面
@@ -116,10 +112,6 @@ export class WeaveView extends ItemView {
 			this.contentEl.empty();
 			this.contentEl.classList.add("weave-view-content");
 			this.contentEl.classList.add("weave-main-editor-mode");
-			//  移除底部间距（侧边栏模式下不需要额外间距）
-			this.contentEl.style.paddingBottom = "0";
-			//  设置背景色为主内容区背景色
-			this.contentEl.style.background = "var(--background-primary)";
 
 			// 创建主组件
 			await this.createMainComponent();

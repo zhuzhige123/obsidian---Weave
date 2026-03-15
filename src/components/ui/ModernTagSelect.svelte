@@ -256,7 +256,7 @@
     padding: 2px 6px;
     cursor: text;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-interface, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
     box-sizing: border-box;
   }
 

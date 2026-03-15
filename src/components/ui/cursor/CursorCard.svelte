@@ -1,17 +1,21 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   // 简单的卡片组件占位符
   interface Props {
     title?: string;
     padding?: boolean;
     shadow?: boolean;
     border?: boolean;
+    children?: Snippet;
   }
 
   let {
     title,
     padding = true,
     shadow = true,
-    border = true
+    border = true,
+    children
   }: Props = $props();
 
   function getCardClass(): string {
@@ -30,7 +34,7 @@
     </div>
   {/if}
   <div class="card-content">
-    <slot />
+    {@render children?.()}
   </div>
 </div>
 

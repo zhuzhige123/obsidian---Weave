@@ -9,6 +9,7 @@
  */
 
 import type { DifficultyTracking } from '../../types/queue-optimization-types';
+import { tr } from '../../utils/i18n';
 
 interface Props {
   tracking: DifficultyTracking;
@@ -18,39 +19,48 @@ interface Props {
 
 let { tracking, compact = false, sticky = false }: Props = $props();
 
+let t = $derived($tr);
+
 // 难度等级配置 - 方案13：纯数字
 const levelConfig = {
   easy: { 
     emoji: '', 
     number: '1',
-    label: '简单', 
+    label: '', 
     color: 'var(--color-green)',
     bgColor: 'rgba(var(--color-green-rgb), 0.1)'
   },
   medium: { 
     emoji: '',
     number: '2',
-    label: '中等', 
+    label: '', 
     color: 'var(--color-yellow)',
     bgColor: 'rgba(var(--color-yellow-rgb), 0.1)'
   },
   hard: { 
     emoji: '',
     number: '3',
-    label: '困难', 
+    label: '', 
     color: 'var(--color-orange)',
     bgColor: 'rgba(var(--color-orange-rgb), 0.1)'
   },
   very_hard: { 
     emoji: '',
     number: '4',
-    label: '超难', 
+    label: '', 
     color: 'var(--color-red)',
     bgColor: 'rgba(var(--color-red-rgb), 0.1)'
   }
 };
 
-const config = $derived(levelConfig[tracking.currentLevel]);
+const levelLabels = $derived({
+  easy: t('study.difficultyIndicator.easy'),
+  medium: t('study.difficultyIndicator.medium'),
+  hard: t('study.difficultyIndicator.hard'),
+  very_hard: t('study.difficultyIndicator.veryHard'),
+});
+const rawConfig = $derived(levelConfig[tracking.currentLevel]);
+const config = $derived({ ...rawConfig, label: levelLabels[tracking.currentLevel] });
 const showTrend = $derived(tracking.trend !== 'stable');
 const showIntervention = $derived(tracking.interventionLevel >= 2);
 
@@ -97,18 +107,18 @@ $effect(() => {
       {#if isHovered}
         <div class="sticky-tooltip">
           <div class="tooltip-row">
-            <span class="tooltip-label">难度等级</span>
+            <span class="tooltip-label">{t('study.difficultyIndicator.level')}</span>
             <span class="tooltip-value">{config.label}</span>
           </div>
           {#if tracking.consecutiveHard > 0}
             <div class="tooltip-row">
-              <span class="tooltip-label">连续困难</span>
-              <span class="tooltip-value">{tracking.consecutiveHard}次</span>
+              <span class="tooltip-label">{t('study.difficultyIndicator.consecutiveHard')}</span>
+              <span class="tooltip-value">{t('study.difficultyIndicator.consecutiveHardTimes', { n: String(tracking.consecutiveHard) })}</span>
             </div>
           {/if}
           <div class="tooltip-row warning">
-            <span class="tooltip-label">建议</span>
-            <span class="tooltip-value">改进此卡片</span>
+            <span class="tooltip-label">{t('study.difficultyIndicator.suggestion')}</span>
+            <span class="tooltip-value">{t('study.difficultyIndicator.improveSuggestion')}</span>
           </div>
         </div>
       {/if}
@@ -139,9 +149,9 @@ $effect(() => {
       {#if showTrend}
         <div class="trend" class:rising={tracking.trend === 'rising'}>
           {#if tracking.trend === 'rising'}
-            <span class="trend-text">难度上升</span>
+            <span class="trend-text">{t('study.difficultyIndicator.trendRising')}</span>
           {:else}
-            <span class="trend-text">难度下降</span>
+            <span class="trend-text">{t('study.difficultyIndicator.trendFalling')}</span>
           {/if}
         </div>
       {/if}
@@ -149,14 +159,14 @@ $effect(() => {
     
     {#if showIntervention}
       <div class="intervention-notice">
-        <span class="notice-text">建议改进此卡片</span>
+        <span class="notice-text">{t('study.difficultyIndicator.interventionNotice')}</span>
       </div>
     {/if}
     
     <!-- 连续Hard提示 -->
     {#if tracking.consecutiveHard >= 3}
       <div class="consecutive-info">
-        连续 {tracking.consecutiveHard} 次评为困难
+        {t('study.difficultyIndicator.consecutiveInfo', { n: String(tracking.consecutiveHard) })}
       </div>
     {/if}
   </div>

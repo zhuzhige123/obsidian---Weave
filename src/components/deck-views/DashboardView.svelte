@@ -297,7 +297,7 @@
                 // 取消选择（至少保留一个分类）
                 newCategoryIds = deck.categoryIds.filter(id => id !== cat.id);
                 if (newCategoryIds.length === 0) {
-                  new Notice('至少需要保留一个分类');
+                  new Notice(t('decks.dashboard.categoryRequired'));
                   return;
                 }
               } else {
@@ -315,7 +315,7 @@
             if (onRefreshData) {
               await onRefreshData();
             }
-            new Notice(`已更新分类`);
+            new Notice(t('decks.dashboard.categoryUpdated'));
           });
       });
     });
@@ -341,7 +341,7 @@
     const completed = todaySessions.reduce((sum, s) => sum + (s.cardsReviewed || 0), 0);
     const totalTime = todaySessions.reduce((sum, s) => sum + (s.totalTime || 0), 0);
     const durationMinutes = Math.round(totalTime / 60000); // 毫秒转分钟
-    const duration = durationMinutes > 0 ? `${durationMinutes}分钟` : '0分钟';
+    const duration = durationMinutes > 0 ? t('decks.dashboard.durationMinutes', { n: String(durationMinutes) }) : t('decks.dashboard.durationZero');
     
     return {
       total,
@@ -376,9 +376,9 @@
   <div class="dashboard-section heatmap">
     <h3 class="section-title">
       <EnhancedIcon name="bar-chart-2" size={18} />
-      牌组热力图
+      {t('decks.dashboard.heatmapTitle')}
       {#if selectedFilter !== 'all'}
-        {@const filterNames = { parent: '父卡片牌组', child: '子卡片牌组', all: '全部牌组' } as Record<DeckFilter, string>}
+        {@const filterNames = { parent: t('decks.dashboard.filterParent'), child: t('decks.dashboard.filterChild'), all: t('decks.dashboard.filterAll') } as Record<DeckFilter, string>}
         {@const filterColors = { 
           parent: { start: '#ef4444', end: '#dc2626' },
           child: { start: '#3b82f6', end: '#2563eb' },

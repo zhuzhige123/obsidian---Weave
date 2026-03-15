@@ -18,10 +18,9 @@
     plugin: WeavePlugin;
     onPerformanceSettingsToggle?: (enabled: boolean) => void;
     onPremiumFeaturesPreviewToggle?: (enabled: boolean) => void;
-    onThirdPartyPluginsToggle?: (enabled: boolean) => void;
   }
 
-  let { plugin, onPerformanceSettingsToggle, onPremiumFeaturesPreviewToggle, onThirdPartyPluginsToggle }: Props = $props();
+  let { plugin, onPerformanceSettingsToggle, onPremiumFeaturesPreviewToggle }: Props = $props();
   let settings = $state(plugin.settings);
   
   // ðŸŒ 响应式翻译函数
@@ -186,36 +185,6 @@
     
   }
 
-  // 处理第三方插件启用变更
-  async function handleThirdPartyPluginsChange(event: Event) {
-    const inputEl = event.target as HTMLInputElement;
-    const checked = inputEl.checked;
-
-    if (checked) {
-      // 启用时需要安全确认
-      const confirmed = await showObsidianConfirm(
-        plugin.app,
-        '第三方插件可以访问你的笔记数据，请仅安装来自可信来源的插件。\n\n确定要启用第三方插件系统吗？',
-        { title: '安全提示', confirmText: '启用', cancelText: '取消' }
-      );
-      if (!confirmed) {
-        // 用户取消，恢复开关
-        inputEl.checked = false;
-        return;
-      }
-    }
-
-    settings.enableThirdPartyPlugins = checked;
-    plugin.settings.enableThirdPartyPlugins = checked;
-    
-    // 立即通知父组件更新UI
-    if (onThirdPartyPluginsToggle) {
-      onThirdPartyPluginsToggle(checked);
-    }
-    
-    saveSettings();
-
-  }
 
 </script>
 
@@ -265,19 +234,6 @@
       </label>
     </div>
 
-    <!-- 启用第三方插件 -->
-    <div class="row">
-      <label for="enableThirdPartyPlugins">启用第三方插件</label>
-      <label class="modern-switch">
-        <input
-          id="enableThirdPartyPlugins"
-          type="checkbox"
-          checked={settings.enableThirdPartyPlugins ?? false}
-          onchange={handleThirdPartyPluginsChange}
-        />
-        <span class="switch-slider"></span>
-      </label>
-    </div>
 
     <!-- ÆŸ 显示性能优化设置 -->
     <div class="row">
@@ -295,7 +251,7 @@
 
     <!-- 🆕 显示高级功能预览 -->
     <div class="row">
-      <label for="showPremiumFeaturesPreview">显示高级功能预览</label>
+      <label for="showPremiumFeaturesPreview">{t('settings.basic.premiumFeaturesPreview.label')}</label>
       <label class="modern-switch">
         <input
           id="showPremiumFeaturesPreview"
@@ -327,12 +283,12 @@
 
     <!-- 主界面打开位置 -->
     <div class="row">
-      <label for="mainInterfaceOpenLocation">主界面打开位置</label>
+      <label for="mainInterfaceOpenLocation">{t('settings.basic.mainInterfaceOpenLocation.label')}</label>
       <div class="settings-dropdown-compact">
         <ObsidianDropdown
           options={[
-            { id: 'content', label: '内容区（主编辑区域）' },
-            { id: 'sidebar', label: '侧边栏' }
+            { id: 'content', label: t('settings.basic.mainInterfaceOpenLocation.content') },
+            { id: 'sidebar', label: t('settings.basic.mainInterfaceOpenLocation.sidebar') }
           ]}
           value={settings.mainInterfaceOpenLocation ?? 'content'}
           onchange={(value) => {
@@ -345,13 +301,13 @@
 
     <!-- 学习界面间距 -->
     <div class="row">
-      <label for="studyViewSpacing">学习界面间距</label>
+      <label for="studyViewSpacing">{t('settings.basic.studyViewSpacing.label')}</label>
       <div class="settings-dropdown-compact">
         <ObsidianDropdown
           options={[
-            { id: 'compact', label: '紧凑' },
-            { id: 'default', label: '默认' },
-            { id: 'comfortable', label: '宽松' }
+            { id: 'compact', label: t('settings.basic.studyViewSpacing.compact') },
+            { id: 'default', label: t('settings.basic.studyViewSpacing.default') },
+            { id: 'comfortable', label: t('settings.basic.studyViewSpacing.comfortable') }
           ]}
           value={settings.studyViewSpacing ?? 'compact'}
           onchange={handleStudyViewSpacingChange}
@@ -473,3 +429,13 @@
     onClose={() => showActivationPrompt = false}
   />
 {/if}
+
+<style>
+  :global(body.is-phone) .settings-dropdown-compact,
+  :global(body.is-phone) .progressive-cloze-history-dropdown {
+    flex: 0 1 auto;
+    width: auto;
+    max-width: none;
+    margin-left: auto;
+  }
+</style>

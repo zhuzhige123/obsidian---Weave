@@ -5,15 +5,14 @@
    * 设计风格：类 Cursor 现代化界面
    */
   import { Notice } from "obsidian";
-  import { onMount, onDestroy } from "svelte";
   import type { WeavePlugin } from "../../main";
   import type { WeaveDataStorage } from "../../data/storage";
   import type { ImportProgress, ImportResult, ImportConfig } from "../../domain/apkg/types";
   import { APKGImportService } from "../../application/services/apkg/APKGImportService";
   import { ObsidianMediaStorageAdapter } from "../../infrastructure/adapters/impl/ObsidianMediaStorageAdapter";
   import { WeaveDataStorageAdapter } from "../../infrastructure/adapters/impl/WeaveDataStorageAdapter";
-  import { isDarkMode, createThemeListener } from "../../utils/theme-detection";
   import EnhancedIcon from "../ui/EnhancedIcon.svelte";
+  import ResizableModal from "../ui/ResizableModal.svelte";
 
   interface Props {
     show: boolean;
@@ -24,7 +23,7 @@
     onImportComplete: (result: ImportResult) => void;
   }
 
-  let { show, dataStorage, wasmUrl, plugin, onClose, onImportComplete }: Props = $props();
+  let { show = $bindable(), dataStorage, wasmUrl, plugin, onClose, onImportComplete }: Props = $props();
 
   // 状态管理
   type ImportStage = 'selection' | 'importing' | 'result';
@@ -34,8 +33,6 @@
   let importResult = $state<ImportResult | null>(null);
   let importProgress = $state<ImportProgress>({ stage: 'parsing', progress: 0, message: "" });
   let isImporting = $state(false);
-  let currentIsDark = $state(isDarkMode());
-  let themeCleanup: (() => void) | null = null;
   let isDragOver = $state(false);
   
   // 卡片切换状态：记录每个模型当前显示的示例卡片索引
@@ -194,55 +191,34 @@
     importResult = null;
     importProgress = { stage: 'parsing', progress: 0, message: "" };
     importStage = 'selection';
+    show = false;
     if (typeof onClose === 'function') {
       onClose();
     }
   }
 
-  onMount(() => {
-    themeCleanup = createThemeListener((isDark) => {
-      currentIsDark = isDark;
-    });
-  });
-
-  onDestroy(() => {
-    if (themeCleanup) {
-      themeCleanup();
-    }
-  });
 </script>
 
-<!-- Weave 现代化模态窗 -->
-{#if show}
-<div class="weave-modal-overlay" onclick={(e) => {
-  // 只有点击背景区域（overlay本身）时才关闭，避免内部点击事件冒泡导致关闭
-  if (e.target === e.currentTarget) {
-    closeModal();
-  }
-}} role="presentation" tabindex="-1">
-  <div class="weave-modal-content large" onclick={(e) => {
-    // 只阻止特定情况，不要全局preventDefault
-    if (e.target === e.currentTarget) {
-      e.preventDefault();
-    }
-  }} onkeydown={(e) => { e.preventDefault(); }} role="dialog" aria-modal="true" aria-labelledby="apkg-modal-title" tabindex="0">
-    <!-- 头部 -->
-    <div class="weave-modal-header">
-      <div class="weave-modal-title" id="apkg-modal-title">
-        <EnhancedIcon name="package" size={24} />
-        <span>导入 APKG 文件</span>
-      </div>
-      <button class="weave-modal-close" onclick={closeModal} aria-label="关闭">
-        <EnhancedIcon name="x" size={20} />
-      </button>
-    </div>
-
-    <!-- 内容区 -->
-    <div class="weave-modal-body">
+<!-- 使用 ResizableModal 统一模态窗设计 -->
+<ResizableModal
+  bind:open={show}
+  {plugin}
+  title="导入 APKG 文件"
+  accentColor="cyan"
+  className="apkg-import-modal"
+  closable={true}
+  maskClosable={!isImporting}
+  keyboard={!isImporting}
+  onClose={closeModal}
+  initialWidth={600}
+  initialHeight={400}
+>
+  {#snippet children()}
+    <div class="apkg-modal-body">
       {#if importStage === 'selection'}
         <!-- 文件选择阶段 -->
         <div class="apkg-stage apkg-selection">
-          <div class="weave-card weave-glass dropzone" 
+          <div class="dropzone" 
                class:is-dragover={isDragOver}
                onclick={() => selectFile()}
                onkeydown={handleKeyDown}
@@ -264,8 +240,6 @@
           />
         </div>
 
-      <!-- 移除了预览阶段，直接进入导入 -->
-
       {:else if importStage === 'importing'}
         <!-- 导入进度阶段 -->
         <div class="apkg-stage apkg-importing">
@@ -285,13 +259,13 @@
           {#if importResult?.success}
             <div class="result-success">
               <div class="result-icon">
-                <EnhancedIcon name="check-circle" size={56} color="var(--weave-success)" />
+                <EnhancedIcon name="check-circle" size={56} color="var(--color-green)" />
               </div>
               <h3 class="result-title">导入成功</h3>
               <p class="result-message">成功导入 {importResult.stats.importedCards} 张卡片</p>
 
               {#if importResult.deckName}
-                <div class="weave-card weave-card--flat result-details">
+                <div class="result-details">
                   <div class="detail-item">
                     <span class="detail-label">牌组：</span>
                     <span class="detail-value">{importResult.deckName}</span>
@@ -311,13 +285,13 @@
 
               <!-- 错误信息列表 -->
               {#if importResult.errors && importResult.errors.length > 0}
-                <details class="weave-collapsible">
-                  <summary class="weave-collapsible-trigger">
+                <details class="error-collapsible">
+                  <summary class="error-collapsible-trigger">
                     <EnhancedIcon name="alert-triangle" size={16} />
                     <span>查看错误信息 ({importResult.errors.length})</span>
                     <EnhancedIcon name="chevron-down" size={16} class="chevron" />
                   </summary>
-                  <div class="weave-collapsible-content">
+                  <div class="error-collapsible-content">
                     {#each importResult.errors as error}
                       <div class="failed-card">
                         <div class="failed-header">
@@ -334,106 +308,93 @@
           {:else}
             <div class="result-error">
               <div class="result-icon">
-                <EnhancedIcon name="alert-circle" size={56} color="var(--weave-error)" />
-          </div>
+                <EnhancedIcon name="alert-circle" size={56} color="var(--color-red)" />
+              </div>
               <h3 class="result-title">导入失败</h3>
               <p class="result-message">{importResult?.errors?.[0]?.message || '未知错误'}</p>
             </div>
           {/if}
         </div>
       {/if}
-    </div>
 
-    <!-- 底部操作栏 -->
-    {#if importStage === 'result'}
-      <div class="weave-modal-footer">
-        <div class="weave-modal-footer-actions">
-          <button class="weave-btn weave-btn--primary weave-btn--md" onclick={closeModal}>
+      <!-- 底部操作栏 -->
+      {#if importStage === 'result'}
+        <div class="apkg-modal-footer">
+          <button class="apkg-close-btn" onclick={closeModal}>
             关闭
           </button>
         </div>
-      </div>
-    {/if}
-  </div>
-</div>
-{/if}
+      {/if}
+    </div>
+  {/snippet}
+</ResizableModal>
 
 <style>
-  /* ===== APKG 模态窗口专属样式 ===== */
-  /* 使用 Weave 设计系统（design-tokens.css + modern-components.css + modal-components.css） */
+  /* ===== APKG 导入模态窗样式 ===== */
 
-  /*  移除 !important：模态窗口宽度调整使用更具体的选择器 */
-  :global(.weave-app .weave-modal-content.large) {
-    width: min(800px, 90vw);
-    max-width: 800px;
-    max-height: 85vh;
-  }
-
-  /*  移除 !important：确保 overlay 正确居中 */
-  :global(.weave-app .weave-modal-overlay) {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .apkg-modal-body {
+    padding: 1rem 1.5rem;
   }
 
   /* 阶段容器 */
   .apkg-stage {
     display: flex;
     flex-direction: column;
-    gap: var(--weave-space-lg, 1.25rem);
+    gap: 1.25rem;
   }
 
   /* ===== 文件选择阶段（Dropzone）===== */
   .dropzone {
-    border: 2px dashed var(--weave-border, var(--background-modifier-border));
-    padding: var(--weave-space-2xl, 2rem) var(--weave-space-xl, 1.5rem);
+    border: 2px dashed var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 2rem 1.5rem;
     text-align: center;
     cursor: pointer;
-    transition: all var(--weave-transition-normal, 250ms) var(--weave-ease-out, cubic-bezier(0.4, 0, 0.2, 1));
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dropzone:hover,
   .dropzone.is-dragover {
-    border-color: var(--weave-accent, var(--interactive-accent));
-    background: var(--weave-choice-selected, color-mix(in srgb, var(--interactive-accent) 10%, transparent));
+    border-color: var(--interactive-accent);
+    background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
     transform: translateY(-2px);
-    box-shadow: var(--weave-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
 
   .dropzone-title {
-    margin-top: var(--weave-space-lg, 1.25rem);
+    margin-top: 1.25rem;
     font-size: 1.125rem;
     font-weight: 600;
-    color: var(--weave-text-normal, var(--text-normal));
+    color: var(--text-normal);
   }
 
   .dropzone-hint {
-    margin-top: var(--weave-space-sm, 0.5rem);
+    margin-top: 0.5rem;
     font-size: 0.875rem;
-    color: var(--weave-text-muted, var(--text-muted));
+    color: var(--text-muted);
   }
 
   /* ===== 导入进度阶段 ===== */
   .progress-container {
     text-align: center;
-    padding: var(--weave-space-2xl, 2rem);
+    padding: 2rem;
   }
 
   .progress-title {
-    margin: var(--weave-space-lg, 1.25rem) 0;
+    margin: 1.25rem 0;
     font-size: 1.125rem;
     font-weight: 600;
-    color: var(--weave-text-normal, var(--text-normal));
+    color: var(--text-normal);
   }
 
   .weave-progress {
     width: 100%;
     height: 12px;
-    background: var(--weave-bg-secondary, var(--background-secondary));
-    border-radius: var(--weave-radius-lg, 12px);
+    background: var(--background-secondary);
+    border-radius: 12px;
     overflow: hidden;
-    margin: var(--weave-space-lg, 1.25rem) 0;
-    border: 1px solid var(--weave-border, var(--background-modifier-border));
+    margin: 1.25rem 0;
+    border: 1px solid var(--background-modifier-border);
   }
 
   .weave-progress-fill {
@@ -443,53 +404,54 @@
       var(--interactive-accent),
       color-mix(in srgb, var(--interactive-accent) 80%, white)
     );
-    transition: width 0.3s var(--weave-ease-out, cubic-bezier(0.4, 0, 0.2, 1));
-    border-radius: var(--weave-radius-lg, 12px);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 12px;
     box-shadow: 0 0 10px color-mix(in srgb, var(--interactive-accent) 30%, transparent);
   }
 
   .progress-message {
-    margin-top: var(--weave-space-md, 1rem);
+    margin-top: 1rem;
     font-size: 0.875rem;
-    color: var(--weave-text-muted, var(--text-muted));
+    color: var(--text-muted);
   }
 
   /* ===== 结果阶段 ===== */
   .result-success,
   .result-error {
     text-align: center;
-    padding: var(--weave-space-xl, 1.5rem);
+    padding: 1.5rem;
   }
 
   .result-icon {
-    margin-bottom: var(--weave-space-md, 1rem);
-    animation: weave-fade-in 0.5s var(--weave-ease-out, cubic-bezier(0.4, 0, 0.2, 1));
+    margin-bottom: 1rem;
   }
 
   .result-title {
     font-size: 1.5rem;
     font-weight: 700;
-    margin: var(--weave-space-md, 1rem) 0;
-    color: var(--weave-text-normal, var(--text-normal));
+    margin: 1rem 0;
+    color: var(--text-normal);
   }
 
   .result-message {
     font-size: 1rem;
-    color: var(--weave-text-muted, var(--text-muted));
-    margin-bottom: var(--weave-space-lg, 1.25rem);
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
   }
 
   .result-details {
     text-align: left;
-    background: var(--weave-bg-secondary, var(--background-secondary));
-    margin-top: var(--weave-space-lg, 1.25rem);
+    background: var(--background-secondary);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-top: 1.25rem;
   }
 
   .detail-item {
     display: flex;
     justify-content: space-between;
-    padding: var(--weave-space-sm, 0.5rem) 0;
-    border-bottom: 1px solid var(--weave-border, var(--background-modifier-border));
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--background-modifier-border);
   }
 
   .detail-item:last-child {
@@ -497,78 +459,78 @@
   }
 
   .detail-item.mod-warning {
-    color: var(--weave-warning, #f59e0b);
+    color: #f59e0b;
   }
 
   .detail-label {
-    color: var(--weave-text-muted, var(--text-muted));
+    color: var(--text-muted);
   }
 
   .detail-value {
     font-weight: 600;
   }
 
-  /* ===== 折叠组件（失败卡片列表）===== */
-  .weave-collapsible {
-    margin-top: var(--weave-space-lg, 1.25rem);
-    border: 1px solid var(--weave-border, var(--background-modifier-border));
-    border-radius: var(--weave-radius-md, 8px);
+  /* ===== 错误折叠组件 ===== */
+  .error-collapsible {
+    margin-top: 1.25rem;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
     overflow: hidden;
     text-align: left;
   }
 
-  .weave-collapsible-trigger {
+  .error-collapsible-trigger {
     display: flex;
     align-items: center;
-    gap: var(--weave-space-sm, 0.5rem);
-    padding: var(--weave-space-md, 1rem);
-    background: var(--weave-bg-secondary, var(--background-secondary));
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--background-secondary);
     cursor: pointer;
     font-weight: 600;
-    transition: background var(--weave-transition-fast, 150ms);
+    transition: background 150ms;
     user-select: none;
   }
 
-  .weave-collapsible-trigger:hover {
-    background: var(--weave-bg-modifier, var(--background-modifier-hover));
+  .error-collapsible-trigger:hover {
+    background: var(--background-modifier-hover);
   }
 
-  .weave-collapsible-trigger :global(.chevron) {
+  .error-collapsible-trigger :global(.chevron) {
     margin-left: auto;
-    transition: transform var(--weave-transition-fast, 150ms);
+    transition: transform 150ms;
   }
 
-  .weave-collapsible[open] :global(.chevron) {
+  .error-collapsible[open] :global(.chevron) {
     transform: rotate(180deg);
   }
 
-  .weave-collapsible-content {
-    padding: var(--weave-space-md, 1rem);
-    background: var(--weave-bg-primary, var(--background-primary));
-    border-top: 1px solid var(--weave-border, var(--background-modifier-border));
+  .error-collapsible-content {
+    padding: 1rem;
+    background: var(--background-primary);
+    border-top: 1px solid var(--background-modifier-border);
     max-height: 400px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: var(--weave-space-sm, 0.5rem);
+    gap: 0.5rem;
   }
 
   .failed-card {
-    padding: var(--weave-space-md, 1rem);
-    background: var(--weave-bg-secondary, var(--background-secondary));
-    border-left: 3px solid var(--weave-warning, #f59e0b);
-    border-radius: var(--weave-radius-sm, 6px);
+    padding: 1rem;
+    background: var(--background-secondary);
+    border-left: 3px solid #f59e0b;
+    border-radius: 6px;
   }
 
   .failed-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: var(--weave-space-sm, 0.5rem);
+    margin-bottom: 0.5rem;
     font-size: 0.875rem;
   }
 
   .failed-id {
-    color: var(--weave-text-muted, var(--text-muted));
+    color: var(--text-muted);
   }
 
   .failed-model {
@@ -576,35 +538,41 @@
   }
 
   .failed-reason {
-    color: var(--weave-warning, #f59e0b);
+    color: #f59e0b;
     font-size: 0.875rem;
-    margin-bottom: var(--weave-space-sm, 0.5rem);
   }
 
-  /* 已删除failed-preview相关样式 */
+  /* ===== 底部操作栏 ===== */
+  .apkg-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem 0 0;
+    border-top: 1px solid var(--background-modifier-border);
+    margin-top: 1rem;
+  }
 
-  /*  移除 !important：响应式设计使用更具体的选择器 */
-  @media (max-width: 768px) {
-    :global(.weave-app .weave-modal-content.large) {
-      width: 95vw;
-      max-width: 95vw;
-    }
+  .apkg-close-btn {
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    transition: opacity 150ms;
+  }
 
-    /* 移动端预览样式已删除 */
+  .apkg-close-btn:hover {
+    opacity: 0.9;
   }
 
   @media (max-width: 480px) {
-    :global(.weave-app .weave-modal-content.large) {
-      width: 100vw;
-      max-width: 100vw;
-      max-height: 100vh;
-      border-radius: 0;
+    .apkg-modal-body {
+      padding: 0.75rem 1rem;
     }
 
     .dropzone {
-      padding: var(--weave-space-xl, 1.5rem) var(--weave-space-md, 1rem);
+      padding: 1.5rem 1rem;
     }
-
-    /* 移动端预览样式已删除 */
   }
 </style>

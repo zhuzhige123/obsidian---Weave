@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
   import type { Card, Deck } from '../../data/types';
+  import { CardType } from '../../data/types';
   import type { WeavePlugin } from '../../main';
   import type { EmbeddableEditorManager } from '../../services/editor/EmbeddableEditorManager';
   import type { ErrorDetails } from '../../types/editor-types';
@@ -14,6 +15,8 @@
   import CustomDropdown from '../ui/CustomDropdown.svelte';
   import { Notice } from 'obsidian';
   import { setCardProperties } from '../../utils/yaml-utils';
+  import { detectCardQuestionType } from '../../utils/card-type-utils';
+  import { getCardTypeName } from '../../types/unified-card-types';
 
   // Props接口定义
   interface Props {
@@ -73,6 +76,83 @@
   
   //  防重复触发标志（移动端双击问题修复）
   let isProcessing = $state(false);
+
+  function extractClozeOrdinals(content: string): number[] {
+    const ordinals = new Set<number>();
+    const clozePattern = /\{\{c(\d+)::/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = clozePattern.exec(content)) !== null) {
+      const ord = Number.parseInt(match[1], 10);
+      if (Number.isFinite(ord) && ord >= 1) {
+        ordinals.add(ord);
+      }
+    }
+
+    return Array.from(ordinals).sort((a, b) => a - b);
+  }
+
+  function getCardTypeDisplayName(targetCard: Card | null | undefined): string {
+    if (!targetCard) return '未知题型';
+
+    switch (targetCard.type) {
+      case CardType.ProgressiveParent:
+      case CardType.ProgressiveChild:
+        return '渐进式挖空';
+      case CardType.Basic:
+        return '问答题';
+      case CardType.Cloze:
+        return '普通挖空';
+      case CardType.Multiple:
+        return '选择题';
+      default:
+        return getCardTypeName(detectCardQuestionType(targetCard));
+    }
+  }
+
+  function buildProgressiveClozeSaveNotice(previousCard: Card, persistedCard: Card): string | null {
+    const previousOrdinals = extractClozeOrdinals(previousCard.content || '');
+    const nextOrdinals = extractClozeOrdinals(persistedCard.content || '');
+
+    const previousOrdinalSet = new Set(previousOrdinals);
+    const nextOrdinalSet = new Set(nextOrdinals);
+
+    const removedOrdinals = previousOrdinals.filter(ord => !nextOrdinalSet.has(ord));
+    const addedOrdinals = nextOrdinals.filter(ord => !previousOrdinalSet.has(ord));
+    const retainedOrdinals = nextOrdinals.filter(ord => previousOrdinalSet.has(ord));
+
+    const parts: string[] = [];
+
+    if (addedOrdinals.length > 0) {
+      const labels = addedOrdinals.map(ord => `c${ord}`).join('、');
+      parts.push(`已新增子卡片 ${labels}，并通过 UUID 加入当前牌组引用`);
+      parts.push('新增子卡片不会进入当前学习会话，下次学习时再由兄弟分散规则自动处理');
+    }
+
+    if (removedOrdinals.length > 0) {
+      const labels = removedOrdinals.map(ord => `c${ord}`).join('、');
+      parts.push(`已删除子卡片 ${labels}，对应子卡片及其复习历史已删除`);
+    }
+
+    if (addedOrdinals.length === 0 && removedOrdinals.length === 0 && retainedOrdinals.length > 0) {
+      parts.push(`已同步 ${retainedOrdinals.length} 张现有渐进式子卡片的内容`);
+    }
+
+    return parts.length > 0 ? parts.join('；') : null;
+  }
+
+  function notifySaveChanges(previousCard: Card, persistedCard: Card) {
+    if (previousCard.type !== persistedCard.type) {
+      const previousTypeLabel = getCardTypeDisplayName(previousCard);
+      const nextTypeLabel = getCardTypeDisplayName(persistedCard);
+      new Notice(`卡片题型已从「${previousTypeLabel}」变更为「${nextTypeLabel}」`, 7000);
+    }
+
+    const progressiveNotice = buildProgressiveClozeSaveNotice(previousCard, persistedCard);
+    if (progressiveNotice) {
+      new Notice(progressiveNotice, 7000);
+    }
+  }
 
   // 初始化编辑器（使用文件池方案）
   async function initializeEditor() {
@@ -243,9 +323,11 @@
       logger.debug('[InlineCardEditor] ✅ 获取到编辑器内容, 长度:', updatedCard.content?.length || 0);
       
       // 步骤2： 修复 - 先保存到数据库，确保持久化成功
+      let persistedCard: Card = updatedCard;
       if (plugin.dataStorage) {
         logger.debug('[InlineCardEditor] 💾 开始保存到数据库...');
         const saveResult = await plugin.dataStorage.saveCard(updatedCard);
+        persistedCard = saveResult.data || updatedCard;
         
         if (!saveResult.success) {
           throw new Error(saveResult.error || '数据库保存失败');
@@ -289,12 +371,16 @@
       // 这样可以确保按钮在回调执行前就已经恢复可用状态
       // 避免在非钉住模式下，模态窗关闭时按钮仍处于禁用状态
       isLoading = false;
+      if (!isNew) {
+        notifySaveChanges(card, persistedCard);
+      }
+
       logger.debug('[InlineCardEditor] 🔓 isLoading 已重置为 false，准备调用 onSave 回调');
       
       // 步骤3：数据库保存成功后，再调用onSave回调（通知上层可以关闭了）
       if (onSave) {
         logger.debug('[InlineCardEditor] 📞 调用 onSave 回调...');
-        onSave(updatedCard);
+        onSave(persistedCard);
         logger.debug('[InlineCardEditor] ✅ onSave 回调已执行');
       }
       

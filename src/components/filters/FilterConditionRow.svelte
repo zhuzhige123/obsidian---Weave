@@ -203,9 +203,6 @@
     color: var(--interactive-accent);
   }
 
-  .field-select,
-  .operator-select,
-  .value-select,
   .value-text,
   .value-number,
   .value-date {
@@ -219,9 +216,6 @@
     transition: border-color 0.2s ease;
   }
 
-  .field-select:focus,
-  .operator-select:focus,
-  .value-select:focus,
   .value-text:focus,
   .value-number:focus,
   .value-date:focus {
@@ -229,22 +223,11 @@
     border-color: var(--interactive-accent);
   }
 
-  .field-select {
-    min-width: 120px;
-    flex-shrink: 0;
-  }
-
-  .operator-select {
-    min-width: 100px;
-    flex-shrink: 0;
-  }
-
   .value-input {
     flex: 1;
     min-width: 0;
   }
 
-  .value-select,
   .value-text,
   .value-number,
   .value-date {
@@ -317,8 +300,8 @@
       flex-wrap: wrap;
     }
 
-    .field-select,
-    .operator-select {
+    :global(.obsidian-dropdown-trigger.field-select),
+    :global(.obsidian-dropdown-trigger.operator-select) {
       flex: 1;
       min-width: 100px;
     }

@@ -8,6 +8,8 @@
  * @since 2025-12-06
  */
 
+import { tr } from '../../utils/i18n';
+
 interface Props {
   accuracy: number;  // 正确率 (0-100)
   correct: number;   // 正确数
@@ -15,6 +17,8 @@ interface Props {
 }
 
 let { accuracy, correct, total }: Props = $props();
+
+let t = $derived($tr);
 
 // Hover状态
 let isHovered = $state(false);
@@ -25,25 +29,25 @@ const colorConfig = $derived.by(() => {
     return {
       bgGradient: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
       textColor: '#065f46',
-      label: '优秀'
+      label: t('study.choiceAccuracy.excellent')
     };
   } else if (accuracy >= 70) {
     return {
       bgGradient: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
       textColor: '#1e40af',
-      label: '良好'
+      label: t('study.choiceAccuracy.good')
     };
   } else if (accuracy >= 60) {
     return {
       bgGradient: 'linear-gradient(135deg, #fed7aa 0%, #fdba74 100%)',
       textColor: '#7c2d12',
-      label: '及格'
+      label: t('study.choiceAccuracy.pass')
     };
   } else {
     return {
       bgGradient: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
       textColor: '#991b1b',
-      label: '需努力'
+      label: t('study.choiceAccuracy.needsWork')
     };
   }
 });
@@ -61,21 +65,21 @@ const formattedAccuracy = $derived(accuracy.toFixed(1));
   onmouseleave={() => isHovered = false}
 >
   <div class="sticker-percentage">{formattedAccuracy}%</div>
-  <div class="sticker-label">正确率</div>
+  <div class="sticker-label">{t('study.choiceAccuracy.label')}</div>
   
   <!-- Hover详情 -->
   {#if isHovered}
     <div class="sticker-tooltip">
       <div class="tooltip-row">
-        <span class="tooltip-label">选择题正确率</span>
+        <span class="tooltip-label">{t('study.choiceAccuracy.tooltipTitle')}</span>
         <span class="tooltip-value">{formattedAccuracy}%</span>
       </div>
       <div class="tooltip-row">
-        <span class="tooltip-label">答对</span>
+        <span class="tooltip-label">{t('study.choiceAccuracy.correct')}</span>
         <span class="tooltip-value">{correct}/{total}</span>
       </div>
       <div class="tooltip-row">
-        <span class="tooltip-label">评价</span>
+        <span class="tooltip-label">{t('study.choiceAccuracy.rating')}</span>
         <span class="tooltip-value">{colorConfig.label}</span>
       </div>
     </div>

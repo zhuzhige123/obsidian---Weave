@@ -297,7 +297,7 @@ async function loadStudyCards() {
         //  模式2: 提前学习模式（加载未到期的复习卡片）
         if (!currentDeckId) {
           logger.error('[StudyViewWrapper] 提前学习模式缺少 deckId');
-          new Notice('提前学习需要选择牌组');
+          new Notice(t('study.viewWrapper.advanceNeedsDeck'));
           onClose();
           return;
         }
@@ -452,7 +452,7 @@ function handleStudyComplete(session: StudySession) {
       : 0;
     
     // 先用默认值初始化，确保模态窗可以立即显示
-    celebrationDeckName = '加载中...';
+    celebrationDeckName = t('study.viewWrapper.loadingDeckName');
     celebrationDeckId = session.deckId;
     celebrationStats = {
       reviewed: session.cardsReviewed,
@@ -475,10 +475,10 @@ function handleStudyComplete(session: StudySession) {
           10000  // 增加到10秒，处理大数据量情况
         );
         const deck = await dataStorage.getDeck(session.deckId);
-        celebrationDeckName = deck?.name || '未知牌组';
+        celebrationDeckName = deck?.name || t('study.viewWrapper.unknownDeck');
       } catch (error) {
         logger.error('[StudyViewWrapper] 加载牌组名称失败:', error);
-        celebrationDeckName = '未知牌组';
+        celebrationDeckName = t('study.viewWrapper.unknownDeck');
       }
     })();
   } else {
@@ -533,7 +533,7 @@ async function handleStartPractice() {
   
   if (!deckId) {
     logger.error('[StudyViewWrapper] 无法开始考试：缺少牌组ID');
-    new Notice('无法开始考试：缺少牌组信息');
+    new Notice(t('study.viewWrapper.examFailed'));
     return;
   }
   
@@ -543,7 +543,7 @@ async function handleStartPractice() {
     // 检查题库服务是否可用
     if (!plugin.questionBankService) {
       logger.error('[StudyViewWrapper] 题库服务未初始化');
-      new Notice('题库功能未启用');
+      new Notice(t('study.viewWrapper.examNotEnabled'));
       return;
     }
     
@@ -599,7 +599,7 @@ async function handleStartPractice() {
     if (!questionBank) {
       // 没有对应的考试牌组
       logger.info('[StudyViewWrapper] 暂无该记忆牌组对应的考试牌组');
-      new Notice('暂无该记忆牌组对应的考试牌组');
+      new Notice(t('study.viewWrapper.noExamBank'));
       return;
     }
     
@@ -619,7 +619,7 @@ async function handleStartPractice() {
     
   } catch (error) {
     logger.error('[StudyViewWrapper] 开始考试失败:', error);
-    new Notice('开始考试失败');
+    new Notice(t('study.viewWrapper.examFailed'));
   }
   
   // 重置标志
@@ -649,7 +649,7 @@ async function handleStartPractice() {
     <!-- 加载中状态 -->
     <div class="loading-container-fullscreen">
       <div class="loading-spinner"></div>
-      <p>加载学习卡片中...</p>
+      <p>{t('study.viewWrapper.loading')}</p>
     </div>
   {/if}
   

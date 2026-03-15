@@ -669,11 +669,11 @@ export class DataIntegrityChecker {
   }
 
   private generateIssueId(): string {
-    return `issue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `issue_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   private generateReportId(): string {
-    return `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `report_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**

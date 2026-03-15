@@ -54,31 +54,32 @@
   // 配置状态
   let showConfigModal = $state(false);
   let showPreviewModal = $state(false);
+  
+  // 从持久化设置中恢复AI制卡配置
+  const saved = plugin.settings.aiConfig?.savedGenerationConfig;
   let generationConfig = $state<GenerationConfig>({
     templateId: '',
     promptTemplate: '',
-    cardCount: 10,
-    difficulty: 'medium',
-    typeDistribution: { qa: 50, cloze: 30, choice: 20 },
-    //  优先使用上次保存的provider和model
+    cardCount: saved?.cardCount ?? 10,
+    difficulty: saved?.difficulty ?? 'medium',
+    typeDistribution: saved?.typeDistribution ?? { qa: 50, cloze: 30, choice: 20 },
     provider: (plugin.settings.aiConfig?.lastUsedProvider || plugin.settings.aiConfig?.defaultProvider || 'openai') as AIProvider,
     model: plugin.settings.aiConfig?.lastUsedModel || '',
-    temperature: 0.7,
-    maxTokens: 2000,
+    temperature: saved?.temperature ?? 0.7,
+    maxTokens: saved?.maxTokens ?? 2000,
     imageGeneration: {
       enabled: false,
       strategy: 'none',
       imagesPerCard: 0,
       placement: 'question'
     },
-    // 使用官方模板作为默认值
     templates: {
       qa: 'official-qa',
       choice: 'official-choice',
       cloze: 'official-cloze'
     },
-    autoTags: [],
-    enableHints: true
+    autoTags: saved?.autoTags ?? [],
+    enableHints: saved?.enableHints ?? true
   });
   
   // 空状态 - 已移除，编辑器始终显示
@@ -190,9 +191,24 @@
 
   // 所有提示词管理现已集成到AIConfigModal中
 
-  function handleSaveConfig(config: GenerationConfig) {
+  async function handleSaveConfig(config: GenerationConfig) {
     generationConfig = config;
     showConfigModal = false;
+    
+    // 持久化到 plugin.settings
+    if (!plugin.settings.aiConfig) {
+      plugin.settings.aiConfig = {};
+    }
+    plugin.settings.aiConfig.savedGenerationConfig = {
+      cardCount: config.cardCount,
+      difficulty: config.difficulty,
+      typeDistribution: { ...config.typeDistribution },
+      autoTags: config.autoTags ? [...config.autoTags] : [],
+      enableHints: config.enableHints,
+      temperature: config.temperature,
+      maxTokens: config.maxTokens
+    };
+    await plugin.saveSettings();
     new Notice('配置已保存');
   }
 
@@ -468,24 +484,27 @@
 
 <style>
   .ai-assistant-page {
+    flex: 1 1 auto;
     height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     background: var(--background-primary);
+    overflow: hidden;
   }
 
   .ai-header {
-    position: relative;  /* 修复：建立层叠上下文 */
-    z-index: 10;  /* 修复：确保 header 在内容之上 */
+    position: relative;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
     background: var(--background-primary);
     border-bottom: 1px solid var(--background-modifier-border);
+    flex-shrink: 0;
   }
 
-  /* 桌面端显示，移动端隐藏 */
   .desktop-only {
     display: flex;
   }
@@ -525,26 +544,24 @@
   }
 
   .ai-main-content {
-    flex: 1;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    padding: 0;  /* 移除所有padding，改用子元素margin */
-    overflow: hidden;
     min-height: 0;
+    overflow: hidden;
   }
 
-  /* 编辑器包装器 - 始终显示，填满可用空间 */
   .editor-wrapper {
-    flex: 1 1 auto;  /* 🔧 允许扩展填充所有可用空间 */
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    min-height: 200px;  /* 设置最小高度，确保编辑器有足够空间 */
-    margin: 16px;  /* 添加margin替代父元素的padding */
+    min-height: 0;
+    margin: 16px;
+    overflow: hidden;
   }
 
-  /* 进度指示器包装器 */
   .progress-wrapper {
-    margin: 12px 16px 16px 16px;  /* 顶、右、下、左 */
+    margin: 12px 16px 16px 16px;
     flex-shrink: 0;
   }
 </style>

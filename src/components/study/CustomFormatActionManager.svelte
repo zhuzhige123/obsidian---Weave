@@ -67,6 +67,18 @@
     onSave(editingActions);
     onClose();
   }
+
+  function handleOverlayClick(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  }
+
+  function handleOverlayKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      onClose();
+    }
+  }
   
   // 图标选择器（简化版）
   const ICON_OPTIONS = ['✨', '🔧', '📝', '🌐', '🧠', '💡', '🎯', '📊', '🔍', '⚙️', '∑', '🎨', '📐', '🔮'];
@@ -75,14 +87,14 @@
 {#if show}
   <div 
     class="modal-overlay" 
-    onclick={onClose} 
-    onkeydown={(e) => e.key === 'Escape' && onClose()}
+    onclick={handleOverlayClick}
+    onkeydown={handleOverlayKeydown}
     role="presentation"
     tabindex="-1"
   >
-    <div class="manager-modal" onclick={(e) => { e.stopPropagation(); }} role="dialog" aria-modal="true" tabindex="-1">
+    <div class="manager-modal" role="dialog" aria-modal="true" aria-labelledby="custom-format-action-manager-title" tabindex="-1">
       <div class="modal-header">
-        <h3>管理AI格式化功能</h3>
+        <h3 id="custom-format-action-manager-title">管理AI格式化功能</h3>
         <button class="close-btn" onclick={onClose} aria-label="关闭">×</button>
       </div>
       
@@ -103,7 +115,12 @@
                   class="action-item"
                   class:selected={selectedActionId === action.id}
                   onclick={() => selectedActionId = action.id}
-                  onkeydown={(e) => e.key === 'Enter' && (selectedActionId = action.id)}
+                  onkeydown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      selectedActionId = action.id;
+                    }
+                  }}
                   role="button"
                   tabindex="0"
                 >
@@ -160,7 +177,7 @@
                 </div>
                 
                 <div class="form-group">
-                  <label>AI提供商 (可选)</label>
+                  <div class="field-label">AI提供商 (可选)</div>
                   <ObsidianDropdown
                     options={[
                       { id: '', label: '使用默认提供商' },
@@ -179,17 +196,19 @@
                 </div>
                 
                 <div class="form-group">
-                  <label>
-                    系统提示词
+                  <div class="field-label-row">
+                    <label for="action-system-prompt">系统提示词</label>
                     <button 
+                      type="button"
                       class="help-btn"
                       onclick={() => showVariableHelp = !showVariableHelp}
                       title="显示/隐藏可用变量"
                     >
                       <EnhancedIcon name="help" size="12" />
                     </button>
-                  </label>
+                  </div>
                   <textarea
+                    id="action-system-prompt"
                     bind:value={selectedAction.systemPrompt}
                     placeholder="定义AI的角色和行为..."
                     rows="4"
@@ -197,8 +216,9 @@
                 </div>
                 
                 <div class="form-group">
-                  <label>用户提示词模板</label>
+                  <label for="action-user-prompt-template">用户提示词模板</label>
                   <textarea
+                    id="action-user-prompt-template"
                     bind:value={selectedAction.userPromptTemplate}
                     placeholder="使用 {'{{'} 变量名 {'}'} 来插入动态内容..."
                     rows="6"
@@ -437,7 +457,6 @@
   }
   
   .form-group input,
-  .form-group select,
   .form-group textarea {
     width: 100%;
     padding: 0.5rem 0.75rem;
@@ -463,7 +482,6 @@
   }
   
   .form-group input:focus,
-  .form-group select:focus,
   .form-group textarea:focus {
     outline: none;
     border-color: var(--interactive-accent);
@@ -479,6 +497,26 @@
     font-family: var(--font-monospace);
     resize: vertical;
     line-height: 1.5;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-normal);
+    margin-bottom: 0.375rem;
+  }
+
+  .field-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.375rem;
+  }
+
+  .field-label-row label {
+    margin-bottom: 0;
   }
   
   .icon-selector {

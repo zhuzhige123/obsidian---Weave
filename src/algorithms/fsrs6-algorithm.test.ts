@@ -65,12 +65,11 @@ describe("FSRS6 Core Algorithm", () => {
 		expect(reviewedCard2.shortTermMemoryFactor).not.toBe(1.0);
 	});
 
-	test("should validate parameters correctly", () => {
-		expect(() => {
-			new FSRS6CoreAlgorithm({
-				w: [1, 2, 3] as unknown as FSRS6Parameters["w"], // 故意传入错误的参数数量来测试验证
-			});
-		}).toThrow();
+	test("should fall back to defaults for invalid parameter shapes", () => {
+		const invalidWeights = [1, 2, 3] as unknown as FSRS6Parameters["w"];
+		const algorithm = new FSRS6CoreAlgorithm({ w: invalidWeights });
+
+		expect(algorithm.getParameters().w).toEqual(FSRS6_DEFAULTS.DEFAULT_WEIGHTS);
 	});
 
 	test("should handle parameter updates", () => {

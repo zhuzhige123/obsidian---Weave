@@ -64,8 +64,14 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if open}
-  <div class="rating-modal-overlay" onclick={onClose}>
-    <div class="rating-modal" onclick={(e) => e.stopPropagation()}>
+  <div class="rating-modal-overlay">
+    <button
+      type="button"
+      class="rating-modal-backdrop"
+      aria-label="关闭理解评分"
+      onclick={onClose}
+    ></button>
+    <div class="rating-modal" role="dialog" aria-modal="true" tabindex="-1">
       <div class="modal-header">
         <h3>这段内容理解程度如何？</h3>
         {#if blockTitle}
@@ -115,6 +121,15 @@
     justify-content: center;
     z-index: var(--weave-z-overlay);
     animation: fadeIn 0.15s ease;
+  }
+
+  .rating-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: default;
   }
 
   @keyframes fadeIn {

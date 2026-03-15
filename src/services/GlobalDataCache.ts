@@ -204,7 +204,7 @@ export class GlobalDataCache {
    * 
    * @param deckId 牌组ID
    */
-  async invalidateCardCache(deckId: string): Promise<void> {
+  invalidateCardCache(deckId: string): void {
     logger.debug('[GlobalDataCache]', `使牌组 ${deckId} 的卡片缓存失效`);
     // 清除牌组缓存，因为牌组统计信息可能已更改
     this.state.decks = null;
@@ -215,7 +215,7 @@ export class GlobalDataCache {
    * 使牌组缓存失效
    * 当牌组被添加、更新或删除时调用
    */
-  async invalidateDeckCache(): Promise<void> {
+  invalidateDeckCache(): void {
     logger.debug('[GlobalDataCache]', '使牌组缓存失效');
     this.state.decks = null;
     this.state.timestamp = Date.now() - this.CACHE_TTL; // 标记为过期
@@ -258,15 +258,10 @@ export class GlobalDataCache {
   /**
    * 加载模板数据
    */
-  private async loadTemplates(_plugin: WeavePlugin): Promise<any[]> {
-    try {
-      // 模板系统已弃用，直接返回空数组
-      logger.debug('[GlobalDataCache]', '模板系统已弃用，返回空数组');
-      return [];
-    } catch (error) {
-      logger.error('[GlobalDataCache] 加载模板失败:', error);
-      return [];
-    }
+  private loadTemplates(_plugin: WeavePlugin): any[] {
+    // 模板系统已弃用，直接返回空数组
+    logger.debug('[GlobalDataCache]', '模板系统已弃用，返回空数组');
+    return [];
   }
 }
 

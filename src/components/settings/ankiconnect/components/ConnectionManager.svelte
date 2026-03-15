@@ -4,6 +4,9 @@
 -->
 <script lang="ts">
   import type { ConnectionStatus } from '../../../../types/ankiconnect-types';
+  import { tr } from '../../../../utils/i18n';
+
+  let t = $derived($tr);
 
   interface Props {
     connectionStatus: ConnectionStatus | null;
@@ -26,16 +29,16 @@
   <!-- 连接状态与测试 -->
   <div class="setting-item">
     <div class="setting-info">
-      <div class="setting-label">连接状态</div>
+      <div class="setting-label">{t('ankiConnect.connection.status')}</div>
       <div class="setting-description">
         {#if isTesting}
-          ⏳ 测试中...
+          {t('ankiConnect.connection.testing')}
         {:else if connectionStatus === null}
-          ⚪ 未测试
+          {t('ankiConnect.connection.notTested')}
         {:else if connectionStatus.isConnected}
-          ✅ 已连接 {#if connectionStatus.apiVersion}<span style="opacity: 0.7;">· API v{connectionStatus.apiVersion}</span>{/if}
+          {t('ankiConnect.connection.connected')} {#if connectionStatus.apiVersion}<span style="opacity: 0.7;"> API v{connectionStatus.apiVersion}</span>{/if}
         {:else}
-          ❌ 未连接
+          {t('ankiConnect.connection.disconnected')}
         {/if}
       </div>
     </div>
@@ -45,7 +48,7 @@
         onclick={onTestConnection}
         disabled={isTesting}
       >
-        {isTesting ? '测试中...' : '测试连接'}
+        {isTesting ? t('ankiConnect.connection.testingButton') : t('ankiConnect.connection.testButton')}
       </button>
     </div>
   </div>
@@ -62,9 +65,9 @@
   <!-- 端点配置 -->
   <div class="setting-item">
     <div class="setting-info">
-      <div class="setting-label">AnkiConnect 端点</div>
+      <div class="setting-label">{t('ankiConnect.connection.endpointLabel')}</div>
       <div class="setting-description">
-        AnkiConnect API 的地址
+        {t('ankiConnect.connection.endpointDesc')}
       </div>
     </div>
     <div class="setting-control">

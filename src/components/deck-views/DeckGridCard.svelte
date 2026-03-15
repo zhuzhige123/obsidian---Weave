@@ -24,9 +24,9 @@
   const statLabels = $derived.by(() => {
     switch (deckMode) {
       case 'incremental-reading':
-        return { first: '未读', second: '待读', third: '提问' };
+        return { first: t('decks.card.irUnread'), second: t('decks.card.irPending'), third: t('decks.card.irQuestions') };
       case 'question-bank':
-        return { first: '总题', second: '已练', third: '错题' };
+        return { first: t('decks.questionBank.total'), second: t('decks.questionBank.completed'), third: t('decks.questionBank.errors') };
       default:
         return { first: t('decks.card.new'), second: t('decks.card.learning'), third: t('decks.card.review') };
     }
@@ -140,8 +140,8 @@
       class="menu-btn"
       onclick={handleMenuClick}
       ontouchend={handleMenuTouchEnd}
-      aria-label="更多操作"
-      title="更多操作"
+      aria-label={t('decks.card.moreActions')}
+      title={t('decks.card.moreActions')}
     >
       <EnhancedIcon name="more-horizontal" size={16} />
     </button>
@@ -263,7 +263,7 @@
   }
 
   .deck-title {
-    font-family: 'Playfair Display', 'Noto Serif SC', serif;
+    font-family: var(--font-text, 'Playfair Display'), 'Noto Serif SC', serif;
     font-size: 24px;
     font-weight: 700;
     text-align: center;

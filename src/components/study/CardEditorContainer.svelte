@@ -6,6 +6,7 @@
   import type { WeaveDataStorage } from "../../data/storage";
   import { logger } from "../../utils/logger";
   import { Notice, Platform } from "obsidian";
+  import { tr } from '../../utils/i18n';
 
   interface Props {
     card: Card | null;
@@ -42,6 +43,8 @@
     onKeyboardStateChange,
     keyboardVisible
   }: Props = $props();
+
+  let t = $derived($tr);
 
   let inlineEditorContainer: HTMLDivElement | null = $state(null);
   let editorHostEl: HTMLDivElement | null = $state(null);
@@ -176,7 +179,7 @@
 
         if (!updateResult.success) {
           logger.error('[CardEditorContainer] 更新编辑器内容失败:', updateResult.error);
-          new Notice('更新编辑器内容失败');
+          new Notice(t('study.editor.updateFailed'));
           return;
         }
 
@@ -198,7 +201,7 @@
         if (!sessionResult.success) {
           logger.error('Failed to create editor session:', sessionResult.error);
           onEditCancel();
-          new Notice('编辑器会话创建失败');
+          new Notice(t('study.editor.sessionCreateFailed'));
           return;
         }
 
@@ -213,7 +216,7 @@
         if (!editorResult.success) {
           logger.error('Failed to create embedded editor:', editorResult.error);
           onEditCancel();
-          new Notice('编辑器创建失败');
+          new Notice(t('study.editor.editorCreateFailed'));
           return;
         }
 
@@ -242,7 +245,7 @@
     } catch (error) {
       logger.error('[CardEditorContainer] 进入编辑模式失败:', error);
       onEditCancel();
-      new Notice('进入编辑模式失败');
+      new Notice(t('study.editor.enterEditFailed'));
     }
   }
 
@@ -308,7 +311,7 @@
 
       if (result.success && result.updatedCard) {
         logger.debug('[CardEditorContainer]',' ✅ 卡片保存成功:', result.updatedCard.uuid);
-        new Notice('卡片已保存');
+        new Notice(t('study.editor.cardSaved'));
 
         //  学习会话模式：不清理编辑器（复用）
         // editCleanupFn 保留，编辑器实例保持活跃
@@ -318,14 +321,14 @@
       } else {
         //  保存失败：停留在编辑模式，不清理资源
         logger.error('[CardEditorContainer] 卡片保存失败:', result.error);
-        new Notice('保存失败: ' + (result.error || '未知错误'));
+        new Notice(t('study.editor.saveFailed', { error: result.error || t('study.editor.unknownError') }));
         // 不执行任何清理和状态切换，用户可以继续编辑或重试
       }
 
     } catch (error) {
       //  异常情况：停留在编辑模式
       logger.error('[CardEditorContainer] 保存过程异常:', error);
-      new Notice('保存失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      new Notice(t('study.editor.saveFailed', { error: error instanceof Error ? error.message : t('study.editor.unknownError') }));
       // 不执行任何清理和状态切换
     }
   }
@@ -384,7 +387,7 @@
       await dataStorage.saveCard(updatedCard);
 
       logger.debug('[CardEditorContainer]','Plain editor: Card saved successfully:', updatedCard.uuid);
-      new Notice('卡片已保存');
+      new Notice(t('study.editor.cardSaved'));
 
       //  通知父组件更新卡片（支持async回调）
       await Promise.resolve(onEditComplete(updatedCard));
@@ -392,7 +395,7 @@
     } catch (error) {
       logger.error('Failed to save card from plain editor:', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
-      new Notice('保存失败: ' + errorMessage);
+      new Notice(t('study.editor.saveFailed', { error: errorMessage }));
     }
   }
 
@@ -487,19 +490,6 @@
     bind:this={inlineEditorContainer} 
     class:cloze-deletion-mode={isClozeMode}
   >
-    {#if Platform.isMobile}
-      <button
-        class="mobile-editor-save-btn-in-editor"
-        onclick={exitEditMode}
-        aria-label="保存并返回"
-        title="保存并返回"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-      </button>
-    {/if}
-
     <div class="embedded-editor-host" bind:this={editorHostEl}></div>
 
     <!-- 编辑器将在这里被EmbeddableEditorManager创建 -->
@@ -514,14 +504,14 @@
             // 实时保存编辑内容到临时变量
             // 这里可以添加实时预览或自动保存逻辑
           }}
-          placeholder="在此编辑卡片内容..."
+          placeholder={t('study.editor.placeholder')}
         ></textarea>
         <div class="plain-editor-actions">
           <button
             class="btn-secondary"
             onclick={handleEditorCancel}
           >
-            取消
+            {t('study.editor.cancel')}
           </button>
           <button
             class="btn-primary"
@@ -531,7 +521,7 @@
               }
             }}
           >
-            保存
+            {t('study.editor.save')}
           </button>
         </div>
       </div>
@@ -682,38 +672,6 @@
   .btn-primary:hover {
     background: var(--color-accent-hover);
     border-color: var(--color-accent-hover);
-  }
-
-  .mobile-editor-save-btn-in-editor {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 5;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 10px;
-    background: var(--background-primary);
-    color: var(--text-normal);
-    cursor: pointer;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    pointer-events: auto;
-  }
-
-  .mobile-editor-save-btn-in-editor:hover,
-  .mobile-editor-save-btn-in-editor:active {
-    background: var(--background-secondary);
-  }
-
-  .mobile-editor-save-btn-in-editor svg {
-    width: 18px;
-    height: 18px;
   }
 
   /* 桌面端不进行布局重排，移动端布局由 :global(body.is-phone) 控制 */

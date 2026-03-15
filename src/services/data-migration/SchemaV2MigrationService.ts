@@ -576,11 +576,8 @@ export class SchemaV2MigrationService {
       this.v2Paths.questionBank.root,
       this.v2Paths.questionBank.banksDir,
       // 插件目录
-      pluginPaths.config.root,
       pluginPaths.indices.root,
       pluginPaths.cache.root,
-      pluginPaths.temp,
-      pluginPaths.logs,
       pluginPaths.backups,
       pluginPaths.migration.root,
     ];

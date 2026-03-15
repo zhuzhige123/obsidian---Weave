@@ -377,7 +377,7 @@ export class MultiPatternMatcher {
    * 添加自定义模式
    */
   addCustomPattern(pattern: Omit<MatchPattern, 'id'>): string {
-    const id = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `custom-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     const fullPattern: MatchPattern = {
       id,
       ...pattern

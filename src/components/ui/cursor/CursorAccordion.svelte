@@ -1,13 +1,17 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   // 简单的手风琴组件占位符
   interface Props {
     title: string;
     open?: boolean;
+    children?: Snippet;
   }
 
   let {
     title,
-    open = false
+    open = false,
+    children
   }: Props = $props();
 </script>
 
@@ -18,7 +22,7 @@
   </button>
   {#if open}
     <div class="accordion-content">
-      <slot />
+      {@render children?.()}
     </div>
   {/if}
 </div>

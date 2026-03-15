@@ -167,7 +167,7 @@
     logger.debug('[EditCardModal] 牌组变更:', { selectedDeckNames, selectedDeckId });
   }
 
-  let deckButtonRef: HTMLButtonElement;
+  let deckButtonRef = $state<HTMLButtonElement | undefined>(undefined);
   let lastMenuPosition: { x: number; y: number } | null = null;
 
   function getDeckSelectorText(): string {

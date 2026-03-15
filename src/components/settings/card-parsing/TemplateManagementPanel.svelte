@@ -4,6 +4,9 @@
 -->
 <script lang="ts">
   import { logger } from '../../../utils/logger';
+  import { tr } from '../../../utils/i18n';
+
+  let t = $derived($tr);
 
   import { Notice } from 'obsidian';
   import type { ParseTemplate } from '../../../types/newCardParsingTypes';
@@ -83,7 +86,7 @@
       const newTemplate = {
         ...template,
         id: `template_${Date.now()}`,
-        name: template.name + ' (副本)',
+        name: template.name + ' ' + t('dataManagement.templateMgmt.copyLabel'),
         isDefault: false,
         isOfficial: false
       };
@@ -114,8 +117,8 @@
     if (linkedCards.length > 0) {
       const confirmed = await showObsidianConfirm(
         plugin!.app,
-        `⚠️ 警告：该模板关联了 ${linkedCards.length} 张卡片。\n\n删除模板后，这些卡片也将被删除，且无法恢复！\n\n确定要继续吗？`,
-        { title: '确认删除', confirmText: '删除', confirmClass: 'mod-warning' }
+        t('dataManagement.templateMgmt.deleteLinkedWarning', { count: linkedCards.length }),
+        { title: t('dataManagement.templateMgmt.confirmDelete'), confirmText: t('dataManagement.templateMgmt.deleteBtn'), confirmClass: 'mod-warning' }
       );
       
       if (!confirmed) return;
@@ -130,15 +133,15 @@
         }
       } catch (error) {
         logger.error('[TemplateManagementPanel] 删除关联卡片失败:', error);
-        new Notice('删除关联卡片失败，操作已取消');
+        new Notice(t('dataManagement.templateMgmt.deleteCardsFailed'));
         return;
       }
     } else {
       // 没有关联卡片，简单确认
       const confirmed = await showObsidianConfirm(
         plugin!.app,
-        '确定要删除这个模板吗？',
-        { title: '确认删除' }
+        t('dataManagement.templateMgmt.confirmDeleteSimple'),
+        { title: t('dataManagement.templateMgmt.confirmDelete') }
       );
       if (!confirmed) {
         return;
@@ -151,9 +154,9 @@
     
     // 显示通知
     if (linkedCards.length > 0) {
-      new Notice(`已删除模板及其关联的 ${linkedCards.length} 张卡片`);
+      new Notice(t('dataManagement.templateMgmt.deletedWithCards', { count: linkedCards.length }));
     } else {
-      new Notice('已删除模板');
+      new Notice(t('dataManagement.templateMgmt.deletedTemplate'));
     }
   }
 </script>
@@ -162,7 +165,7 @@
   <!-- 模板来源筛选器 -->
   <TemplateTypeFilter
     sourceFilter={templateSourceFilter}
-    onSourceFilterChange={(filter) => templateSourceFilter = filter}
+    onSourceFilterChange={(filter: 'all' | 'weave' | 'anki') => templateSourceFilter = filter}
   />
 
   <!-- 模板列表 -->
@@ -170,9 +173,9 @@
     {#each filteredTemplates as template (template.id)}
       <TemplateCard
         {template}
-        onEdit={(t) => openTemplateModal(t)}
-        onDuplicate={(t) => duplicateTemplate(t.id)}
-        onDelete={(t) => deleteTemplate(t.id)}
+        onEdit={(t: ParseTemplate) => openTemplateModal(t)}
+        onDuplicate={(t: ParseTemplate) => duplicateTemplate(t.id)}
+        onDelete={(t: ParseTemplate) => deleteTemplate(t.id)}
       />
     {/each}
   </div>

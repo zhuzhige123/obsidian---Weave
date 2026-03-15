@@ -8,6 +8,10 @@
    * - 两种方式互斥
    */
   
+  import { tr } from '../../../utils/i18n';
+
+  let t = $derived($tr);
+
   interface Props {
     /** 配置对象（包含 cardSeparator 和 emptyLineSeparator） */
     config: {
@@ -77,7 +81,7 @@
 <div class="range-separator-config">
   <!-- 分隔方式选择 -->
   <div class="form-group">
-    <div class="form-label">卡片分隔方式</div>
+    <div class="form-label">{t('dataManagement.batchScan.separator.cardSeparatorMethod')}</div>
     <div class="separator-type-switch">
       <label class="switch-option">
         <input 
@@ -86,7 +90,7 @@
           checked={!safeEmptyLineSeparator.enabled}
           onchange={switchToCustomSeparator}
         />
-        <span>使用自定义分隔符</span>
+        <span>{t('dataManagement.batchScan.separator.useCustomSeparator')}</span>
       </label>
       <label class="switch-option">
         <input 
@@ -95,7 +99,7 @@
           checked={safeEmptyLineSeparator.enabled}
           onchange={switchToEmptyLineSeparator}
         />
-        <span>使用空行分隔</span>
+        <span>{t('dataManagement.batchScan.separator.useEmptyLine')}</span>
       </label>
     </div>
   </div>
@@ -103,7 +107,7 @@
   <!-- 根据选择显示对应的配置项 -->
   {#if safeEmptyLineSeparator.enabled}
     <div class="form-group">
-      <label for="empty-line-count">空行数量</label>
+      <label for="empty-line-count">{t('dataManagement.batchScan.separator.emptyLineCount')}</label>
       <input 
         type="number"
         id="empty-line-count"
@@ -111,21 +115,21 @@
         max="10"
         value={safeEmptyLineSeparator.lineCount}
         onchange={(e) => updateLineCount(parseInt(e.currentTarget.value) || 2)}
-        placeholder="例如：2"
+        placeholder={t('dataManagement.batchScan.separator.emptyLineCountPlaceholder')}
       />
-      <small class="help-text">连续的空行数量（默认2行）</small>
+      <small class="help-text">{t('dataManagement.batchScan.separator.emptyLineCountHelp')}</small>
     </div>
   {:else}
     <div class="form-group">
-      <label for="card-separator">卡片范围分隔符</label>
+      <label for="card-separator">{t('dataManagement.batchScan.separator.cardRangeSeparator')}</label>
       <input 
         type="text"
         id="card-separator"
         value={safeCardSeparator}
         oninput={(e) => updateCardSeparator(e.currentTarget.value)}
-        placeholder="例如：%%<->%%"
+        placeholder={t('dataManagement.batchScan.separator.cardRangeSeparatorPlaceholder')}
       />
-      <small class="help-text">用于分隔卡片范围</small>
+      <small class="help-text">{t('dataManagement.batchScan.separator.cardRangeSeparatorHelp')}</small>
     </div>
   {/if}
 </div>

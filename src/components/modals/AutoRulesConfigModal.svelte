@@ -547,9 +547,14 @@
 </script>
 
 {#if open}
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="ar-overlay" onclick={handleOverlayClick} onkeydown={handleKeydown} role="dialog" aria-modal="true">
-  <div class="ar-modal">
+<div class="ar-overlay">
+  <button
+    type="button"
+    class="ar-backdrop"
+    aria-label="关闭"
+    onclick={handleOverlayClick}
+  ></button>
+  <div class="ar-modal" role="dialog" aria-modal="true" tabindex="-1" onkeydown={handleKeydown}>
     <header class="ar-header">
       <h2 class="ar-title"><span class="ar-accent-bar"></span>自动规则配置</h2>
       <button class="ar-close" onclick={handleCloseBtn} aria-label="关闭">✕</button>
@@ -589,7 +594,7 @@
     {#if showAddForm}
       <div class="add-form">
         <div class="form-row">
-          <label class="form-label">规则类型</label>
+          <div class="form-label">规则类型</div>
           <div class="type-selector type-selector-wrap">
             <button class="type-btn" class:active={newRuleType === 'include'} onclick={() => { newRuleType = 'include'; }}>自动引入</button>
             <button class="type-btn" class:active={newRuleType === 'exclusive'} onclick={() => { newRuleType = 'exclusive'; }}>独占限制</button>
@@ -600,8 +605,9 @@
         </div>
         {#if ruleNeedsTag(newRuleType)}
           <div class="form-row">
-            <label class="form-label">{newRuleType === 'auto-tag' ? '添加标签' : '匹配标签'}</label>
+            <label class="form-label" for="auto-rule-tag-input">{newRuleType === 'auto-tag' ? '添加标签' : '匹配标签'}</label>
             <input
+              id="auto-rule-tag-input"
               type="text"
               class="form-input"
               placeholder={newRuleType === 'auto-tag' ? '输入要添加的标签名' : '输入标签名，如：英语'}
@@ -611,8 +617,9 @@
         {/if}
         {#if ruleNeedsSource(newRuleType)}
           <div class="form-row">
-            <label class="form-label">来源匹配</label>
+            <label class="form-label" for="auto-rule-source-input">来源匹配</label>
             <input
+              id="auto-rule-source-input"
               type="text"
               class="form-input"
               placeholder="输入文件名关键词或通配符，如：英语笔记*"
@@ -621,11 +628,11 @@
           </div>
         {/if}
         <div class="form-row">
-          <label class="form-label">目标牌组</label>
+          <label class="form-label" for="auto-rule-deck-select">目标牌组</label>
           {#if isLoadingDecks}
             <span class="form-hint">加载牌组中...</span>
           {:else}
-            <select class="form-select" bind:value={newRuleDeckId}>
+            <select id="auto-rule-deck-select" class="form-select" bind:value={newRuleDeckId}>
               <option value="">-- 选择牌组 --</option>
               {#each decks as deck (deck.id)}
                 <option value={deck.id}>{deck.name}</option>
@@ -748,6 +755,15 @@
     align-items: center;
     z-index: var(--layer-modal, 50);
     padding: 12px;
+  }
+
+  .ar-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: default;
   }
 
   .ar-modal {

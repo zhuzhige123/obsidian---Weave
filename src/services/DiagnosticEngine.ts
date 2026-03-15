@@ -280,7 +280,7 @@ export class DiagnosticEngine {
   /**
    * 修复选择题格式
    */
-  private async fixChoiceFormat(card: Card): Promise<Card> {
+  private fixChoiceFormat(card: Card): Card {
     const frontContent = card.fields?.front || '';
     
     // 简单的格式修复逻辑
@@ -347,7 +347,7 @@ export class DiagnosticEngine {
   /**
    * 修复分隔符
    */
-  private async fixSeparators(card: Card): Promise<Card> {
+  private fixSeparators(card: Card): Card {
     //  Content-Only 架构：直接修复 content
     const fixedContent = card.content
       .replace(/---+/g, '---div---')
@@ -443,7 +443,7 @@ export class DiagnosticEngine {
   /**
    * 修复标签格式
    */
-  private async fixTagFormat(card: Card): Promise<Card> {
+  private fixTagFormat(card: Card): Card {
     const fixedContent = card.content.replace(
       /^(#{1,6})\s*(.+)$/gm,
       (match, hashes, text) => `**${text}**`

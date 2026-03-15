@@ -49,8 +49,7 @@ export class ZhipuService extends OpenAIService {
 
       return response.status === 200;
     } catch (error) {
-      logger.error('Zhipu AI connection test failed:', error);
-      return false;
+      throw this.classifyConnectionError(error);
     }
   }
 

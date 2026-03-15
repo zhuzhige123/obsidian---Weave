@@ -31,7 +31,7 @@
   let selectRef: HTMLDivElement;
   
   // 生成唯一ID用于ARIA属性
-  const dropdownId = `select-dropdown-${Math.random().toString(36).substr(2, 9)}`;
+  const dropdownId = `select-dropdown-${Math.random().toString(36).substring(2, 11)}`;
 
   // 获取当前选中的选项
   let selectedOption = $derived(options.find(opt => opt.value === value));

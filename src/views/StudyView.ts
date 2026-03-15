@@ -302,7 +302,16 @@ export class StudyView extends ItemView {
    *  添加编辑模式按钮（保存并返回）
    */
   private addEditModeActions(): void {
-    logger.debug('[StudyView] 📱 编辑模式：不添加顶部栏按钮（使用界面内悬浮保存按钮）');
+    const saveAction = this.addAction('check', '保存并返回', async () => {
+      logger.debug('[StudyView] 移动端保存按钮被点击');
+      await this.handleSaveFromHeader();
+    });
+    
+    if (saveAction) {
+      this.mobileActionElements.push(saveAction);
+    }
+    
+    logger.debug('[StudyView] 编辑模式按钮已添加');
   }
   
   /**

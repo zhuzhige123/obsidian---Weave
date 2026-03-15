@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import { tr } from '../../utils/i18n';
 
   interface Props {
     newCards: number;
@@ -27,6 +28,8 @@
     onClose 
   }: Props = $props();
 
+  let t = $derived($tr);
+
   let popoverElement: HTMLDivElement;
   let adjustedPosition = $state({ x: position.x, y: position.y });
 
@@ -35,10 +38,10 @@
 
   // 格式化学习时长
   const formattedStudyTime = $derived(() => {
-    if (todayStudyTime === 0) return '0分钟';
+    if (todayStudyTime === 0) return t('decks.statsPopover.zeroMin');
     const minutes = Math.floor(todayStudyTime / 60);
-    if (minutes === 0) return '< 1分钟';
-    return `${minutes}分钟`;
+    if (minutes === 0) return t('decks.statsPopover.lessThan1Min');
+    return `${minutes}${t('decks.statsPopover.minutes')}`;
   });
 
   // 🆕 将 popover 移动到 body，并调整位置
@@ -125,7 +128,7 @@
   style:left="{adjustedPosition.x}px"
   style:top="{adjustedPosition.y}px"
   role="dialog"
-  aria-label="牌组统计信息"
+  aria-label={t('decks.statsPopover.ariaLabel')}
 >
   <!-- 标题栏 -->
   <div class="popover-header">
@@ -133,8 +136,8 @@
     <button 
       class="close-btn"
       onclick={onClose}
-      aria-label="关闭"
-      title="关闭 (Esc)"
+      aria-label={t('decks.statsPopover.close')}
+      title={t('decks.statsPopover.closeEsc')}
     >
       ×
     </button>
@@ -146,10 +149,10 @@
     <div class="stat-row">
       <div class="stat-left">
         <span class="stat-icon">[N]</span>
-        <span class="stat-label">新卡片</span>
+        <span class="stat-label">{t('decks.statsPopover.newCards')}</span>
       </div>
       <div class="stat-right">
-        <span class="stat-count">{newCards}张</span>
+        <span class="stat-count">{newCards}{t('decks.statsPopover.unit')}</span>
       </div>
     </div>
 
@@ -157,10 +160,10 @@
     <div class="stat-row">
       <div class="stat-left">
         <span class="stat-icon">[L]</span>
-        <span class="stat-label">学习中</span>
+        <span class="stat-label">{t('decks.statsPopover.learning')}</span>
       </div>
       <div class="stat-right">
-        <span class="stat-count">{learningCards}张</span>
+        <span class="stat-count">{learningCards}{t('decks.statsPopover.unit')}</span>
       </div>
     </div>
 
@@ -168,10 +171,10 @@
     <div class="stat-row">
       <div class="stat-left">
         <span class="stat-icon">[W]</span>
-        <span class="stat-label">待复习</span>
+        <span class="stat-label">{t('decks.statsPopover.review')}</span>
       </div>
       <div class="stat-right">
-        <span class="stat-count">{reviewCards}张</span>
+        <span class="stat-count">{reviewCards}{t('decks.statsPopover.unit')}</span>
       </div>
     </div>
 
@@ -179,10 +182,10 @@
     <div class="stat-row">
       <div class="stat-left">
         <span class="stat-icon">[M]</span>
-        <span class="stat-label">已掌握</span>
+        <span class="stat-label">{t('decks.statsPopover.mastered')}</span>
       </div>
       <div class="stat-right">
-        <span class="stat-count">{masteredCards}张</span>
+        <span class="stat-count">{masteredCards}{t('decks.statsPopover.unit')}</span>
       </div>
     </div>
   </div>
@@ -194,13 +197,13 @@
   <div class="extra-info">
     <div class="info-row">
       <span class="info-icon">[R]</span>
-      <span class="info-label">记忆率</span>
+      <span class="info-label">{t('decks.statsPopover.memoryRate')}</span>
       <span class="info-value">{Math.round(memoryRate * 100)}%</span>
     </div>
     <div class="info-row">
       <span class="info-icon">[T]</span>
-      <span class="info-label">今日学习</span>
-      <span class="info-value">{formattedStudyTime()} / {todayReviewed}张</span>
+      <span class="info-label">{t('decks.statsPopover.todayStudy')}</span>
+      <span class="info-value">{formattedStudyTime()} / {todayReviewed}{t('decks.statsPopover.unit')}</span>
     </div>
   </div>
 </div>

@@ -102,6 +102,8 @@ export class MediaFileHandler {
    */
   async saveMediaFile(filename: string, fileData: Uint8Array): Promise<MediaFileResult> {
     try {
+      await this.ensureMediaFolder();
+
       // 生成安全的文件名
       const safeFilename = this.sanitizeFilename(filename);
       const filePath = `${this.baseMediaPath}/${safeFilename}`;
@@ -166,6 +168,7 @@ export class MediaFileHandler {
       .replace(/[<>:"/\\|?*]/g, '_') // 替换不安全字符
       .replace(/\s+/g, '_') // 替换空格
       .replace(/_{2,}/g, '_') // 合并多个下划线
+      .replace(/_+\./g, '.') // 移除扩展名前多余的下划线
       .replace(/^_+|_+$/g, ''); // 移除开头和结尾的下划线
   }
 

@@ -80,7 +80,13 @@ export class GeminiService extends AIService {
       }
 
       const content_text = data.candidates[0].content.parts[0].text;
-      const parsedCards = this.parseResponse(content_text);
+      let parsedCards = this.parseResponse(content_text);
+
+      // 截断：AI返回数量可能超出请求，只取需要的数量
+      if (parsedCards.length > config.cardCount) {
+        logger.debug(`[Gemini] AI returned ${parsedCards.length} cards, truncating to requested ${config.cardCount}`);
+        parsedCards = parsedCards.slice(0, config.cardCount);
+      }
 
       // 转换为GeneratedCard格式
       const cards: GeneratedCard[] = parsedCards.map((card: any) => {
@@ -167,8 +173,7 @@ export class GeminiService extends AIService {
 
       return response.status === 200;
     } catch (error) {
-      logger.error('Gemini connection test failed:', error);
-      return false;
+      throw this.classifyConnectionError(error);
     }
   }
 
@@ -254,7 +259,7 @@ export class GeminiService extends AIService {
   }
 
   protected generateCardId(): string {
-    return `gemini-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `gemini-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**

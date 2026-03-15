@@ -41,14 +41,16 @@
     
     onConfirm(options, rememberChoice);
   }
+
+  function handleBackdropPointerDown(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      onCancel();
+    }
+  }
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="modal-backdrop" onclick={onCancel} role="presentation">
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="modal-container" onclick={(e) => { e.stopPropagation(); }} role="dialog" aria-modal="true">
+<div class="modal-backdrop" onmousedown={handleBackdropPointerDown} role="presentation">
+  <div class="modal-container" role="dialog" aria-modal="true" tabindex="-1">
     <div class="modal-header">
       <h2 class="modal-title">检测到学习历史</h2>
       <button class="modal-close" onclick={onCancel}>×</button>

@@ -103,50 +103,50 @@
       {#if isIRDataSource}
         <!-- 增量阅读模式按钮顺序：组建牌组、更换牌组、收藏、提取卡片、标签操作、删除 -->
         {#if onBuildIRDeck}
-          <div class="weave-toolbar-btn weave-btn-primary" role="button" tabindex="-1" title="组建增量牌组" onclick={handleBuildIRDeckClick}>
+          <button type="button" class="weave-toolbar-btn weave-btn-primary" title="组建增量牌组" onclick={handleBuildIRDeckClick}>
             <EnhancedIcon name="layers" size={16} />
-          </div>
+          </button>
         {/if}
         {#if onIRChangeDeck}
-          <div class="weave-toolbar-btn" role="button" tabindex="-1" title="更换牌组" onclick={handleIRChangeDeckClick}>
+          <button type="button" class="weave-toolbar-btn" title="更换牌组" onclick={handleIRChangeDeckClick}>
             <EnhancedIcon name="folder" size={16} />
-          </div>
+          </button>
         {/if}
         {#if onIRToggleFavorite}
-          <div class="weave-toolbar-btn" role="button" tabindex="-1" title="切换收藏" onclick={handleIRToggleFavoriteClick}>
+          <button type="button" class="weave-toolbar-btn" title="切换收藏" onclick={handleIRToggleFavoriteClick}>
             <EnhancedIcon name="heart" size={16} />
-          </div>
+          </button>
         {/if}
         {#if onIRExtractCards}
-          <div class="weave-toolbar-btn" role="button" tabindex="-1" title="提取卡片" onclick={handleIRExtractCardsClick}>
+          <button type="button" class="weave-toolbar-btn" title="提取卡片" onclick={handleIRExtractCardsClick}>
             <EnhancedIcon name="file-plus" size={16} />
-          </div>
+          </button>
         {/if}
       {:else}
         <!-- 记忆/考试模式按钮顺序：组建牌组、更换牌组、标签操作、删除 -->
         {#if onBuildDeck}
-          <div class="weave-toolbar-btn weave-btn-primary" role="button" tabindex="-1" title="组建牌组" onclick={handleBuildDeckClick}>
+          <button type="button" class="weave-toolbar-btn weave-btn-primary" title="组建牌组" onclick={handleBuildDeckClick}>
             <EnhancedIcon name="layers" size={16} />
-          </div>
+          </button>
         {/if}
         {#if onBatchChangeDeck}
-          <div class="weave-toolbar-btn" role="button" tabindex="-1" title={t('cardManagement.batchToolbar.changeDeck')} onclick={handleBatchChangeDeckClick}>
+          <button type="button" class="weave-toolbar-btn" title={t('cardManagement.batchToolbar.changeDeck')} onclick={handleBatchChangeDeckClick}>
             <EnhancedIcon name="folder" size={16} />
-          </div>
+          </button>
         {/if}
       {/if}
       <!-- 通用按钮：标签操作、删除 -->
       {#if onBatchTagsMenu}
-        <div class="weave-toolbar-btn" role="button" tabindex="-1" title="标签操作" onclick={handleBatchTagsMenuClick}>
+        <button type="button" class="weave-toolbar-btn" title="标签操作" onclick={handleBatchTagsMenuClick}>
           <EnhancedIcon name="tag" size={16} />
-        </div>
+        </button>
       {/if}
-      <div class="weave-toolbar-btn weave-btn-danger" role="button" tabindex="-1" title={t('ui.delete')} onclick={handleBatchDeleteClick}>
+      <button type="button" class="weave-toolbar-btn weave-btn-danger" title={t('ui.delete')} onclick={handleBatchDeleteClick}>
         <EnhancedIcon name="trash-2" size={16} />
-      </div>
-      <div class="weave-toolbar-btn weave-btn-secondary" role="button" tabindex="-1" title="取消选择" onclick={() => onClearSelection?.()}>
+      </button>
+      <button type="button" class="weave-toolbar-btn weave-btn-secondary" title="取消选择" onclick={() => onClearSelection?.()}>
         <EnhancedIcon name="x-circle" size={16} />
-      </div>
+      </button>
     </div>
   </div>
 {/if}

@@ -1,9 +1,10 @@
-import { ItemView, WorkspaceLeaf, TFile, MarkdownView, setIcon, Menu, Notice } from 'obsidian';
+import { ItemView, WorkspaceLeaf, TFile, MarkdownView, setIcon, Menu, Notice, Platform } from 'obsidian';
 import type { WeavePlugin } from '../main';
 import type { EpubWidthMode, EpubLayoutMode } from '../services/epub';
 import type { EpubCanvasService } from '../services/epub/EpubCanvasService';
 import type { CanvasLayoutDirection } from '../services/epub/canvas-types';
 import { logger } from '../utils/logger';
+import { VIEW_TYPE_EPUB_SIDEBAR } from './EpubSidebarView';
 
 export const VIEW_TYPE_EPUB = 'weave-epub-reader';
 
@@ -19,9 +20,11 @@ export class EpubView extends ItemView {
 	private screenshotModeActive: boolean = false;
 	private screenshotSaveAsImage: boolean = true;
 	private widthMode: EpubWidthMode = 'standard';
-	private layoutMode: EpubLayoutMode = 'scroll';
+	private layoutMode: EpubLayoutMode = 'paginated';
 	private lastActiveMarkdownLeaf: WorkspaceLeaf | null = null;
 	private leafChangeHandler: any = null;
+	private layoutChangeHandler: any = null;
+	private linkedCanvasPath: string | null = null;
 	private mounting = false;
 	private sidebarBtn: HTMLElement | null = null;
 	private autoInsertBtn: HTMLElement | null = null;
@@ -33,9 +36,9 @@ export class EpubView extends ItemView {
 	private canvasDirBtn: HTMLElement | null = null;
 	private canvasModeActive: boolean = false;
 	private canvasDirection: CanvasLayoutDirection = 'down';
+	private resumePointBtn: HTMLElement | null = null;
+	private bookmarkBtn: HTMLElement | null = null;
 	private actionHandlers: {
-		toggleSidebar?: () => void;
-		toggleSettings?: () => void;
 		setAutoInsert?: (enabled: boolean) => void;
 		setScreenshotMode?: (active: boolean) => void;
 		setWidthMode?: (mode: EpubWidthMode) => void;
@@ -43,9 +46,11 @@ export class EpubView extends ItemView {
 		setScreenshotSaveMode?: (saveAsImage: boolean) => void;
 		navigateToCfi?: (cfi: string, text: string) => void;
 		toggleTutorial?: () => void;
+		addBookmark?: () => Promise<void>;
 		bindCanvasPath?: (canvasPath: string) => void;
 		unbindCanvas?: () => void;
 		getCanvasService?: () => EpubCanvasService;
+		markIRResumePoint?: () => Promise<void>;
 	} = {};
 
 	constructor(leaf: WorkspaceLeaf, plugin: WeavePlugin) {
@@ -58,11 +63,25 @@ export class EpubView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return this.bookTitle || 'EPUB Reader';
+		return this.bookTitle || 'EPUB 阅读器';
 	}
 
 	getIcon(): string {
 		return 'book-open';
+	}
+
+	onPaneMenu(menu: Menu, source: string): void {
+		super.onPaneMenu(menu, source);
+		if (!Platform.isMobile) return;
+
+		menu.addItem(item => {
+			item.setTitle('切换侧边栏');
+			item.setIcon('panel-left');
+			item.onClick(() => { void this.toggleGlobalSidebar(); });
+		});
+
+		menu.addSeparator();
+		this.addMobileToolsToMenu(menu);
 	}
 
 	allowNoFile(): boolean {
@@ -103,51 +122,84 @@ export class EpubView extends ItemView {
 		this.contentEl.empty();
 		this.contentEl.addClass('weave-epub-view-content');
 
-		this.sidebarBtn = this.addAction('panel-left', 'Toggle sidebar', () => {
-			this.actionHandlers.toggleSidebar?.();
-		});
-		this.addAction('a-large-small', 'Display settings', () => {
-			this.actionHandlers.toggleSettings?.();
-		});
-		this.saveAsImageBtn = this.addAction('image', 'Save as image file (ON)', () => {
+		if (!Platform.isMobile) {
+			this.sidebarBtn = this.addAction('panel-left', '切换侧边栏', () => {
+				void this.toggleGlobalSidebar();
+			});
+		}
+
+		this.saveAsImageBtn = this.addAction('image', '保存为图片文件（开）', () => {
 			this.screenshotSaveAsImage = !this.screenshotSaveAsImage;
 			this.saveAsImageBtn?.toggleClass('is-active', this.screenshotSaveAsImage);
 			this.updateSaveAsImageBtn();
 			this.actionHandlers.setScreenshotSaveMode?.(this.screenshotSaveAsImage);
 		});
 		this.saveAsImageBtn?.toggleClass('is-active', this.screenshotSaveAsImage);
-		this.screenshotBtn = this.addAction('camera', 'Screenshot tool', () => {
+		this.screenshotBtn = this.addAction('camera', '截图工具', () => {
 			this.screenshotModeActive = !this.screenshotModeActive;
 			this.screenshotBtn?.toggleClass('is-active', this.screenshotModeActive);
 			this.actionHandlers.setScreenshotMode?.(this.screenshotModeActive);
 		});
-		this.autoInsertBtn = this.addAction('zap', 'Auto (OFF: copy, ON: insert)', () => {
+		this.autoInsertBtn = this.addAction('zap', '自动模式（关：复制，开：插入）', () => {
 			this.autoInsertEnabled = !this.autoInsertEnabled;
 			this.autoInsertBtn?.toggleClass('is-active', this.autoInsertEnabled);
 			this.actionHandlers.setAutoInsert?.(this.autoInsertEnabled);
 		});
-		this.layoutBtn = this.addAction('scroll-text', 'Layout: scroll', () => {
-			this.cycleLayoutMode();
-		});
-		this.widthBtn = this.addAction('align-center', 'Width: standard', () => {
-			this.toggleWidthMode();
-		});
-		this.canvasDirBtn = this.addAction('arrow-down', 'Canvas direction: down', (evt) => {
-			this.showDirectionMenu(evt);
-		});
-		this.canvasDirBtn.style.display = 'none';
-		this.canvasBtn = this.addAction('layout-dashboard', 'Canvas mind map (OFF)', (evt) => {
-			this.showCanvasMenu(evt);
-		});
-		this.addAction('circle-help', 'Tutorial', () => {
-			this.actionHandlers.toggleTutorial?.();
-		});
 
-		this.moveSidebarBtnToNav();
+		if (Platform.isMobile) {
+			this.bookmarkBtn = this.addAction('bookmark', '添加书签', () => {
+				void this.actionHandlers.addBookmark?.();
+			});
+		} else {
+			this.layoutBtn = this.addAction('scroll-text', '布局：翻页', () => {
+				this.cycleLayoutMode();
+			});
+			this.widthBtn = this.addAction('align-center', '宽度：标准', () => {
+				this.toggleWidthMode();
+			});
+			this.canvasDirBtn = this.addAction('arrow-down', 'Canvas 方向：向下', (evt) => {
+				this.showDirectionMenu(evt);
+			});
+			this.canvasDirBtn.style.display = 'none';
+			this.canvasBtn = this.addAction('layout-dashboard', 'Canvas 脑图（关）', (evt) => {
+				this.showCanvasMenu(evt);
+			});
+			this.bookmarkBtn = this.addAction('bookmark', '添加书签', () => {
+				void this.actionHandlers.addBookmark?.();
+			});
+			this.resumePointBtn = this.addAction('bookmark-plus', 'IR 续读点', () => {
+				void this.actionHandlers.markIRResumePoint?.();
+			});
+			this.addAction('circle-help', '使用教程', () => {
+				this.actionHandlers.toggleTutorial?.();
+			});
+		}
+
+		if (!Platform.isMobile) {
+			this.moveSidebarBtnToNav();
+		}
 		this.setupLeafChangeTracking();
+		this.setupLinkedTabTracking();
 
 		if (this.filePath) {
 			await this.mountComponent();
+		}
+	}
+
+	private async toggleGlobalSidebar(): Promise<void> {
+		const { workspace } = this.app;
+		const existing = workspace.getLeavesOfType(VIEW_TYPE_EPUB_SIDEBAR);
+		if (existing.length > 0) {
+			existing.forEach(leaf => leaf.detach());
+			return;
+		}
+		const leftLeaf = workspace.getLeftLeaf(false);
+		if (leftLeaf) {
+			await leftLeaf.setViewState({
+				type: VIEW_TYPE_EPUB_SIDEBAR,
+				active: true
+			});
+			void workspace.revealLeaf(leftLeaf);
 		}
 	}
 
@@ -182,6 +234,12 @@ export class EpubView extends ItemView {
 						this.bookTitle = title;
 						(this.leaf as any).updateHeader?.();
 					},
+					onReaderSettingsLoaded: (settings: { widthMode: EpubWidthMode; layoutMode: EpubLayoutMode }) => {
+						this.widthMode = settings.widthMode;
+						this.layoutMode = settings.layoutMode;
+						this.updateWidthBtn();
+						this.updateLayoutBtn();
+					},
 					pendingCfi: this.pendingCfi,
 					pendingText: this.pendingText,
 					autoInsertEnabled: this.autoInsertEnabled,
@@ -211,7 +269,7 @@ export class EpubView extends ItemView {
 			this.contentEl.empty();
 			this.contentEl.createDiv({
 				cls: 'epub-error-state',
-				text: 'EPUB loading failed'
+				text: 'EPUB 加载失败'
 			});
 		} finally {
 			this.mounting = false;
@@ -223,6 +281,10 @@ export class EpubView extends ItemView {
 			this.app.workspace.off('active-leaf-change', this.leafChangeHandler);
 			this.leafChangeHandler = null;
 		}
+		if (this.layoutChangeHandler) {
+			this.app.workspace.off('layout-change', this.layoutChangeHandler);
+			this.layoutChangeHandler = null;
+		}
 		if (this.component) {
 			const { unmount } = await import('svelte');
 			try {
@@ -231,6 +293,58 @@ export class EpubView extends ItemView {
 				// ignore
 			}
 			this.component = null;
+		}
+	}
+
+	private setupLinkedTabTracking(): void {
+		this.layoutChangeHandler = () => {
+			this.checkLinkedCanvasTab();
+		};
+		this.app.workspace.on('layout-change', this.layoutChangeHandler);
+	}
+
+	private checkLinkedCanvasTab(): void {
+		const myGroup = (this.leaf as any).group;
+
+		if (!myGroup) {
+			// Not in any group - unbind if previously linked
+			if (this.linkedCanvasPath) {
+				this.linkedCanvasPath = null;
+				this.canvasModeActive = false;
+				this.actionHandlers.unbindCanvas?.();
+				this.updateCanvasBtn();
+			}
+			return;
+		}
+
+		// Find canvas leaves in the same group
+		const canvasLeaves = this.app.workspace.getLeavesOfType('canvas');
+		let foundCanvasPath: string | null = null;
+
+		for (const leaf of canvasLeaves) {
+			if ((leaf as any).group === myGroup) {
+				const file = (leaf.view as any)?.file;
+				if (file?.path) {
+					foundCanvasPath = file.path;
+					break;
+				}
+			}
+		}
+
+		if (foundCanvasPath && foundCanvasPath !== this.linkedCanvasPath) {
+			// New linked canvas detected - auto-bind
+			this.linkedCanvasPath = foundCanvasPath;
+			this.canvasModeActive = true;
+			this.actionHandlers.bindCanvasPath?.(foundCanvasPath);
+			this.updateCanvasBtn();
+			new Notice(`Canvas 已关联：${foundCanvasPath.split('/').pop()}`);
+		} else if (!foundCanvasPath && this.linkedCanvasPath) {
+			// Canvas unlinked
+			this.linkedCanvasPath = null;
+			this.canvasModeActive = false;
+			this.actionHandlers.unbindCanvas?.();
+			this.updateCanvasBtn();
+			new Notice('Canvas 已取消关联');
 		}
 	}
 
@@ -281,7 +395,7 @@ export class EpubView extends ItemView {
 	}
 
 	private cycleLayoutMode(): void {
-		const modes: EpubLayoutMode[] = ['scroll', 'paginated', 'double'];
+		const modes: EpubLayoutMode[] = ['paginated', 'double'];
 		const idx = modes.indexOf(this.layoutMode);
 		this.layoutMode = modes[(idx + 1) % modes.length];
 		this.updateLayoutBtn();
@@ -291,7 +405,7 @@ export class EpubView extends ItemView {
 	private updateWidthBtn(): void {
 		if (!this.widthBtn) return;
 		const icon = this.widthMode === 'standard' ? 'align-center' : 'maximize';
-		const label = `Width: ${this.widthMode}`;
+		const label = `宽度：${this.widthMode === 'standard' ? '标准' : '全宽'}`;
 		setIcon(this.widthBtn, icon);
 		this.widthBtn.setAttribute('aria-label', label);
 	}
@@ -299,25 +413,25 @@ export class EpubView extends ItemView {
 	private updateLayoutBtn(): void {
 		if (!this.layoutBtn) return;
 		const iconMap: Record<EpubLayoutMode, string> = {
-			'scroll': 'scroll-text',
 			'paginated': 'file-text',
 			'double': 'book-open'
 		};
 		setIcon(this.layoutBtn, iconMap[this.layoutMode]);
-		this.layoutBtn.setAttribute('aria-label', `Layout: ${this.layoutMode}`);
+		const layoutLabels: Record<EpubLayoutMode, string> = { 'paginated': '翻页', 'double': '双栏' };
+		this.layoutBtn.setAttribute('aria-label', `布局：${layoutLabels[this.layoutMode]}`);
 	}
 
 	private updateSaveAsImageBtn(): void {
 		if (!this.saveAsImageBtn) return;
 		const icon = this.screenshotSaveAsImage ? 'image' : 'code';
-		const label = this.screenshotSaveAsImage ? 'Save as image file (ON)' : 'Save as embed link (OFF)';
+		const label = this.screenshotSaveAsImage ? '保存为图片文件（开）' : '保存为嵌入链接（关）';
 		setIcon(this.saveAsImageBtn, icon);
 		this.saveAsImageBtn.setAttribute('aria-label', label);
 	}
 
 	private updateCanvasBtn(): void {
 		if (!this.canvasBtn) return;
-		const label = this.canvasModeActive ? 'Canvas mind map (ON)' : 'Canvas mind map (OFF)';
+		const label = this.canvasModeActive ? 'Canvas 脑图（开）' : 'Canvas 脑图（关）';
 		setIcon(this.canvasBtn, 'layout-dashboard');
 		this.canvasBtn.setAttribute('aria-label', label);
 		this.canvasBtn.toggleClass('is-active', this.canvasModeActive);
@@ -327,16 +441,68 @@ export class EpubView extends ItemView {
 		}
 	}
 
+	private addMobileToolsToMenu(menu: Menu): void {
+		const layoutLabels: Record<EpubLayoutMode, string> = {
+			'paginated': '翻页',
+			'double': '双栏'
+		};
+		menu.addItem(item => {
+			item.setTitle(`布局：${layoutLabels[this.layoutMode]}`);
+			item.setIcon(this.layoutMode === 'paginated' ? 'file-text' : 'book-open');
+			item.onClick(() => { this.cycleLayoutMode(); });
+		});
+		menu.addItem(item => {
+			item.setTitle(`宽度：${this.widthMode === 'standard' ? '标准' : '全宽'}`);
+			item.setIcon(this.widthMode === 'standard' ? 'align-center' : 'maximize');
+			item.onClick(() => { this.toggleWidthMode(); });
+		});
+		menu.addSeparator();
+		menu.addItem(item => {
+			item.setTitle('添加书签');
+			item.setIcon('bookmark');
+			item.onClick(() => { void this.actionHandlers.addBookmark?.(); });
+		});
+		menu.addItem(item => {
+			item.setTitle(this.canvasModeActive ? 'Canvas（开）' : 'Canvas（关）');
+			item.setIcon('layout-dashboard');
+			item.setChecked(this.canvasModeActive);
+			item.onClick((e) => { this.showCanvasMenu(e); });
+		});
+		if (this.canvasModeActive) {
+			const dirLabels: Record<CanvasLayoutDirection, string> = { down: '向下', right: '向右', up: '向上', left: '向左' };
+			menu.addItem(item => {
+				item.setTitle(`Canvas 方向：${dirLabels[this.canvasDirection]}`);
+				item.setIcon({
+					down: 'arrow-down',
+					right: 'arrow-right',
+					up: 'arrow-up',
+					left: 'arrow-left'
+				}[this.canvasDirection]);
+				item.onClick((e) => { this.showDirectionMenu(e); });
+			});
+		}
+		menu.addItem(item => {
+			item.setTitle('IR 续读点');
+			item.setIcon('bookmark-plus');
+			item.onClick(() => { void this.actionHandlers.markIRResumePoint?.(); });
+		});
+		menu.addItem(item => {
+			item.setTitle('使用教程');
+			item.setIcon('circle-help');
+			item.onClick(() => { this.actionHandlers.toggleTutorial?.(); });
+		});
+	}
+
 	private showDirectionMenu(evt: MouseEvent | Event): void {
 		const canvasService = this.actionHandlers.getCanvasService?.();
 		if (!canvasService) return;
 
 		const menu = new Menu();
 		const dirs: { dir: CanvasLayoutDirection; icon: string; label: string }[] = [
-			{ dir: 'down', icon: 'arrow-down', label: 'Down' },
-			{ dir: 'right', icon: 'arrow-right', label: 'Right' },
-			{ dir: 'up', icon: 'arrow-up', label: 'Up' },
-			{ dir: 'left', icon: 'arrow-left', label: 'Left' }
+			{ dir: 'down', icon: 'arrow-down', label: '向下' },
+			{ dir: 'right', icon: 'arrow-right', label: '向右' },
+			{ dir: 'up', icon: 'arrow-up', label: '向上' },
+			{ dir: 'left', icon: 'arrow-left', label: '向左' }
 		];
 
 		for (const { dir, icon, label } of dirs) {
@@ -364,7 +530,8 @@ export class EpubView extends ItemView {
 			left: 'arrow-left'
 		};
 		setIcon(this.canvasDirBtn, iconMap[this.canvasDirection]);
-		this.canvasDirBtn.setAttribute('aria-label', `Canvas direction: ${this.canvasDirection}`);
+		const dirLabels: Record<CanvasLayoutDirection, string> = { down: '向下', right: '向右', up: '向上', left: '向左' };
+		this.canvasDirBtn.setAttribute('aria-label', `Canvas 方向：${dirLabels[this.canvasDirection]}`);
 	}
 
 	private showCanvasMenu(evt: MouseEvent | Event): void {
@@ -377,19 +544,19 @@ export class EpubView extends ItemView {
 			const currentPath = canvasService.getCanvasPath();
 			if (currentPath) {
 				menu.addItem(item => {
-					item.setTitle(`Current: ${currentPath}`);
+					item.setTitle(`当前：${currentPath}`);
 					item.setIcon('file');
 					item.setDisabled(true);
 				});
 				menu.addItem(item => {
-					item.setTitle('Open canvas');
+					item.setTitle('打开 Canvas');
 					item.setIcon('external-link');
 					item.onClick(() => this.openCanvasFile(currentPath));
 				});
 			}
 			menu.addSeparator();
 			menu.addItem(item => {
-				item.setTitle('Disconnect canvas');
+				item.setTitle('断开 Canvas');
 				item.setIcon('unlink');
 				item.onClick(() => {
 					this.canvasModeActive = false;
@@ -399,7 +566,7 @@ export class EpubView extends ItemView {
 			});
 		} else {
 			menu.addItem(item => {
-				item.setTitle('Create new canvas');
+				item.setTitle('新建 Canvas');
 				item.setIcon('plus');
 				item.onClick(() => this.createAndBindCanvas(canvasService));
 			});
@@ -434,12 +601,12 @@ export class EpubView extends ItemView {
 			this.canvasModeActive = true;
 			this.actionHandlers.bindCanvasPath?.(canvasPath);
 			this.updateCanvasBtn();
-			new Notice(`Canvas created: ${canvasPath}`);
+			new Notice(`Canvas 已创建：${canvasPath}`);
 
 			this.openCanvasFile(canvasPath);
 		} catch (e) {
 			logger.error('[EpubView] Failed to create canvas:', e);
-			new Notice('Failed to create canvas');
+			new Notice('Canvas 创建失败');
 		}
 	}
 
@@ -448,7 +615,7 @@ export class EpubView extends ItemView {
 			this.canvasModeActive = true;
 			this.actionHandlers.bindCanvasPath?.(path);
 			this.updateCanvasBtn();
-			new Notice(`Canvas connected: ${path}`);
+			new Notice(`Canvas 已连接：${path}`);
 		} catch (e) {
 			logger.error('[EpubView] Failed to bind canvas:', e);
 		}

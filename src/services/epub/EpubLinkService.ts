@@ -1,5 +1,6 @@
 import type { App } from 'obsidian';
 import { VIEW_TYPE_EPUB } from '../../views/EpubView';
+import { getPreferredEpubLeaf } from '../../utils/epub-leaf-utils';
 import { logger } from '../../utils/logger';
 
 export interface EpubLinkParams {
@@ -22,6 +23,14 @@ export class EpubLinkService {
 
 	static decodeCfiFromWikilink(encoded: string): string {
 		return encoded.replace(/%5B/gi, '[').replace(/%5D/gi, ']').replace(/%7C/gi, '|');
+	}
+
+	static normalizeCfi(cfi: string): string {
+		let normalized = cfi.replace(/%5B/gi, '[').replace(/%5D/gi, ']').replace(/%7C/gi, '|');
+		if (normalized.includes('%')) {
+			try { normalized = decodeURIComponent(normalized); } catch { /* use as-is */ }
+		}
+		return normalized;
 	}
 
 	static extractShortBookName(filePath: string): string {
@@ -49,23 +58,27 @@ export class EpubLinkService {
 		return `[[${filePath}#${subpath}|${displayText}]]`;
 	}
 
-	buildQuoteBlock(filePath: string, cfi: string, text: string, chapterIndex?: number, color?: string, chapterTitle?: string): string {
+	buildQuoteBlock(filePath: string, cfi: string, text: string, chapterIndex?: number, color?: string, chapterTitle?: string, timestamp?: string): string {
 		const link = this.buildEpubLink(filePath, cfi, text, chapterIndex, chapterTitle);
 		const calloutMeta = color ? `|${color}` : '';
+		const timeSuffix = timestamp ? ` ${timestamp}` : '';
 		const quotedLines = text.split('\n').map(line => `> ${line}`).join('\n');
-		return `> [!EPUB${calloutMeta}] ${link}\n${quotedLines}\n`;
+		return `> [!EPUB${calloutMeta}] ${link}${timeSuffix}\n${quotedLines}\n`;
 	}
 
 	static parseEpubLink(subpath: string): EpubLinkParams | null {
-		if (!subpath || !subpath.includes('weave-cfi=')) {
+		if (!subpath || (!subpath.includes('weave-cfi=') && !subpath.includes('tuanki-cfi-'))) {
 			return null;
 		}
 
 		try {
 			const hashContent = subpath.startsWith('#') ? subpath.slice(1) : subpath;
 
+			// support both weave-cfi= (current) and tuanki-cfi- (legacy) formats
 			const cfiMatch = hashContent.match(/weave-cfi=(epubcfi\([^)]*\))/)
-				|| hashContent.match(/weave-cfi=([^&|\]]*)/);
+				|| hashContent.match(/weave-cfi=([^&|\]]*)/)
+				|| hashContent.match(/tuanki-cfi-(epubcfi\([^)]*\))/)
+				|| hashContent.match(/tuanki-cfi-([^&|\]]*)/);
 			const chapterMatch = hashContent.match(/[&?]chapter=(\d+)/);
 
 			if (!cfiMatch) {
@@ -108,28 +121,16 @@ export class EpubLinkService {
 
 	async navigateToEpubLocation(filePath: string, cfi: string, text: string): Promise<void> {
 		try {
-			let targetLeaf = this.app.workspace.getLeavesOfType(VIEW_TYPE_EPUB)
-				.find(leaf => {
-					const state = leaf.getViewState()?.state;
-					return state?.filePath === filePath;
-				});
+			const targetLeaf = getPreferredEpubLeaf(this.app, filePath);
+			if (!targetLeaf) return;
 
-			if (targetLeaf) {
-				this.app.workspace.setActiveLeaf(targetLeaf, { focus: true });
-				await targetLeaf.setViewState({
-					type: VIEW_TYPE_EPUB,
-					active: true,
-					state: { filePath, pendingCfi: cfi, pendingText: text }
-				});
-			} else {
-				const newLeaf = this.app.workspace.getLeaf('tab');
-				await newLeaf.setViewState({
-					type: VIEW_TYPE_EPUB,
-					active: true,
-					state: { filePath, pendingCfi: cfi, pendingText: text }
-				});
-				void this.app.workspace.revealLeaf(newLeaf);
-			}
+			this.app.workspace.setActiveLeaf(targetLeaf, { focus: true });
+			await targetLeaf.setViewState({
+				type: VIEW_TYPE_EPUB,
+				active: true,
+				state: { filePath, pendingCfi: cfi, pendingText: text }
+			});
+			void this.app.workspace.revealLeaf(targetLeaf);
 
 			logger.debug('[EpubLinkService] Navigated to:', filePath, cfi);
 		} catch (error) {

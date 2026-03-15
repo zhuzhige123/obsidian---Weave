@@ -154,7 +154,7 @@ const createInitialState = (): CardEditState => ({
 
 // 生成会话ID
 function generateSessionId(): string {
-  return `edit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `edit_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
 
 /**

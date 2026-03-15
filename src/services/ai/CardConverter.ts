@@ -86,15 +86,16 @@ export class CardConverter {
         deckId,
         templateId: templateId,
         type: this.mapCardType(generatedCard.type),
+        cardPurpose: 'memory',
         
         // 内容存储
         content: content,
         fields: fields,
-        parsedMetadata: parsedMetadata, // 新增：保存解析后的元数据
+        parsedMetadata: parsedMetadata,
         
         // 源文件信息
         sourceFile: sourceFile,
-        sourceBlock: generatedCard.sourceBlock, // 🆕 块链接ID
+        sourceBlock: generatedCard.sourceBlock,
         sourceExists: !!sourceFile,
         
         // FSRS 数据 - 使用标准 FSRS 算法创建，确保数据结构一致

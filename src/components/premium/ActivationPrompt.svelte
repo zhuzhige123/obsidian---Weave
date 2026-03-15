@@ -73,6 +73,12 @@
       onClose();
     }
   }
+
+  function handleOverlayKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      onClose();
+    }
+  }
 </script>
 
 {#if visible}
@@ -133,6 +139,7 @@
     <div 
       class="activation-prompt-overlay" 
       onclick={handleOverlayClick}
+      onkeydown={handleOverlayKeydown}
       role="dialog"
       aria-modal="true"
       tabindex="-1"

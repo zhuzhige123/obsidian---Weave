@@ -7,6 +7,9 @@
 <script lang="ts">
   import type { BatchParseResult } from '../../../services/batch-parsing';
   import EnhancedIcon from '../../ui/EnhancedIcon.svelte';
+  import { tr } from '../../../utils/i18n';
+
+  let t = $derived($tr);
 
   interface Props {
     results: BatchParseResult | null;
@@ -19,7 +22,7 @@
     totalCards: results?.totalCards || 0,
     newCards: results?.newCards || 0,
     updatedCards: results?.updatedCards || 0,
-    failedCards: results?.failedCards || 0,
+    failedCards: results?.failedCards?.length || 0,
     errors: results?.errors?.length || 0,
     
     // 计算成功率
@@ -35,33 +38,33 @@
 <div class="batch-scan-stats">
   <div class="stat-item">
     <EnhancedIcon name="check-circle" size={14} variant="success" />
-    <span>检测到: <strong>{stats.totalCards}</strong></span>
+    <span>{t('dataManagement.batchScan.detected')} <strong>{stats.totalCards}</strong></span>
   </div>
   
   {#if stats.newCards > 0}
   <div class="stat-item">
     <EnhancedIcon name="plus-circle" size={14} variant="primary" />
-    <span>新增: <strong>{stats.newCards}</strong></span>
+    <span>{t('dataManagement.batchScan.newCards')} <strong>{stats.newCards}</strong></span>
   </div>
   {/if}
   
   {#if stats.updatedCards > 0}
   <div class="stat-item">
     <EnhancedIcon name="refresh-cw" size={14} variant="primary" />
-    <span>更新: <strong>{stats.updatedCards}</strong></span>
+    <span>{t('dataManagement.batchScan.updated')} <strong>{stats.updatedCards}</strong></span>
   </div>
   {/if}
   
   {#if stats.failedCards > 0 || stats.errors > 0}
   <div class="stat-item">
     <EnhancedIcon name="x-circle" size={14} variant="error" />
-    <span>错误: <strong>{stats.failedCards + stats.errors}</strong></span>
+    <span>{t('dataManagement.batchScan.errors')} <strong>{stats.failedCards + stats.errors}</strong></span>
   </div>
   {/if}
   
   <div class="stat-item success-rate">
     <EnhancedIcon name="trending-up" size={14} variant="success" />
-    <span>成功率: <strong>{stats.successRate}%</strong></span>
+    <span>{t('dataManagement.batchScan.successRate')} <strong>{stats.successRate}%</strong></span>
   </div>
 </div>
 {/if}

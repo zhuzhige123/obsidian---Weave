@@ -37,6 +37,7 @@
   import { DirectoryUtils } from '../../../utils/directory-utils';
   import { DataManagementService } from '../../../services/data-management-service';
   import { BackupManagementService } from '../../../services/backup-management-service';
+  import { UnifiedDataMigrationService } from '../../../services/data-migration/UnifiedDataMigrationService';
   
   interface Props {
     plugin: any;
@@ -385,79 +386,12 @@
   }
 
   async function applyweaveParentFolder(newParentFolder: string): Promise<void> {
-    const vault = plugin.app.vault;
-    const adapter = vault.adapter;
-
-    const oldParentFolder = normalizeWeaveParentFolder(plugin.settings?.weaveParentFolder);
-    const normalizedNewParent = normalizeWeaveParentFolder(newParentFolder);
-
-    const oldRootFromSetting = getReadableWeaveRoot(oldParentFolder);
-    const newRoot = getReadableWeaveRoot(normalizedNewParent);
-    const legacyRoot = getReadableWeaveRoot(undefined);
-
-    const rewriteRoots = new Set<string>();
-    if (oldRootFromSetting) rewriteRoots.add(oldRootFromSetting);
-    if (legacyRoot) rewriteRoots.add(legacyRoot);
-
-    const migrateRoots = new Set<string>();
-    if (oldRootFromSetting !== newRoot && (await adapter.exists(oldRootFromSetting))) {
-      migrateRoots.add(oldRootFromSetting);
-    }
-    if (legacyRoot !== newRoot && legacyRoot !== oldRootFromSetting && (await adapter.exists(legacyRoot))) {
-      migrateRoots.add(legacyRoot);
-    }
-
-    if (normalizedNewParent) {
-      await DirectoryUtils.ensureDirRecursive(adapter, normalizedNewParent);
-    }
-
-    const newExistsInitially = await adapter.exists(newRoot);
-    if (!newExistsInitially && migrateRoots.size === 1) {
-      const onlyRoot = Array.from(migrateRoots)[0];
-      const oldObj = vault.getAbstractFileByPath(onlyRoot);
-      if (!oldObj || !(oldObj instanceof TFolder)) {
-        throw new Error(`旧路径不是文件夹: ${onlyRoot}`);
-      }
-      await vault.rename(oldObj, newRoot);
-      await tryRemoveEmptyFolder(onlyRoot);
-    } else {
-      if (!newExistsInitially) {
-        await vault.createFolder(newRoot);
-      }
-      for (const root of migrateRoots) {
-        if (root === newRoot) continue;
-        const oldObj = vault.getAbstractFileByPath(root);
-        if (!oldObj || !(oldObj instanceof TFolder)) {
-          throw new Error(`旧路径不是文件夹: ${root}`);
-        }
-        await mergeFolderContents(root, newRoot);
-        await tryRemoveEmptyFolder(root);
-      }
-    }
-
-    if (migrateRoots.size === 0 && !newExistsInitially && !(await adapter.exists(newRoot))) {
-      await vault.createFolder(newRoot);
-    }
-
-    await rewriteIRStorageFilePaths(rewriteRoots, newRoot);
-
-    plugin.settings.weaveParentFolder = normalizedNewParent;
-
-    const importFolder = plugin.settings?.incrementalReading?.importFolder;
-    if (typeof importFolder === 'string' && importFolder.trim()) {
-      for (const root of rewriteRoots) {
-        if (root === newRoot) continue;
-        if (importFolder === root) {
-          plugin.settings.incrementalReading.importFolder = newRoot;
-          break;
-        }
-        if (importFolder.startsWith(`${root}/`)) {
-          plugin.settings.incrementalReading.importFolder = `${newRoot}/${importFolder.slice(root.length + 1)}`;
-          break;
-        }
-      }
-    }
-
+    const migrationService = new UnifiedDataMigrationService(plugin.app, plugin.settings);
+    const plan = await migrationService.planDataMigration({
+      requestedParentFolder: newParentFolder,
+      reason: 'change-parent-folder',
+    });
+    await migrationService.executeDataMigration(plan);
     await plugin.saveSettings();
     await loadInitialData();
   }

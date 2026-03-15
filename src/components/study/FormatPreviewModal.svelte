@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { FormatPreviewResult } from '../../types/ai-types';
+  import { tr } from '../../utils/i18n';
   
   interface Props {
     show: boolean;
@@ -10,6 +11,8 @@
   }
   
   let { show, previewResult, actionName, onConfirm, onCancel }: Props = $props();
+
+  let t = $derived($tr);
 </script>
 
 {#if show}
@@ -21,7 +24,7 @@
     <div class="format-preview-modal" onclick={(e) => e.stopPropagation()}>
       <!-- 头部 - 使用多彩侧边颜色条 -->
       <div class="format-preview-header">
-        <h3 class="format-title with-accent-bar accent-ai">AI格式化预览 - {actionName}</h3>
+        <h3 class="format-title with-accent-bar accent-ai">{t('study.formatPreview.title', { name: actionName })}</h3>
         <button class="format-preview-close" onclick={onCancel}>×</button>
       </div>
       
@@ -31,9 +34,9 @@
         <div class="format-comparison">
           <!-- 原始内容面板 -->
           <div class="format-panel format-panel-original">
-            <div class="format-panel-title">原始内容</div>
+            <div class="format-panel-title">{t('study.formatPreview.originalContent')}</div>
             <div class="format-panel-body">
-              {previewResult?.originalContent || '(无内容)'}
+              {previewResult?.originalContent || t('study.formatPreview.noContent')}
             </div>
           </div>
           
@@ -43,13 +46,13 @@
           <!-- 格式化后面板 -->
           <div class="format-panel format-panel-formatted">
             <div class="format-panel-title">
-              格式化后
+              {t('study.formatPreview.formattedContent')}
               {#if previewResult?.provider}
                 <span class="format-provider-tag">{previewResult.provider}</span>
               {/if}
             </div>
             <div class="format-panel-body">
-              {previewResult?.formattedContent || '(无内容)'}
+              {previewResult?.formattedContent || t('study.formatPreview.noContent')}
             </div>
           </div>
         </div>
@@ -57,20 +60,20 @@
         <!-- 错误信息 -->
         {#if !previewResult?.success}
           <div class="format-error">
-            {previewResult?.error || '未知错误'}
+            {previewResult?.error || t('study.formatPreview.unknownError')}
           </div>
         {/if}
       </div>
       
       <!-- 底部按钮 -->
       <div class="format-preview-footer">
-        <button class="format-btn format-btn-cancel" onclick={onCancel}>取消</button>
+        <button class="format-btn format-btn-cancel" onclick={onCancel}>{t('study.formatPreview.cancel')}</button>
         <button 
           class="format-btn format-btn-confirm" 
           onclick={onConfirm}
           disabled={!previewResult?.success}
         >
-          应用更改
+          {t('study.formatPreview.apply')}
         </button>
       </div>
     </div>

@@ -6,6 +6,7 @@
   // UI组件导入
   import EnhancedButton from "../ui/EnhancedButton.svelte";
   import EnhancedIcon from "../ui/EnhancedIcon.svelte";
+  import FloatingMenu from "../ui/FloatingMenu.svelte";
   import MarkdownView from "../atoms/MarkdownRenderer.svelte";
   import StatsCards from "./StatsCards.svelte";
   import SourceInfoBar from "./SourceInfoBar.svelte";
@@ -35,7 +36,7 @@
   import type { WeaveDataStorage } from "../../data/storage";
   import type { WeavePlugin } from "../../main";
   import { generateId } from "../../utils/helpers";
-  import { MarkdownRenderer, Modal, Notice, Platform } from "obsidian";
+  import { Component, MarkdownRenderer, Modal, Notice, Platform } from "obsidian";
   import { onMount, onDestroy, tick } from "svelte";
   import StudyProgressBar from "./StudyProgressBar.svelte";
   import { StudySessionManager } from "../../services/StudySessionManager";
@@ -44,6 +45,7 @@
 
   import { CardType as PreviewCardType } from "../preview/ContentPreviewEngine";
   import { UnifiedCardType, getCardTypeName } from "../../types/unified-card-types";
+  import { detectCardQuestionType } from "../../utils/card-type-utils";
   import type { ParseTemplate } from "../../types/newCardParsingTypes";
   import { UI_CONSTANTS } from "../../constants/app-constants";
   import { cardToMarkdown, markdownToCard } from "../../utils/card-markdown-serializer";
@@ -105,7 +107,7 @@
   import { logger } from "../../utils/logger";
   import { vaultStorage } from '../../utils/vault-local-storage';
   // 🆕 v2.2: 牌组信息获取工具
-  import { getCardMetadata, setCardProperties, getCardDeckIds, createContentWithMetadata } from "../../utils/yaml-utils";
+  import { getCardMetadata, setCardProperties, getCardDeckIds, createContentWithMetadata, extractBodyContent } from "../../utils/yaml-utils";
   //  v2.3: 使用 CardMetadataService 统一获取卡片元数据（带缓存 + 向后兼容）
   import { getCardMetadataService } from "../../services/CardMetadataService";
   
@@ -357,6 +359,67 @@
   }));
   //  缓存转换后的牌组列表，避免每次渲染都重新创建数组
   let availableDecksList = $derived(memoryDecks.map(d => ({ id: d.id, name: d.name })));
+
+  // --- 提示功能状态 ---
+  let hintMaxUsesPerSession = $state(plugin.settings.hintMaxUses ?? 5);
+  let hintSessionUsedCount = $state(0); // 整个会话已使用次数
+  let hintVisible = $state(false);
+  let hintCapsuleElement: HTMLElement | null = $state(null); // 胶囊按钮引用（用于浮窗锚定）
+  let hintRenderContainer: HTMLElement | null = $state(null); // Markdown 渲染容器
+  let hintRenderComponent: Component | null = null; // Obsidian Component 实例
+
+  /**
+   * 从卡片正文中提取 >hint: blockquote 内容
+   * 支持多行引用块（连续 > 开头的行）
+   */
+  function extractHintFromContent(content: string): string {
+    if (!content) return '';
+    const body = extractBodyContent(content);
+    const match = body.match(/^>hint:\s*(.*(?:\n>.*)*)/m);
+    if (!match) return '';
+    const lines = match[0].split('\n');
+    const hintLines = lines.map((line, i) => {
+      if (i === 0) return line.replace(/^>hint:\s*/, '').trim();
+      return line.replace(/^>\s?/, '').trim();
+    });
+    return hintLines.filter(l => l.length > 0).join('\n');
+  }
+
+  let currentHintText = $derived.by(() => {
+    if (!currentCard?.content) return '';
+    return extractHintFromContent(currentCard.content);
+  });
+
+  let hintUsesRemaining = $derived(Math.max(0, hintMaxUsesPerSession - hintSessionUsedCount));
+
+  /**
+   * 使用 Obsidian MarkdownRenderer 渲染提示内容到浮窗
+   */
+  async function renderHintContent() {
+    if (!hintRenderContainer || !currentHintText || !plugin?.app) return;
+    
+    hintRenderContainer.innerHTML = '';
+    
+    try {
+      if (hintRenderComponent) {
+        hintRenderComponent.unload();
+      }
+      
+      const comp = new Component();
+      await MarkdownRenderer.render(
+        plugin.app,
+        currentHintText,
+        hintRenderContainer,
+        currentCard?.sourceFile || '',
+        comp
+      );
+      comp.load();
+      hintRenderComponent = comp;
+    } catch (error) {
+      logger.error('[StudyInterface] Hint Markdown 渲染失败:', error);
+      hintRenderContainer.textContent = currentHintText;
+    }
+  }
 
   // --- 卡片详细信息模态窗状态 ---
   //  改用全局模态窗，不再需要本地状态
@@ -1707,7 +1770,7 @@
       }
 
       // Open the file and navigate to the block with enhanced targeting
-      plugin.app.workspace.openLinkText(file.path, contextPath, true).then(async () => {
+      plugin.app.workspace.openLinkText(file.path, contextPath, 'tab').then(async () => {
         // Wait a bit longer to ensure file is fully loaded
         setTimeout(async () => {
           const activeView = plugin.app.workspace.getActiveViewOfType('markdown' as any);
@@ -2054,6 +2117,8 @@
   // 计时器状态
   let currentCardTime = $state(0);
   let averageTime = $state(0);
+  let timerAutoPauseSeconds = $state(plugin.settings.timerAutoPauseSeconds ?? 60);
+  let timerPaused = $state(false);
 
   // 进度条刷新触发器
   let progressBarRefreshTrigger = $state(0);
@@ -2153,6 +2218,18 @@
     showTemplateList = false;
   }
 
+  function closeOnBackdropClick(event: MouseEvent, close: () => void) {
+    if (event.target === event.currentTarget) {
+      close();
+    }
+  }
+
+  function closeOnEscape(event: KeyboardEvent, close: () => void) {
+    if (event.key === 'Escape') {
+      close();
+    }
+  }
+
   // 处理模板选择
   function handleTemplateSelect(template: ParseTemplate) {
     logger.debug('选择模板:', template.name);
@@ -2182,6 +2259,264 @@
       cards[cardIndex] = updatedCard;
       cards = [...cards];  // 触发响应式更新，studyQueue 会自动重新生成
     }
+  }
+
+  function extractClozeOrdinals(content: string): number[] {
+    const ordinals = new Set<number>();
+    const clozePattern = /\{\{c(\d+)::/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = clozePattern.exec(content)) !== null) {
+      const ord = Number.parseInt(match[1], 10);
+      if (Number.isFinite(ord) && ord >= 1) {
+        ordinals.add(ord);
+      }
+    }
+
+    return Array.from(ordinals).sort((a, b) => a - b);
+  }
+
+  function buildProgressiveClozeSaveNotice(
+    previousEditTarget: Card | null,
+    persistedCard: Card,
+    newlyAddedChildren: ProgressiveClozeChildCard[]
+  ): string | null {
+    const previousOrdinals = previousEditTarget ? extractClozeOrdinals(previousEditTarget.content || '') : [];
+    const nextOrdinals = extractClozeOrdinals(persistedCard.content || '');
+
+    const previousOrdinalSet = new Set(previousOrdinals);
+    const nextOrdinalSet = new Set(nextOrdinals);
+
+    const removedOrdinals = previousOrdinals.filter(ord => !nextOrdinalSet.has(ord));
+    const addedOrdinals = nextOrdinals.filter(ord => !previousOrdinalSet.has(ord));
+    const retainedOrdinals = nextOrdinals.filter(ord => previousOrdinalSet.has(ord));
+
+    const parts: string[] = [];
+
+    if (addedOrdinals.length > 0) {
+      const labels = addedOrdinals.map(ord => `c${ord}`).join('、');
+      parts.push(`已新增子卡片 ${labels}，并通过 UUID 加入当前牌组引用`);
+    }
+
+    if (removedOrdinals.length > 0) {
+      const labels = removedOrdinals.map(ord => `c${ord}`).join('、');
+      parts.push(`已删除子卡片 ${labels}，对应子卡片及其复习历史已删除`);
+    }
+
+    if (addedOrdinals.length === 0 && removedOrdinals.length === 0 && retainedOrdinals.length > 0) {
+      parts.push(`已同步 ${retainedOrdinals.length} 张现有渐进式子卡片的内容`);
+    }
+
+    if (newlyAddedChildren.length > 0) {
+      parts.push('新增子卡片不会进入当前学习会话，下次学习时再由兄弟分散规则自动处理');
+    }
+
+    return parts.length > 0 ? parts.join('；') : null;
+  }
+
+  function getStudyCardTypeDisplayName(card: Card | null | undefined): string {
+    if (!card) return '未知题型';
+
+    switch (card.type) {
+      case CardType.ProgressiveParent:
+      case CardType.ProgressiveChild:
+        return '渐进式挖空';
+      case CardType.Basic:
+        return '普通问答';
+      case CardType.Cloze:
+        return '普通挖空';
+      case CardType.Multiple:
+        return '选择题';
+      default:
+        return getCardTypeName(detectCardQuestionType(card));
+    }
+  }
+
+  function notifyCardTypeChange(
+    previousEditTarget: Card | null,
+    persistedCard: Card
+  ) {
+    if (!previousEditTarget || previousEditTarget.type === persistedCard.type) {
+      return;
+    }
+
+    const previousTypeLabel = getStudyCardTypeDisplayName(previousEditTarget);
+    const nextTypeLabel = getStudyCardTypeDisplayName(persistedCard);
+    new Notice(`卡片题型已从「${previousTypeLabel}」变更为「${nextTypeLabel}」`, 7000);
+  }
+
+  async function syncStudyQueueAfterProgressiveEdit(
+    persistedCard: Card,
+    previousStudyCard: Card,
+    previousEditTarget: Card | null
+  ) {
+    const editedParentId = previousEditTarget?.uuid || persistedCard.uuid;
+    const currentStudyCardId = previousStudyCard.uuid;
+
+    const { primaryDeckId: persistedDeckId } = getCardDeckIds(persistedCard);
+    const { primaryDeckId: previousDeckId } = getCardDeckIds(previousStudyCard);
+    const deckId =
+      persistedDeckId ||
+      previousDeckId ||
+      persistedCard.deckId ||
+      previousStudyCard.deckId ||
+      session.deckId;
+
+    if (!deckId) {
+      logger.warn('[StudyInterface] 渐进式挖空保存后无法确定牌组，降级为单卡同步');
+      const cardsIndex = cards.findIndex(c => c.uuid === persistedCard.uuid);
+      if (cardsIndex !== -1) {
+        cards[cardsIndex] = persistedCard;
+        cards = [...cards];
+      }
+
+      const queueIndex = studyQueue.findIndex(c => c.uuid === currentStudyCardId || c.uuid === persistedCard.uuid);
+      if (queueIndex !== -1) {
+        studyQueue[queueIndex] = persistedCard;
+        studyQueue = [...studyQueue];
+      }
+      return;
+    }
+
+    const latestDeckCards = await dataStorage.getDeckCards(deckId);
+    const latestParent = latestDeckCards.find(c => c.uuid === editedParentId) || persistedCard;
+
+    const latestRelatedCards =
+      latestParent.type === CardType.ProgressiveParent
+        ? latestDeckCards
+            .filter(c =>
+              c.uuid === latestParent.uuid ||
+              (c.type === CardType.ProgressiveChild && (c as ProgressiveClozeChildCard).parentCardId === latestParent.uuid)
+            )
+            .sort((a, b) => {
+              if (a.uuid === latestParent.uuid) return -1;
+              if (b.uuid === latestParent.uuid) return 1;
+              const ordA = isProgressiveClozeChild(a) ? a.clozeOrd : -1;
+              const ordB = isProgressiveClozeChild(b) ? b.clozeOrd : -1;
+              return ordA - ordB;
+            })
+        : [latestParent];
+
+    const previousRelatedIds = new Set<string>([
+      editedParentId,
+      persistedCard.uuid,
+      ...(previousEditTarget?.type === CardType.ProgressiveParent
+        ? (previousEditTarget as Card & { progressiveCloze?: { childCardIds?: string[] } }).progressiveCloze?.childCardIds || []
+        : []),
+      ...cards
+        .filter(c => c.uuid === editedParentId || ((c as ProgressiveClozeChildCard).parentCardId === editedParentId))
+        .map(c => c.uuid),
+      ...studyQueue
+        .filter(c => c.uuid === editedParentId || ((c as ProgressiveClozeChildCard).parentCardId === editedParentId))
+        .map(c => c.uuid)
+    ]);
+
+    const newlyAddedChildren = latestRelatedCards.filter(
+      (c): c is ProgressiveClozeChildCard =>
+        isProgressiveClozeChild(c) && !previousRelatedIds.has(c.uuid)
+    );
+
+    const relatedIds = new Set<string>([
+      ...previousRelatedIds,
+      ...latestRelatedCards.map(c => c.uuid)
+    ]);
+
+    const baseCards = cards.filter(c => !relatedIds.has(c.uuid));
+    cards = [
+      ...baseCards,
+      ...latestRelatedCards
+    ];
+
+    const latestById = new Map(latestRelatedCards.map(card => [card.uuid, card] as const));
+    const matchProgressiveChildByOrd = (card: Card): ProgressiveClozeChildCard | undefined => {
+      if (!isProgressiveClozeChild(card)) return undefined;
+
+      return latestRelatedCards.find(
+        (candidate): candidate is ProgressiveClozeChildCard =>
+          isProgressiveClozeChild(candidate) &&
+          candidate.parentCardId === latestParent.uuid &&
+          candidate.clozeOrd === card.clozeOrd
+      );
+    };
+
+    const resolveLatestRelatedCard = (card: Card): Card => {
+      if (latestById.has(card.uuid)) {
+        return latestById.get(card.uuid) || card;
+      }
+
+      return matchProgressiveChildByOrd(card) || card;
+    };
+
+    studyQueue = studyQueue.map(card => resolveLatestRelatedCard(card));
+
+    const currentReplacement = resolveLatestRelatedCard(previousStudyCard);
+    const queueIndex = studyQueue.findIndex(c => {
+      if (c.uuid === currentStudyCardId) {
+        return true;
+      }
+
+      return (
+        isProgressiveClozeChild(previousStudyCard) &&
+        isProgressiveClozeChild(c) &&
+        c.parentCardId === latestParent.uuid &&
+        c.clozeOrd === previousStudyCard.clozeOrd
+      );
+    });
+    if (queueIndex !== -1) {
+      studyQueue[queueIndex] = currentReplacement;
+      currentCardIndex = queueIndex;
+    }
+
+    const progressiveSaveNotice = buildProgressiveClozeSaveNotice(
+      previousEditTarget,
+      persistedCard,
+      newlyAddedChildren
+    );
+    if (progressiveSaveNotice) {
+      new Notice(progressiveSaveNotice, 7000);
+    }
+
+    cards = [...cards];
+    studyQueue = [...studyQueue];
+    detectedCardType = detectCardQuestionType(currentReplacement);
+    forceRefresh();
+  }
+
+  function isProgressiveEditContext(
+    persistedCard: Card,
+    previousStudyCard: Card,
+    previousEditTarget: Card | null
+  ): boolean {
+    return (
+      persistedCard.type === CardType.ProgressiveParent ||
+      persistedCard.type === CardType.ProgressiveChild ||
+      previousStudyCard.type === CardType.ProgressiveParent ||
+      previousStudyCard.type === CardType.ProgressiveChild ||
+      previousEditTarget?.type === CardType.ProgressiveParent ||
+      previousEditTarget?.type === CardType.ProgressiveChild
+    );
+  }
+
+  function syncStudyQueueAfterRegularEdit(
+    persistedCard: Card,
+    previousStudyCard: Card
+  ) {
+    const currentStudyCardId = previousStudyCard.uuid;
+
+    const cardsIndex = cards.findIndex(c => c.uuid === currentStudyCardId || c.uuid === persistedCard.uuid);
+    if (cardsIndex !== -1) {
+      cards[cardsIndex] = persistedCard;
+    }
+
+    const queueIndex = studyQueue.findIndex(c => c.uuid === currentStudyCardId || c.uuid === persistedCard.uuid);
+    if (queueIndex !== -1) {
+      studyQueue[queueIndex] = persistedCard;
+    }
+
+    cards = [...cards];
+    studyQueue = [...studyQueue];
+    detectedCardType = detectCardQuestionType(persistedCard);
+    forceRefresh();
   }
 
   function getCurrentTemplateInfo() {
@@ -2246,8 +2581,19 @@
       if (!showEditModal && currentCard) {
         // 更新时间相关的状态
         const elapsed = Date.now() - cardStartTime;
-        currentCardTime = elapsed;
-        currentStudyTime = elapsed; // 同步更新计时信息栏显示
+        const autoPauseMs = timerAutoPauseSeconds * 1000;
+        // 超时自动暂停：当超过设定阈值时停止计时
+        if (autoPauseMs > 0 && elapsed >= autoPauseMs) {
+          if (!timerPaused) {
+            timerPaused = true;
+            new Notice(`计时已暂停（超过${timerAutoPauseSeconds >= 60 ? (timerAutoPauseSeconds / 60) + '分钟' : timerAutoPauseSeconds + '秒'}未操作）`, 3000);
+          }
+          currentCardTime = autoPauseMs;
+          currentStudyTime = autoPauseMs;
+        } else {
+          currentCardTime = elapsed;
+          currentStudyTime = elapsed;
+        }
 
         // 更新会话总时间
         session.totalTime = Math.floor((Date.now() - session.startTime.getTime()) / 1000);
@@ -2443,6 +2789,47 @@
     logger.debug('撤销显示答案，返回预览状态');
   }
 
+  // --- 提示功能处理函数 ---
+  
+  /**
+   * 显示/隐藏提示浮窗（消耗一次会话使用次数）
+   */
+  function toggleHint() {
+    if (!currentCard) return;
+    
+    if (hintVisible) {
+      hintVisible = false;
+      return;
+    }
+    
+    if (!currentHintText) {
+      new Notice(t('studyInterface.hint.noHint'));
+      return;
+    }
+    
+    if (hintUsesRemaining <= 0) {
+      new Notice(t('studyInterface.hint.usedUp'));
+      return;
+    }
+    
+    hintSessionUsedCount++;
+    hintVisible = true;
+    
+    // 浮窗打开后渲染 Markdown 内容
+    requestAnimationFrame(() => {
+      renderHintContent();
+    });
+  }
+
+  /**
+   * 提示次数限制变更处理
+   */
+  function handleHintMaxUsesChange(value: number) {
+    hintMaxUsesPerSession = value;
+    plugin.settings.hintMaxUses = value;
+    plugin.saveSettings();
+  }
+
   //  撤销上一次评分
   /**
    * 撤销最后一次评分操作
@@ -2502,7 +2889,7 @@
         
         // 重置UI状态
         showAnswer = false;
-        cardStartTime = Date.now();
+        cardStartTime = Date.now(); timerPaused = false;
         
         // 更新撤销计数
         updateUndoCount();
@@ -3639,7 +4026,7 @@
         const prevIndex = currentCardIndex;
         currentCardIndex = nextIndex;
         showAnswer = false;
-        cardStartTime = Date.now(); // 重置卡片计时
+        cardStartTime = Date.now(); timerPaused = false; // 重置卡片计时
 
         // 添加状态变更确认日志
         if (plugin?.settings?.enableDebugMode) {
@@ -3773,6 +4160,8 @@
 
       try {
         const sessionCardId = editorSessionId;
+        const previousStudyCard = currentCard;
+        const previousEditTarget = editTargetCard;
         const saveTargetId = editTargetCard?.uuid || currentCard.uuid;
         
         // 使用学习会话模式保存
@@ -3782,6 +4171,7 @@
         });
 
         if (result.success && result.updatedCard) {
+          let persistedCard = result.updatedCard;
           try {
             const saveResult = await dataStorage.saveCard(result.updatedCard);
             if (!saveResult.success) {
@@ -3794,7 +4184,8 @@
               new Notice('保存失败: ' + (saveResult.error || '未知错误'));
               return;
             }
-            logger.debug('卡片已持久化到数据库:', result.updatedCard.uuid);
+            persistedCard = saveResult.data || result.updatedCard;
+            logger.debug('卡片已持久化到数据库:', persistedCard.uuid);
           } catch (persistError) {
             logger.error('卡片持久化异常（点击预览）:', persistError);
             new Notice('保存失败: ' + (persistError instanceof Error ? persistError.message : '未知错误'));
@@ -3802,30 +4193,13 @@
           }
           
           new Notice('卡片已保存');
+
+          notifyCardTypeChange(previousEditTarget, persistedCard);
           
-          // 同步更新 cards 和 studyQueue（内存缓存）
-          const cardUuid = result.updatedCard.uuid;
-          
-          const cardsIndex = cards.findIndex(c => c.uuid === cardUuid);
-          if (cardsIndex !== -1) {
-            cards[cardsIndex] = result.updatedCard;
-            cards = [...cards];
-          }
-          
-          const queueIndex = studyQueue.findIndex(c => c.uuid === cardUuid);
-          if (queueIndex !== -1) {
-            studyQueue[queueIndex] = result.updatedCard;
-            studyQueue = [...studyQueue];
-          }
-          
-          // 如果编辑的是父卡片，同步更新当前子卡片的content
-          if (editTargetCard && isProgressiveClozeChild(currentCard) && 
-              editTargetCard.uuid !== currentCard.uuid) {
-            const childIndex = studyQueue.findIndex(c => c.uuid === currentCard.uuid);
-            if (childIndex !== -1) {
-              studyQueue[childIndex] = { ...studyQueue[childIndex], content: result.updatedCard.content };
-              studyQueue = [...studyQueue];
-            }
+          if (isProgressiveEditContext(persistedCard, previousStudyCard, previousEditTarget)) {
+            await syncStudyQueueAfterProgressiveEdit(persistedCard, previousStudyCard, previousEditTarget);
+          } else {
+            syncStudyQueueAfterRegularEdit(persistedCard, previousStudyCard);
           }
           
           // 退出编辑模式
@@ -3934,7 +4308,7 @@
       
       // 重置显示状态
       showAnswer = false;
-      cardStartTime = Date.now();
+      cardStartTime = Date.now(); timerPaused = false;
       showEditModal = false;
 
       // 强制触发界面刷新
@@ -4093,7 +4467,7 @@
         
         // 重置显示状态
         showAnswer = false;
-        cardStartTime = Date.now();
+        cardStartTime = Date.now(); timerPaused = false;
         
         // 强制刷新
         cards = [...cards];
@@ -4178,7 +4552,7 @@
       
       // 重置显示状态
       showAnswer = false;
-      cardStartTime = Date.now();
+      cardStartTime = Date.now(); timerPaused = false;
       showEditModal = false;
 
       // 强制刷新界面
@@ -4213,10 +4587,12 @@
   let showReminderModal = $state(false);
   let customReviewDate = $state("");
   let customReviewTime = $state("");
+  let reminderAnchorElement: HTMLElement | null = $state(null);
 
   // 优先级功能状态
   let showPriorityModal = $state(false);
   let selectedPriority = $state(2);
+  let priorityAnchorElement: HTMLElement | null = $state(null);
 
   // 倒计时定时器ID
   let countdownTimerId: number | null = $state(null);
@@ -4231,6 +4607,7 @@
     customReviewDate = tomorrow.toISOString().split('T')[0];
     customReviewTime = new Date().toTimeString().slice(0, 5);
 
+    showPriorityModal = false;
     showReminderModal = true;
   }
 
@@ -4291,6 +4668,7 @@
   function handleChangePriority() {
     if (!currentCard) return;
     selectedPriority = (currentCard as any).priority || 2;
+    showReminderModal = false;
     showPriorityModal = true;
   }
 
@@ -4891,6 +5269,12 @@
     
   }
 
+  // 切换卡片时重置提示状态
+  $effect(() => {
+    const _idx = currentCardIndex;
+    hintVisible = false;
+  });
+
   // 自动显示答案与快捷键绑定（编辑模态开启时暂停监听与自动计时）
   $effect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -5226,6 +5610,18 @@
     }
   }
 
+  // 处理超时自动暂停计时设置变化
+  async function handleTimerAutoPauseChange(seconds: number) {
+    timerAutoPauseSeconds = seconds;
+    plugin.settings.timerAutoPauseSeconds = seconds;
+    try {
+      await plugin.saveSettings();
+      logger.debug('超时自动暂停计时设置已保存:', seconds);
+    } catch (error) {
+      logger.error('[StudyInterface] 保存超时自动暂停计时设置失败:', error);
+    }
+  }
+
   //  确认删除卡片
   async function confirmDeleteCard() {
     showDeleteConfirmModal = false;
@@ -5468,6 +5864,12 @@
   onDestroy(() => {
     document.removeEventListener('focus', trapFocus, true);
 
+    // 清理提示渲染组件
+    if (hintRenderComponent) {
+      hintRenderComponent.unload();
+      hintRenderComponent = null;
+    }
+
     //  移动端：移除学习界面激活类
     document.body.classList.remove('weave-study-active');
     document.body.classList.remove('weave-edit-active');
@@ -5647,6 +6049,10 @@
                     }
                   }}
                   onEditComplete={async (updatedCard) => {
+                    const previousStudyCard = currentCard;
+                    const previousEditTarget = editTargetCard;
+                    let persistedCard = updatedCard;
+
                     try {
                       const saveResult = await dataStorage.saveCard(updatedCard);
                       if (!saveResult.success) {
@@ -5658,35 +6064,21 @@
                         new Notice('保存失败: ' + (saveResult.error || '未知错误'));
                         return;
                       }
-                      logger.debug('[StudyInterface] 卡片已保存到数据库:', updatedCard.uuid);
+                      persistedCard = saveResult.data || updatedCard;
+                      logger.debug('[StudyInterface] 卡片已保存到数据库:', persistedCard.uuid);
                     } catch (error) {
                       logger.error('[StudyInterface] 卡片保存异常:', error);
                       new Notice('保存失败: ' + (error instanceof Error ? error.message : '未知错误'));
                       return;
                     }
                     
-                    // 同步更新 cards 和 studyQueue（内存缓存）
-                    const cardUuid = updatedCard.uuid;
-                    
-                    const cardsIndex = cards.findIndex(c => c.uuid === cardUuid);
-                    if (cardsIndex !== -1) {
-                      cards[cardsIndex] = updatedCard;
-                      cards = [...cards];
-                    }
-                    
-                    const queueIndex = studyQueue.findIndex(c => c.uuid === cardUuid);
-                    if (queueIndex !== -1) {
-                      studyQueue[queueIndex] = updatedCard;
-                      studyQueue = [...studyQueue];
-                    }
-                    
-                    // 如果编辑的是父卡片，同步子卡片content
-                    if (editTargetCard && currentCard && isProgressiveClozeChild(currentCard) &&
-                        editTargetCard.uuid !== currentCard.uuid) {
-                      const childIdx = studyQueue.findIndex(c => c.uuid === currentCard.uuid);
-                      if (childIdx !== -1) {
-                        studyQueue[childIdx] = { ...studyQueue[childIdx], content: updatedCard.content };
-                        studyQueue = [...studyQueue];
+                    notifyCardTypeChange(previousEditTarget, persistedCard);
+
+                    if (previousStudyCard) {
+                      if (isProgressiveEditContext(persistedCard, previousStudyCard, previousEditTarget)) {
+                        await syncStudyQueueAfterProgressiveEdit(persistedCard, previousStudyCard, previousEditTarget);
+                      } else {
+                        syncStudyQueueAfterRegularEdit(persistedCard, previousStudyCard);
                       }
                     }
                     
@@ -5765,11 +6157,11 @@
 
       <!--  删除确认弹窗 -->
       {#if showDeleteConfirmModal}
-        <div class="modal-backdrop" onclick={cancelDeleteCard} role="button" tabindex="0">
-          <div class="delete-confirm-modal" onclick={(e) => {
+        <div class="modal-backdrop" onclick={(event) => closeOnBackdropClick(event, cancelDeleteCard)} onkeydown={(event) => closeOnEscape(event, cancelDeleteCard)} role="button" tabindex="0">
+          <div class="delete-confirm-modal" role="dialog" aria-modal="true" tabindex="-1">
             // Svelte 5: 检查是否点击了模态框本身
-            if (e.target === e.currentTarget) e.preventDefault();
-          }} role="dialog" aria-modal="true" tabindex="-1">
+            
+          
             <div class="modal-header">
               <h3>确认删除卡片</h3>
               <button class="close-btn" onclick={cancelDeleteCard}>
@@ -5797,7 +6189,39 @@
       <!-- 底部功能栏 - 移到Grid内部 -->
       {#if currentCard && !showEditModal}
         <div class="study-footer">
-          <!-- 🆕 撤销/预览按钮在评分区域上方居中显示（仅图标） -->
+          <!-- 提示胶囊（仅在未显示答案且有提示内容时显示，左对齐） -->
+          {#if !showAnswer && currentHintText}
+            <div class="hint-area">
+              <button
+                bind:this={hintCapsuleElement}
+                class="hint-capsule"
+                class:hint-active={hintVisible}
+                class:hint-used-up={hintUsesRemaining <= 0}
+                onclick={toggleHint}
+                title={hintUsesRemaining > 0 
+                  ? t('studyInterface.hint.usesRemaining').replace('{n}', String(hintUsesRemaining))
+                  : t('studyInterface.hint.usedUp')}
+              >
+                <span class="hint-capsule-icon">?</span>
+                <span class="hint-capsule-label">{t('studyInterface.hint.showHint')}</span>
+                <span class="hint-capsule-count">{hintUsesRemaining}</span>
+              </button>
+              
+              <FloatingMenu
+                bind:show={hintVisible}
+                anchor={hintCapsuleElement}
+                placement="top-start"
+                onClose={() => hintVisible = false}
+                class="hint-floating-panel"
+              >
+                {#snippet children()}
+                  <div class="hint-floating-content" bind:this={hintRenderContainer}></div>
+                {/snippet}
+              </FloatingMenu>
+            </div>
+          {/if}
+
+          <!-- 撤销/预览按钮在评分区域上方居中显示（仅图标） -->
           {#if showAnswer}
             <div class="footer-top-controls footer-top-controls-centered">
               <!-- 返回预览按钮 -->
@@ -5835,6 +6259,89 @@
           />
         </div>
       {/if}
+      <!-- 提醒设置浮窗 -->
+      <FloatingMenu
+        bind:show={showReminderModal}
+        anchor={reminderAnchorElement}
+        placement="left-start"
+        onClose={() => showReminderModal = false}
+        class="study-side-panel-menu"
+      >
+        {#snippet children()}
+          <div class="study-side-panel reminder-modal" role="dialog" aria-modal="true" tabindex="-1">
+            <div class="modal-header">
+              <h3>设置复习提醒</h3>
+              <button class="modal-close" onclick={() => showReminderModal = false}>×</button>
+            </div>
+            <div class="modal-body">
+              <p class="modal-description">为当前卡片自定义下次复习时间：</p>
+              <div class="form-group">
+                <label for="review-date">复习日期：</label>
+                <input id="review-date" type="date" bind:value={customReviewDate} class="date-input" />
+              </div>
+              <div class="form-group">
+                <label for="review-time">复习时间：</label>
+                <input id="review-time" type="time" bind:value={customReviewTime} class="time-input" />
+              </div>
+              <div class="warning-message">
+                <EnhancedIcon name="info" size="16" />
+                <span>注意：自定义复习时间将覆盖算法计算的时间</span>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-secondary" onclick={() => showReminderModal = false}>取消</button>
+              <button class="btn-primary" onclick={confirmSetReminder}>确认设置</button>
+            </div>
+          </div>
+        {/snippet}
+      </FloatingMenu>
+
+      <!-- 优先级设置浮窗 -->
+      <FloatingMenu
+        bind:show={showPriorityModal}
+        anchor={priorityAnchorElement}
+        placement="left-start"
+        onClose={() => showPriorityModal = false}
+        class="study-side-panel-menu"
+      >
+        {#snippet children()}
+          <div class="study-side-panel priority-modal" role="dialog" aria-modal="true" tabindex="-1">
+            <div class="modal-header">
+              <h3>设置优先级</h3>
+              <button class="modal-close" onclick={() => showPriorityModal = false}>×</button>
+            </div>
+            <div class="modal-body">
+              <p class="modal-description">选择当前卡片的重要程度：</p>
+              <div class="priority-options">
+                {#each [1, 2, 3, 4] as priority}
+                  <button
+                    class="priority-option"
+                    class:selected={selectedPriority === priority}
+                    onclick={(e) => { e.stopPropagation(); selectedPriority = priority; }}
+                  >
+                    <div class="priority-stars">
+                      {#each Array(priority) as _}
+                        <EnhancedIcon name="starFilled" size="16" />
+                      {/each}
+                      {#each Array(4 - priority) as _}
+                        <EnhancedIcon name="star" size="16" />
+                      {/each}
+                    </div>
+                    <span class="priority-label">
+                      {['', '低优先级', '中优先级', '高优先级', '紧急'][priority]}
+                    </span>
+                  </button>
+                {/each}
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-secondary" onclick={() => showPriorityModal = false}>取消</button>
+              <button class="btn-primary" onclick={confirmChangePriority}>确认设置</button>
+            </div>
+          </div>
+        {/snippet}
+      </FloatingMenu>
+
       </div><!-- 关闭 main-study-area -->
 
       <!-- 右侧垂直工具栏 -->
@@ -5856,6 +6363,9 @@
             onRemoveFromDeck={plugin?.referenceDeckService ? handleRemoveFromDeck : undefined}
             onSetReminder={handleSetReminder}
             onChangePriority={handleChangePriority}
+            onReminderAnchorChange={(element) => reminderAnchorElement = element}
+            onPriorityAnchorChange={(element) => priorityAnchorElement = element}
+            onPanelOpen={() => { showReminderModal = false; showPriorityModal = false; }}
             onRecycleCard={suspendCurrentCard}
             onChangeDeck={handleChangeDeck}
             {enableDirectDelete}
@@ -5887,6 +6397,10 @@
             onGraphLinkToggle={handleGraphLinkToggle}
             onGraphLeafChange={handleGraphLeafChange}
             {isPremium}
+            {timerAutoPauseSeconds}
+            onTimerAutoPauseChange={handleTimerAutoPauseChange}
+            hintMaxUses={hintMaxUsesPerSession}
+            onHintMaxUsesChange={handleHintMaxUsesChange}
           />
         </div><!-- 关闭 sidebar-content -->
       {/if}
@@ -5929,7 +6443,7 @@
 
 <!-- 模板选择列表（锚定到功能键左侧展开） -->
 {#if showTemplateList}
-  <div class="menu-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={handleCloseTemplateList}>
+  <div class="menu-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={(event) => closeOnBackdropClick(event, handleCloseTemplateList)} onkeydown={(event) => closeOnEscape(event, handleCloseTemplateList)}>
     <div
       class="template-menu"
       role="menu"
@@ -5961,111 +6475,6 @@
 {/if}
 
 
-
-
-<!-- 提醒设置模态窗 -->
-{#if showReminderModal}
-  <div class="modal-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={() => showReminderModal = false}>
-    <div class="reminder-modal" role="button" tabindex="0" onclick={(e) => e.stopPropagation()} onkeydown={(_e) => {
-      // 其他键不阻止传播，让编辑器接收 Obsidian 快捷键
-    }}>
-      <div class="modal-header">
-        <h3>设置复习提醒</h3>
-        <button class="modal-close" onclick={() => showReminderModal = false}>×</button>
-      </div>
-
-      <div class="modal-body">
-        <p class="modal-description">为当前卡片自定义下次复习时间：</p>
-
-        <div class="form-group">
-          <label for="review-date">复习日期：</label>
-          <input
-            id="review-date"
-            type="date"
-            bind:value={customReviewDate}
-            class="date-input"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="review-time">复习时间：</label>
-          <input
-            id="review-time"
-            type="time"
-            bind:value={customReviewTime}
-            class="time-input"
-          />
-        </div>
-
-        <div class="warning-message">
-          <EnhancedIcon name="info" size="16" />
-          <span>注意：自定义复习时间将覆盖算法计算的时间</span>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn-secondary" onclick={() => showReminderModal = false}>
-          取消
-        </button>
-        <button class="btn-primary" onclick={confirmSetReminder}>
-          确认设置
-        </button>
-      </div>
-    </div>
-  </div>
-{/if}
-
-<!-- 优先级设置模态窗 -->
-{#if showPriorityModal}
-  <div class="modal-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={() => showPriorityModal = false}>
-    <div class="priority-modal" role="button" tabindex="0" onclick={(e) => e.stopPropagation()} onkeydown={(_e) => {
-      // 其他键不阻止传播，让编辑器接收 Obsidian 快捷键
-    }}>
-      <div class="modal-header">
-        <h3>设置优先级</h3>
-        <button class="modal-close" onclick={() => showPriorityModal = false}>×</button>
-      </div>
-
-      <div class="modal-body">
-        <p class="modal-description">选择当前卡片的重要程度：</p>
-
-        <div class="priority-options">
-          {#each [1, 2, 3, 4] as priority}
-            <button
-              class="priority-option"
-              class:selected={selectedPriority === priority}
-              onclick={(e) => {
-                e.stopPropagation();
-                selectedPriority = priority;
-              }}
-            >
-              <div class="priority-stars">
-                {#each Array(priority) as _}
-                  <EnhancedIcon name="starFilled" size="16" />
-                {/each}
-                {#each Array(4 - priority) as _}
-                  <EnhancedIcon name="star" size="16" />
-                {/each}
-              </div>
-              <span class="priority-label">
-                {['', '低优先级', '中优先级', '高优先级', '紧急'][priority]}
-              </span>
-            </button>
-          {/each}
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn-secondary" onclick={() => showPriorityModal = false}>
-          取消
-        </button>
-        <button class="btn-primary" onclick={confirmChangePriority}>
-          确认设置
-        </button>
-      </div>
-    </div>
-  </div>
-{/if}
 
 
 <!--  激活提示 -->
@@ -6167,6 +6576,7 @@
     flex-direction: column;
     min-height: 0; /* 允许flex子元素收缩 */
     overflow: hidden;
+    position: relative; /* 为模态窗提供定位上下文 */
   }
 
   /* 侧边栏内容容器 - 延伸到底部 */
@@ -6297,34 +6707,36 @@
   }
 
 
-  /* 提醒和优先级模态窗样式 */
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: var(--weave-z-sticky);
-    backdrop-filter: blur(2px);
-    pointer-events: none; /* 🔧 让遮罩层透明且不捕获鼠标事件 */
+  /* 提醒和优先级浮窗样式 - 统一复用侧边功能栏 FloatingMenu 定位逻辑 */
+  :global(.study-side-panel-menu) {
+    min-width: 300px;
+    max-width: 340px;
   }
 
+  .study-side-panel,
   .reminder-modal,
   .priority-modal {
+    position: relative;
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
     border-radius: 12px;
     box-shadow: var(--shadow-s);
-    max-width: 450px;
-    min-width: 350px;
-    pointer-events: auto; /* 🔧 恢复模态窗内容的交互能力 */
-    max-height: 80vh;
+    min-width: 300px;
+    max-width: 340px;
+    max-height: min(70vh, 720px);
     overflow: hidden;
-    animation: bounceIn 0.3s ease-out;
+    animation: slideInRight 0.2s ease-out;
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
   .modal-header {
@@ -6553,6 +6965,135 @@
   .footer-top-controls .compact-control-btn.disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+
+  /* --- 提示胶囊样式 --- */
+  .hint-area {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.375rem;
+    padding: 0 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .hint-capsule {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+
+  .hint-capsule:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--text-accent);
+    color: var(--text-normal);
+  }
+
+  .hint-capsule.hint-active {
+    color: var(--text-normal);
+    border-color: var(--text-accent);
+    background: color-mix(in srgb, var(--text-accent) 10%, var(--background-secondary));
+  }
+
+  .hint-capsule.hint-used-up {
+    opacity: 0.45;
+    cursor: not-allowed;
+    border-color: var(--background-modifier-border);
+  }
+
+  .hint-capsule-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--text-accent);
+    color: var(--text-on-accent, #fff);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .hint-capsule.hint-used-up .hint-capsule-icon {
+    background: var(--text-muted);
+  }
+
+  .hint-capsule-label {
+    font-weight: 500;
+  }
+
+  .hint-capsule-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--text-accent) 15%, transparent);
+    color: var(--text-accent);
+    font-size: 0.6875rem;
+    font-weight: 600;
+  }
+
+  .hint-capsule.hint-used-up .hint-capsule-count {
+    background: color-mix(in srgb, var(--text-muted) 15%, transparent);
+    color: var(--text-muted);
+  }
+
+  /* 提示浮窗面板 */
+  :global(.hint-floating-panel) {
+    min-width: 240px;
+    max-width: 420px;
+    width: max-content;
+  }
+
+  .hint-floating-content {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--text-normal);
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  /* Obsidian 渲染内容样式微调 */
+  .hint-floating-content :global(p) {
+    margin: 0 0 0.5rem;
+  }
+
+  .hint-floating-content :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .hint-floating-content :global(img) {
+    max-width: 100%;
+    border-radius: 6px;
+  }
+
+  /* 移动端提示样式适配 */
+  :global(body.is-phone) .hint-area {
+    margin-bottom: 0.25rem;
+    padding: 0 0.375rem;
+  }
+
+  :global(body.is-phone) .hint-capsule {
+    font-size: 0.75rem;
+    padding: 0.1875rem 0.625rem;
+  }
+
+  :global(body.is-phone .hint-floating-panel) {
+    max-width: calc(100vw - 32px);
   }
 
   /* 编辑器样式已移至 CardEditorContainer.svelte 组件 */

@@ -92,10 +92,12 @@ export class EditorInitializationManager {
         logger.debug(`EditorInitManager: 等待现有初始化进程 [${editorId}]`);
         try {
           const success = await existingProcess.promise;
+          const wasAborted = existingProcess.abortController.signal.aborted;
           return { 
             success, 
             duration: Date.now() - existingProcess.startTime,
-            retryCount: existingProcess.retryCount
+            retryCount: existingProcess.retryCount,
+            error: !success && wasAborted ? '初始化被中止' : undefined
           };
         } catch (error) {
           return { 
@@ -149,13 +151,19 @@ export class EditorInitializationManager {
     try {
       process.state = InitializationState.INITIALIZING;
       const success = await process.promise;
+      const wasAborted = process.abortController.signal.aborted;
       
-      process.state = success ? InitializationState.COMPLETED : InitializationState.FAILED;
+      if (success) {
+        process.state = InitializationState.COMPLETED;
+      } else if (!wasAborted) {
+        process.state = InitializationState.FAILED;
+      }
       
       return {
         success,
         duration: Date.now() - startTime,
-        retryCount: process.retryCount
+        retryCount: process.retryCount,
+        error: !success && wasAborted ? '初始化被中止' : undefined
       };
     } catch (error) {
       process.state = InitializationState.FAILED;

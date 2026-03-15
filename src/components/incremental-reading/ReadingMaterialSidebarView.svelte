@@ -16,6 +16,7 @@
   import { logger } from '../../utils/logger';
   import RescheduleMaterialModal from './RescheduleMaterialModal.svelte';
   import MaterialImportModal from './MaterialImportModal.svelte';
+  import AddReadingPointModal from './AddReadingPointModal.svelte';
   import ObsidianIcon from '../ui/ObsidianIcon.svelte';
   import type { BatchImportResult } from '../../services/incremental-reading/ReadingMaterialManager';
 
@@ -57,6 +58,10 @@
   // 导入模态窗状态
   let showImportModal = $state(false);
   
+  // 阅读点弹窗状态
+  let showAddReadingPointModal = $state(false);
+  let readingPointTarget = $state<ReadingMaterial | null>(null);
+  
   // 层级视图折叠状态
   let expandedFolders = $state<Set<string>>(new Set(['']));  // 根目录默认展开
 
@@ -68,15 +73,28 @@
   let readingCount = $derived(materials.filter(m => m.category === ReadingCategory.Reading).length);
   let favoriteCount = $derived(materials.filter(m => m.category === ReadingCategory.Favorite).length);
 
-  // 过滤当前分类的材料（列表模式）
+  // 过滤当前分类的材料（列表模式），排除子阅读点
   let filteredMaterials = $derived(materials
-    .filter(m => m.category === selectedCategory)
+    .filter(m => m.category === selectedCategory && !m.parentMaterialId)
     .sort((a, b) => {
       if (b.priority !== a.priority) {
         return b.priority - a.priority;
       }
       return new Date(b.lastAccessed).getTime() - new Date(a.lastAccessed).getTime();
     }));
+
+  // 子材料映射：parentId -> children[]
+  let childMaterialsMap = $derived.by(() => {
+    const map = new Map<string, ReadingMaterial[]>();
+    for (const m of materials) {
+      if (m.parentMaterialId) {
+        const siblings = map.get(m.parentMaterialId) || [];
+        siblings.push(m);
+        map.set(m.parentMaterialId, siblings);
+      }
+    }
+    return map;
+  });
 
   // 获取选中日期的材料（日历模式）
   let selectedDateMaterials = $derived.by(() => {
@@ -101,6 +119,9 @@
       totalCount: materials.length
     };
   });
+
+  // 展开的材料节点（显示子阅读点）
+  let expandedMaterials = $state<Set<string>>(new Set());
 
   // 层级目录结构
   let hierarchyRoot = $derived.by(() => {
@@ -451,6 +472,28 @@
     showImportModal = true;
   }
 
+  function openAddReadingPointModal(material: ReadingMaterial): void {
+    readingPointTarget = material;
+    showAddReadingPointModal = true;
+    closeContextMenu();
+  }
+
+  function handleReadingPointCreated(): void {
+    showAddReadingPointModal = false;
+    readingPointTarget = null;
+    loadMaterials();
+  }
+
+  function toggleMaterialExpand(materialId: string): void {
+    const newSet = new Set(expandedMaterials);
+    if (newSet.has(materialId)) {
+      newSet.delete(materialId);
+    } else {
+      newSet.add(materialId);
+    }
+    expandedMaterials = newSet;
+  }
+
   function handleImportComplete(result: BatchImportResult): void {
     showImportModal = false;
     
@@ -666,6 +709,11 @@
         <button class="menu-item" onclick={() => handleMenuAction('move-to-favorite')}>添加到收藏</button>
       {/if}
       <div class="menu-divider"></div>
+      <button class="menu-item" onclick={() => {
+        const mat = materials.find(m => m.uuid === contextMenuMaterialId);
+        if (mat) openAddReadingPointModal(mat);
+      }}>新增阅读点</button>
+      <div class="menu-divider"></div>
       <button class="menu-item" onclick={() => handleMenuAction('archive')}>归档</button>
       <button class="menu-item danger" onclick={() => handleMenuAction('delete')}>删除</button>
     </div>
@@ -689,6 +737,18 @@
   onClose={() => showImportModal = false}
   onImportComplete={handleImportComplete}
 />
+
+<!-- 阅读点弹窗 -->
+{#if showAddReadingPointModal && readingPointTarget}
+  <AddReadingPointModal
+    {plugin}
+    deckId={readingPointTarget.readingDeckId || ''}
+    pdfPath={readingPointTarget.filePath}
+    parentTitle={readingPointTarget.title}
+    onClose={() => { showAddReadingPointModal = false; readingPointTarget = null; }}
+    onCreated={handleReadingPointCreated}
+  />
+{/if}
 
 <!-- 文件夹树节点组件 -->
 {#snippet FolderTreeNode(node: FolderNode, depth: number)}
@@ -719,8 +779,12 @@
 
       <!-- 该文件夹下的材料 -->
       {#each node.materials.sort((a, b) => b.priority - a.priority) as material (material.uuid)}
+        {@const children = childMaterialsMap.get(material.uuid) || []}
+        {@const hasChildren = children.length > 0}
+        {@const isExpanded = expandedMaterials.has(material.uuid)}
         <div 
           class="hierarchy-material-item"
+          class:has-children={hasChildren}
           style="--depth: {depth + 1}"
           onclick={() => handleMaterialClick(material)}
           oncontextmenu={(e) => handleContextMenu(e, material)}
@@ -728,10 +792,76 @@
           role="button"
           tabindex="0"
         >
-          <ObsidianIcon name="file-text" size={16} />
+          {#if hasChildren}
+            <button class="expand-toggle" onclick={(e) => { e.stopPropagation(); toggleMaterialExpand(material.uuid); }}>
+              <span class="expand-icon" class:expanded={isExpanded}>
+                <ObsidianIcon name="chevron-right" size={12} />
+              </span>
+            </button>
+          {/if}
+          <ObsidianIcon name={material.parentMaterialId ? 'bookmark' : 'file-text'} size={16} />
           <span class="material-title" title={material.title}>{material.title}</span>
+          {#if hasChildren}
+            <span class="children-count">{children.length}</span>
+          {/if}
           <span class="material-progress-badge">{material.progress.percentage}%</span>
         </div>
+        {#if hasChildren && isExpanded}
+          {#each children.sort((a, b) => {
+            const pa = a.resumeLink?.match(/page=(\d+)/)?.[1];
+            const pb = b.resumeLink?.match(/page=(\d+)/)?.[1];
+            return (pa ? parseInt(pa) : 0) - (pb ? parseInt(pb) : 0);
+          }) as child (child.uuid)}
+            {@const grandChildren = childMaterialsMap.get(child.uuid) || []}
+            {@const childHasChildren = grandChildren.length > 0}
+            {@const childExpanded = expandedMaterials.has(child.uuid)}
+            <div
+              class="hierarchy-material-item child-material"
+              class:has-children={childHasChildren}
+              style="--depth: {depth + 2}"
+              onclick={() => handleMaterialClick(child)}
+              oncontextmenu={(e) => handleContextMenu(e, child)}
+              onkeydown={(e) => e.key === 'Enter' && handleMaterialClick(child)}
+              role="button"
+              tabindex="0"
+            >
+              {#if childHasChildren}
+                <button class="expand-toggle" onclick={(e) => { e.stopPropagation(); toggleMaterialExpand(child.uuid); }}>
+                  <span class="expand-icon" class:expanded={childExpanded}>
+                    <ObsidianIcon name="chevron-right" size={12} />
+                  </span>
+                </button>
+              {/if}
+              <ObsidianIcon name="bookmark" size={14} />
+              <span class="material-title" title={child.title}>{child.title}</span>
+              {#if childHasChildren}
+                <span class="children-count">{grandChildren.length}</span>
+              {/if}
+              <span class="material-progress-badge">{child.progress.percentage}%</span>
+            </div>
+            {#if childHasChildren && childExpanded}
+              {#each grandChildren.sort((a, b) => {
+                const pa = a.resumeLink?.match(/page=(\d+)/)?.[1];
+                const pb = b.resumeLink?.match(/page=(\d+)/)?.[1];
+                return (pa ? parseInt(pa) : 0) - (pb ? parseInt(pb) : 0);
+              }) as grandChild (grandChild.uuid)}
+                <div
+                  class="hierarchy-material-item child-material"
+                  style="--depth: {depth + 3}"
+                  onclick={() => handleMaterialClick(grandChild)}
+                  oncontextmenu={(e) => handleContextMenu(e, grandChild)}
+                  onkeydown={(e) => e.key === 'Enter' && handleMaterialClick(grandChild)}
+                  role="button"
+                  tabindex="0"
+                >
+                  <ObsidianIcon name="bookmark" size={14} />
+                  <span class="material-title" title={grandChild.title}>{grandChild.title}</span>
+                  <span class="material-progress-badge">{grandChild.progress.percentage}%</span>
+                </div>
+              {/each}
+            {/if}
+          {/each}
+        {/if}
       {/each}
     {/if}
   </div>
@@ -1236,6 +1366,38 @@
     background: var(--interactive-accent-hover);
     padding: 1px 6px;
     border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .expand-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 3px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  .expand-toggle:hover {
+    background: var(--background-modifier-hover);
+  }
+
+  .child-material {
+    opacity: 0.9;
+  }
+
+  .children-count {
+    font-size: 10px;
+    color: var(--text-faint);
+    padding: 0 4px;
+    background: var(--background-secondary);
+    border-radius: 8px;
     flex-shrink: 0;
   }
 </style>

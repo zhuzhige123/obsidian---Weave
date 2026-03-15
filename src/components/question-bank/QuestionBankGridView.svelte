@@ -500,12 +500,6 @@ import { logger } from '../../utils/logger';
     text-align: center;
   }
 
-  .placeholder-icon {
-    font-size: 4rem;
-    margin-bottom: 1.5rem;
-    opacity: 0.6;
-  }
-
   .placeholder-title {
     font-size: 1.5rem;
     font-weight: 600;
@@ -533,10 +527,6 @@ import { logger } from '../../utils/logger';
     .mode-placeholder {
       min-height: 300px;
       padding: 2rem 1rem;
-    }
-
-    .placeholder-icon {
-      font-size: 3rem;
     }
 
     .placeholder-title {

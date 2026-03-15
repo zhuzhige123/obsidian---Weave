@@ -1,13 +1,15 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   interface DragDropItem { id: string; [key: string]: any; }
-  interface Props { items: DragDropItem[]; onReorder?: (items: DragDropItem[]) => void; }
-  let { items = [], onReorder }: Props = $props();
+  interface Props { items: DragDropItem[]; onReorder?: (items: DragDropItem[]) => void; children?: Snippet<[DragDropItem]>; }
+  let { items = [], onReorder, children }: Props = $props();
 </script>
 
 <div class="drag-drop-list">
   {#each items as item}
     <div class="drag-item" draggable="true">
-      <slot {item} />
+      {@render children?.(item)}
     </div>
   {/each}
 </div>

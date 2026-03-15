@@ -546,10 +546,9 @@ export class WeaveIdentifierService {
   /**
    * 重建索引
    */
-  async rebuildIndices(): Promise<void> {
+  rebuildIndices(): void {
     this.clearCache();
     
-    // TODO: 从数据库重新加载所有标识符
     logger.debug('[WeaveIdentifierService] 索引重建完成');
   }
 

@@ -28,17 +28,18 @@
   let showPreviewModal = $state(false);
   let textareaElement = $state<HTMLTextAreaElement | undefined>(undefined);
 
-  // 生成配置
+  // 从持久化设置中恢复AI制卡配置
+  const saved = plugin.settings.aiConfig?.savedGenerationConfig;
   let generationConfig = $state<GenerationConfig>({
     templateId: '',
     promptTemplate: '',
-    cardCount: 10,
-    difficulty: 'medium',
-    typeDistribution: { qa: 50, cloze: 30, choice: 20 },
+    cardCount: saved?.cardCount ?? 10,
+    difficulty: saved?.difficulty ?? 'medium',
+    typeDistribution: saved?.typeDistribution ?? { qa: 50, cloze: 30, choice: 20 },
     provider: (plugin.settings.aiConfig?.lastUsedProvider || plugin.settings.aiConfig?.defaultProvider || 'openai') as AIProvider,
     model: plugin.settings.aiConfig?.lastUsedModel || '',
-    temperature: 0.7,
-    maxTokens: 2000,
+    temperature: saved?.temperature ?? 0.7,
+    maxTokens: saved?.maxTokens ?? 2000,
     imageGeneration: {
       enabled: false,
       strategy: 'none',
@@ -50,15 +51,15 @@
       choice: 'official-choice',
       cloze: 'official-cloze'
     },
-    autoTags: [],
-    enableHints: true
+    autoTags: saved?.autoTags ?? [],
+    enableHints: saved?.enableHints ?? true
   });
 
   const generationService = new AICardGenerationService(plugin);
 
   // 提示词
   let officialPrompts = $derived<PromptTemplate[]>(
-    (plugin.settings.aiConfig?.promptTemplates.official || []).map(p => ({
+    (plugin.settings.aiConfig?.promptTemplates?.official || []).map(p => ({
       ...p,
       category: 'official' as const,
       useBuiltinSystemPrompt: true
@@ -66,7 +67,7 @@
   );
 
   let customPrompts = $derived<PromptTemplate[]>(
-    (plugin.settings.aiConfig?.promptTemplates.custom || []).map(p => ({
+    (plugin.settings.aiConfig?.promptTemplates?.custom || []).map(p => ({
       ...p,
       category: 'custom' as const,
       useBuiltinSystemPrompt: true
@@ -236,9 +237,24 @@
     }
   }
 
-  function handleSaveConfig(newConfig: GenerationConfig) {
+  async function handleSaveConfig(newConfig: GenerationConfig) {
     generationConfig = newConfig;
     showConfigModal = false;
+    
+    // 持久化到 plugin.settings
+    if (!plugin.settings.aiConfig) {
+      plugin.settings.aiConfig = {};
+    }
+    plugin.settings.aiConfig.savedGenerationConfig = {
+      cardCount: newConfig.cardCount,
+      difficulty: newConfig.difficulty,
+      typeDistribution: { ...newConfig.typeDistribution },
+      autoTags: newConfig.autoTags ? [...newConfig.autoTags] : [],
+      enableHints: newConfig.enableHints,
+      temperature: newConfig.temperature,
+      maxTokens: newConfig.maxTokens
+    };
+    await plugin.saveSettings();
   }
 
   async function handleImportCards(selectedCards: GeneratedCard[], targetDeckId: string) {

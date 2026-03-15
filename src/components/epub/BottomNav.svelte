@@ -22,10 +22,10 @@
 <div class="epub-bottom-nav">
 	<button class="epub-nav-btn" onclick={onPrev}>
 		<span use:icon={'arrow-left'}></span>
-		<span>Prev</span>
+		<span>上一页</span>
 	</button>
 	<button class="epub-nav-btn" onclick={onNext}>
-		<span>Next</span>
+		<span>下一页</span>
 		<span use:icon={'arrow-right'}></span>
 	</button>
 </div>

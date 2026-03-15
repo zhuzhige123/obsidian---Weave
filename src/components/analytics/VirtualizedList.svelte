@@ -30,7 +30,7 @@
   }: Props = $props();
 
   // 虚拟滚动实例
-  let virtualScroll: any;
+  let virtualScroll = $state<any>();
 
   /**
    * 处理项目点击
@@ -75,13 +75,26 @@
       {onScroll}
     >
       {#snippet children(item: any, index: number)}
-        <div 
-          class="list-item"
-          class:clickable={!!onItemClick}
-          onclick={() => handleItemClick(item, index)}
-        >
-          {@render children?.(item, index)}
-        </div>
+        {#if onItemClick}
+          <div 
+            class="list-item clickable"
+            role="button"
+            tabindex="0"
+            onclick={() => handleItemClick(item, index)}
+            onkeydown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleItemClick(item, index);
+              }
+            }}
+          >
+            {@render children?.(item, index)}
+          </div>
+        {:else}
+          <div class="list-item">
+            {@render children?.(item, index)}
+          </div>
+        {/if}
       {/snippet}
     </VirtualScroll>
   {/if}

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { AIActionType } from '../../types/ai-types';
+  import { tr } from '../../utils/i18n';
   
   interface Props {
     activeType: AIActionType;
@@ -9,6 +10,8 @@
   }
   
   let { activeType, formatCount, splitCount, onTypeChange }: Props = $props();
+
+  let t = $derived($tr);
 </script>
 
 <div class="action-type-tab-bar">
@@ -17,7 +20,7 @@
     class:active={activeType === 'format'}
     onclick={() => onTypeChange('format')}
   >
-    <span>AI格式化</span>
+    <span>{t('study.actionTypeTab.aiFormat')}</span>
     <span class="count-badge">{formatCount}</span>
   </button>
   
@@ -26,7 +29,7 @@
     class:active={activeType === 'split'}
     onclick={() => onTypeChange('split')}
   >
-    <span>AI拆分</span>
+    <span>{t('study.actionTypeTab.aiSplit')}</span>
     <span class="count-badge">{splitCount}</span>
   </button>
 </div>

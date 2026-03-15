@@ -128,6 +128,12 @@
     resetState();
   }
 
+  function handleOverlayPointerDown(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      handleCancel();
+    }
+  }
+
   // 监听open变化，重置状态
   $effect(() => {
     if (!open) {
@@ -137,8 +143,8 @@
 </script>
 
 {#if open}
-<div class="bat-overlay" onclick={(e) => { if (e.currentTarget === e.target) handleCancel() }} role="button" tabindex="0">
-  <div class="bat-modal" role="dialog" aria-labelledby="bat-title">
+<div class="bat-overlay" onmousedown={handleOverlayPointerDown} role="presentation">
+  <div class="bat-modal" role="dialog" aria-modal="true" aria-labelledby="bat-title">
     <header class="bat-header">
       <h2 id="bat-title">{t('modals.batchAddTags.title')}</h2>
       <EnhancedButton variant="secondary" size="sm" onclick={handleCancel}>

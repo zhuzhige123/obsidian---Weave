@@ -635,7 +635,7 @@ export class BackupManagementService {
             logger.warn('[BackupManagement] v2.0+ 不支持从 sessions.json 直接恢复会话（会话为分片目录），已跳过');
             break;
           case DataType.PROFILE:
-            await this.restoreDataFile(backup.path, getPluginPaths(this.plugin.app).config.userProfile, 'profile.json', adapter);
+            await this.restoreDataFile(backup.path, getPluginPaths(this.plugin.app).userProfile, 'profile.json', adapter);
             restoredDataTypes.push(DataType.PROFILE);
             fileCount++;
             break;

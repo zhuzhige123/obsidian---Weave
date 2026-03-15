@@ -408,9 +408,15 @@ function formatYAMLLine(key: string, value: any): string {
  * @returns 可能带引号的字符串
  */
 function quoteIfNeeded(value: string): string {
-  if ((value.startsWith('[[') && value.endsWith(']]')) ||
-      (value.startsWith('![[') && value.endsWith(']]'))) {
-    return value;
+  const isObsidianWikiLink =
+    (value.startsWith('[[') && value.endsWith(']]')) ||
+    (value.startsWith('![[') && value.endsWith(']]'));
+
+  // YAML 中的 wikilink / embed link 容易被高亮器误判为非法裸值，
+  // 统一输出为带引号字符串，读取时会由 unquoteString 去掉外层引号，
+  // 不影响后续 parseSourceInfo / parseObsidianLink 的跳转解析。
+  if (isObsidianWikiLink) {
+    return `"${value.replace(/"/g, '\\"')}"`;
   }
 
   // 需要引号的情况：包含特殊字符

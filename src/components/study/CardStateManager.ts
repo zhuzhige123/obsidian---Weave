@@ -1,6 +1,8 @@
 import { logger } from '../../utils/logger';
-// 🆕 v2.2: 导入牌组信息获取工具
+// v2.2: 导入牌组信息获取工具
 import { getCardDeckIds } from '../../utils/yaml-utils';
+import { detectCardQuestionType } from '../../utils/card-type-utils';
+import { UnifiedCardType } from '../../types/unified-card-types';
 
 /**
  * 卡片状态管理器
@@ -187,37 +189,28 @@ export class CardStateManager {
   getTypeGroups(): CardGroupInfo[] {
     return [
       {
-        key: 'basic',
-        label: '基础问答',
+        key: UnifiedCardType.BASIC_QA,
+        label: '问答题',
         color: 'var(--interactive-accent)',
-        icon: 'message-circle',
+        icon: 'file-text',
         cards: [],
         count: 0,
         dueCount: 0
       },
       {
-        key: 'cloze',
-        label: '挖空填词',
-        color: '#ec4899',
-        icon: 'edit-3',
-        cards: [],
-        count: 0,
-        dueCount: 0
-      },
-      {
-        key: 'multiple',
-        label: '多选题',
+        key: UnifiedCardType.SINGLE_CHOICE,
+        label: '选择题',
         color: '#06b6d4',
-        icon: 'check-square',
+        icon: 'check-circle',
         cards: [],
         count: 0,
         dueCount: 0
       },
       {
-        key: 'code',
-        label: '代码题',
-        color: '#84cc16',
-        icon: 'code',
+        key: UnifiedCardType.CLOZE_DELETION,
+        label: '挖空题',
+        color: '#ec4899',
+        icon: 'edit',
         cards: [],
         count: 0,
         dueCount: 0
@@ -386,9 +379,46 @@ export class CardStateManager {
   }
 
   /**
+   * 获取标签分组信息（动态生成）
+   */
+  getTagGroups(cards: Card[]): CardGroupInfo[] {
+    const tagSet = new Set<string>();
+    const tagColors = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#ef4444'];
+
+    cards.forEach(_card => {
+      const cardTags = _card.tags || [];
+      if (cardTags.length > 0) {
+        tagSet.add(cardTags[0]);
+      }
+    });
+
+    const groups: CardGroupInfo[] = Array.from(tagSet).sort().map((tag, index) => ({
+      key: tag,
+      label: tag,
+      color: tagColors[index % tagColors.length],
+      icon: 'tag',
+      cards: [],
+      count: 0,
+      dueCount: 0
+    }));
+
+    groups.push({
+      key: '_noTag',
+      label: '无标签',
+      color: '#6b7280',
+      icon: 'circle',
+      cards: [],
+      count: 0,
+      dueCount: 0
+    });
+
+    return groups;
+  }
+
+  /**
    * 将卡片分组到指定的分组中
    */
-  groupCards(cards: Card[], groupBy: 'status' | 'type' | 'priority' | 'deck' | 'createTime'): Record<string, Card[]> {
+  groupCards(cards: Card[], groupBy: 'status' | 'type' | 'priority' | 'deck' | 'createTime' | 'tag'): Record<string, Card[]> {
     const groups: Record<string, Card[]> = {};
     let groupInfos: CardGroupInfo[];
 
@@ -408,6 +438,9 @@ export class CardStateManager {
       case 'createTime':
         groupInfos = this.getCreateTimeGroups();
         break;
+      case 'tag':
+        groupInfos = this.getTagGroups(cards);
+        break;
       default:
         groupInfos = this.getStateGroups();
     }
@@ -426,9 +459,18 @@ export class CardStateManager {
           //  状态分组需要fsrs数据，没有的视为新卡片(state=0)
           groupKey = _card.fsrs?.state?.toString() ?? '0';
           break;
-        case 'type':
-          groupKey = _card.type || 'basic';
+        case 'type': {
+          const detectedType = detectCardQuestionType(_card);
+          // 将多选题归入选择题分组
+          if (detectedType === UnifiedCardType.MULTIPLE_CHOICE) {
+            groupKey = UnifiedCardType.SINGLE_CHOICE;
+          } else if (detectedType === UnifiedCardType.FILL_IN_BLANK || detectedType === UnifiedCardType.SEQUENCE || detectedType === UnifiedCardType.EXTENSIBLE) {
+            groupKey = UnifiedCardType.BASIC_QA;
+          } else {
+            groupKey = detectedType;
+          }
           break;
+        }
         case 'priority':
           groupKey = (_card.priority || 1).toString();
           break;
@@ -440,6 +482,15 @@ export class CardStateManager {
         case 'createTime':
           groupKey = this.getTimeGroupKey(_card.created);
           break;
+        case 'tag': {
+          const cardTags = _card.tags || [];
+          if (cardTags.length > 0) {
+            groupKey = cardTags[0];
+          } else {
+            groupKey = '_noTag';
+          }
+          break;
+        }
         default:
           groupKey = '0';
       }

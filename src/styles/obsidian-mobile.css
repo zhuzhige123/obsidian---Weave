@@ -1278,6 +1278,7 @@ body.is-mobile .weave-app .mobile-grid-card-title {
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: var(--weave-mobile-grid-title-lines, 3);
+  line-clamp: var(--weave-mobile-grid-title-lines, 3);
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1613,6 +1614,7 @@ body.is-mobile .weave-app .lazy-grid-card .card-front {
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: var(--weave-mobile-grid-title-lines, 3);
+  line-clamp: var(--weave-mobile-grid-title-lines, 3);
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2031,6 +2033,54 @@ body.is-phone .weave-app,
 body.is-mobile .weave-app {
   --weave-editor-padding-x: 12px;
   --weave-editor-padding-y: 12px;
+}
+
+/* ==================== 设置界面移动端布局修复 ==================== */
+
+/* Fix 1: 下拉框容器在手机端自适应宽度并靠右对齐 */
+body.is-phone .weave-settings .progressive-cloze-history-dropdown,
+body.is-phone .weave-settings .settings-dropdown-compact {
+  flex: 0 1 auto;
+  width: auto;
+  max-width: none;
+  min-width: 120px;
+  margin-left: auto;
+}
+
+/* Fix 2: 数字输入框与标题保持同行显示 */
+body.is-phone .weave-settings .row:has(.number-input-compact) {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+body.is-phone .weave-settings .row:has(.number-input-compact) > label:first-child {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-phone .weave-settings .row:has(.number-input-compact) .number-input-compact {
+  width: 80px;
+  max-width: 80px;
+  flex: 0 0 80px;
+  margin-left: auto;
+}
+
+/* Fix 3: 模态窗底部按钮保持同行 */
+body.is-phone .weave-settings .editor-footer,
+body.is-phone .weave-settings .modal-actions,
+body.is-phone .preset-editor-overlay .editor-footer {
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+body.is-phone .weave-settings .editor-footer .btn-cancel,
+body.is-phone .weave-settings .editor-footer .btn-save,
+body.is-phone .preset-editor-overlay .editor-footer .btn-cancel,
+body.is-phone .preset-editor-overlay .editor-footer .btn-save {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ==================== 滚动禁用样式类 ==================== */

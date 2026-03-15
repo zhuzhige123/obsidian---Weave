@@ -33,8 +33,6 @@
   // 增量阅读设置组件
   import IncrementalReadingSettingsSection from './sections/IncrementalReadingSettingsSection.svelte';
 
-  // 插件系统管理组件
-  import PluginSystemSection from './sections/PluginSystemSection.svelte';
 
   // 类型和常量
   import type { PluginExtended } from "./types/settings-types";
@@ -59,8 +57,6 @@
   // 🆕 本地响应式状态跟踪性能优化设置显示
   let showPerformanceSettings = $state(plugin.settings.showPerformanceSettings ?? false);
   
-  // 本地响应式状态跟踪第三方插件开关
-  let enableThirdPartyPlugins = $state(plugin.settings.enableThirdPartyPlugins ?? false);
   
   //  高级功能守卫
   const premiumGuard = PremiumFeatureGuard.getInstance();
@@ -100,15 +96,6 @@
     }
   }
 
-  // 处理第三方插件开关变更（由子组件调用）
-  function handleThirdPartyPluginsToggle(enabled: boolean) {
-    enableThirdPartyPlugins = enabled;
-    
-    // 如果当前在插件标签页且被关闭，自动切换到默认标签页
-    if (activeTab === 'plugin-system' && !enabled) {
-      activeTab = DEFAULT_ACTIVE_TAB;
-    }
-  }
   
   // 🆕 根据设置动态过滤标签页（响应式）
   //  高级功能标签页列表（未激活时隐藏）
@@ -122,10 +109,6 @@
       // 如果是性能优化标签页，检查设置
       if (tab.id === 'virtualization') {
         return showPerformanceSettings;
-      }
-      // 如果是插件标签页，检查第三方插件开关
-      if (tab.id === 'plugin-system') {
-        return enableThirdPartyPlugins;
       }
       //  如果是高级功能标签页，检查高级功能状态
       if (PREMIUM_TABS.includes(tab.id)) {
@@ -171,9 +154,9 @@
       try {
         await plugin.saveSettings();
       } catch (error) {
-        logger.error('保存设置失败:', error);
+        logger.error('Failed to save settings:', error);
         showNotification({
-          message: '设置保存失败，请重试',
+          message: t('settings.actions.saveFailed'),
           type: 'error'
         });
       }
@@ -191,7 +174,7 @@
         return await operation();
       } catch (error) {
         if (i === maxRetries - 1) throw error;
-        logger.warn(`操作失败，${delay}ms后重试 (${i + 1}/${maxRetries}):`, error);
+        logger.warn(`Operation failed, retrying in ${delay}ms (${i + 1}/${maxRetries}):`, error);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -215,7 +198,7 @@
     } catch (error) {
       const context = errorContext || errorMessage;
       logger.error(`${context}:`, error);
-      const errorMsg = error instanceof Error ? error.message : '未知错误';
+      const errorMsg = error instanceof Error ? error.message : t('common.unknown');
       showNotification({
         message: `${errorMessage}: ${errorMsg}`,
         type: 'error'
@@ -249,7 +232,6 @@
       {plugin} 
       onPerformanceSettingsToggle={handlePerformanceSettingsToggle}
       onPremiumFeaturesPreviewToggle={handlePremiumFeaturesPreviewToggle}
-      onThirdPartyPluginsToggle={handleThirdPartyPluginsToggle}
     />
   {/if}
 
@@ -299,10 +281,6 @@
     <AnkiConnectPanel {plugin} />
   {/if}
 
-  <!-- Plugin System -->
-  {#if activeTab === 'plugin-system'}
-    <PluginSystemSection {plugin} />
-  {/if}
 </div>
 
 <style>
@@ -334,6 +312,8 @@
 
   .tabs {
     margin-top: 0.25rem;
+    position: relative;
+    z-index: 0;
   }
 
   /* 关于页面样式 */

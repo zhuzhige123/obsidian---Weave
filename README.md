@@ -1,6 +1,6 @@
 # Weave Deck
 
-[简体中文](#中文文档) | [English](#english-documentation)
+[简体中文](#中文文档) | [English](#english-documentation) | [Русский](README.ru.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md)
 
 ![weave-series-banner-og](https://github.com/user-attachments/assets/a52c0875-9296-4dfd-bf94-114a225f2972)
 
@@ -166,9 +166,9 @@ Weave 向其它 Obsidian 插件开放 **WeaveDomainAPI**，通过 `app.plugins.p
 
 **买断制**（一次激活、长期使用），非按月订阅。
 
-#### 6. 为何目前仅支持中英？
+#### 6. 目前支持哪些界面语言？
 
-**Weave 功能模块多、界面文案量大**，完整本地化需要持续投入。当前优先保证**简体中文**与**英文**的质量与更新及时性；其它界面语言将**逐步补充**，感谢理解。
+**Weave 功能模块多、界面文案量大**，完整本地化需要持续投入。**当前已支持**简体中文、英文、俄语、日语、韩语；**德语、法语、西班牙语等将逐步补充**，感谢理解。
 
 ### 许可证与作者
 
@@ -337,9 +337,9 @@ It **funds ongoing development** so the team can keep polishing review and asses
 
 **Buy-once** activation, not a monthly subscription.
 
-#### 6. Why are only Chinese and English supported for now?
+#### 6. Which UI languages are supported?
 
-**Weave has a large feature surface and a heavy UI translation load**—full localization takes ongoing effort. We currently prioritize **Simplified Chinese** and **English** for quality and timely updates; **additional interface languages will be added gradually**. Thank you for your understanding.
+**Weave has a large feature surface and a heavy UI translation load**—full localization takes ongoing effort. **Currently available**: Simplified Chinese, English, Russian, Japanese, and Korean. **German, French, Spanish, and more will be added gradually**. Thank you for your understanding.
 
 ### License and author
 

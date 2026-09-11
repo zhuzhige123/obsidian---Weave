@@ -9,7 +9,7 @@
       "locale": "zh-CN",
       "version": "1.0",
       "cardCount": 48,
-      "packageUrl": "https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/packages/weave-intro-zh.json"
+      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-zh.json"
     },
     {
       "id": "weave-intro-en",
@@ -18,7 +18,7 @@
       "locale": "en",
       "version": "1.0",
       "cardCount": 48,
-      "packageUrl": "https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/packages/weave-intro-en.json"
+      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-en.json"
     }
   ]
 }

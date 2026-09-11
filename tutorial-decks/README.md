@@ -21,6 +21,11 @@ node 10-Project-Weave\docs\tutorial-deck\build-remote-package.cjs
 
 再把 `remote/` 内容同步到公开仓的 `tutorial-decks/`。
 
-## 插件默认目录 URL
+## 插件默认拉取顺序
 
-`https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/catalog.json`
+1. **jsDelivr（优先）**  
+   `https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/catalog.json`
+2. **GitHub raw（回退）**  
+   `https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/catalog.json`
+
+内容真源仍在 GitHub；用户端默认走 CDN，以降低中国大陆等地区访问 raw.githubusercontent.com 的不稳定问题。

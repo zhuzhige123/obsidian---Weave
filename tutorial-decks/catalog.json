@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-11",
+  "decks": [
+    {
+      "id": "weave-intro-zh",
+      "name": "Weave 入门教程",
+      "description": "Weave Deck 新手实用教程：动态题型、制卡溯源、学习界面与常用工作流。",
+      "locale": "zh-CN",
+      "cardCount": 48,
+      "packageUrl": "https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/packages/weave-intro-zh.json"
+    }
+  ]
+}

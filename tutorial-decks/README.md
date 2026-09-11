@@ -8,7 +8,10 @@
 ## 文件
 
 - `catalog.json`：目录列表
-- `packages/weave-intro-zh.json`：简体入门教程牌组
+- `packages/weave-intro-zh.json`：简体入门教程 **1.0**
+- `packages/weave-intro-en.json`：英文入门教程 **1.0**
+
+牌组显示名带版本号（如 `Weave 入门教程 1.0`），后续完善会升到 1.1 / 2.0 等。
 
 ## 重新生成
 

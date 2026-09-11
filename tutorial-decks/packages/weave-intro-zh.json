@@ -1,9 +1,10 @@
 {
   "schemaVersion": 1,
   "id": "weave-intro-zh",
-  "name": "Weave 入门教程",
-  "description": "Weave Deck 新手实用教程：动态题型、制卡溯源、学习界面与常用工作流。",
+  "name": "Weave 入门教程 1.0",
+  "description": "Weave Deck 新手实用教程 1.0：动态题型、制卡溯源、学习界面与常用工作流（后续版本会继续完善）。",
   "locale": "zh-CN",
+  "version": "1.0",
   "cards": [
     {
       "content": "Weave Deck 的学习闭环是什么？\n\n---div---\n\n摘录 → 制卡 → 复习 → 测验 → 溯源。\n\n从笔记或阅读中取出要点做成记忆卡片，用间隔重复巩固，必要时再测验；复习时仍可回到原文语境，而不是只剩孤立的句子。\n\n#weave-tutorial #学习闭环",

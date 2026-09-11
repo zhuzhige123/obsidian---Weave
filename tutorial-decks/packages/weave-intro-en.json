@@ -1,0 +1,370 @@
+{
+  "schemaVersion": 1,
+  "id": "weave-intro-en",
+  "name": "Weave Intro Tutorial 1.0",
+  "description": "Practical Weave Deck intro 1.0: dynamic card types, sourcing, study UI, and common workflows (will keep improving in later versions).",
+  "locale": "en",
+  "version": "1.0",
+  "cards": [
+    {
+      "content": "What is Weave Deck’s learning loop?\n\n---div---\n\nExcerpt → create cards → review → quiz → source back.\n\nTake key points from notes or reading into memory cards, reinforce them with spaced repetition, quiz when needed; during review you can still jump back to the original context instead of keeping only isolated sentences.\n\n#weave-tutorial #learning-loop",
+      "tags": [
+        "weave-tutorial",
+        "learning-loop"
+      ]
+    },
+    {
+      "content": "Why keep memory cards in separate decks instead of writing everything into the source note?\n\n---div---\n\nSource notes stay for reading and writing; cards are managed and scheduled for review on their own. Both sides stay linked by sourcing—jump back when you need context.\n\nThat keeps notes clean while collecting “things to remember” in one place.\n\n#weave-tutorial #cards-and-notes",
+      "tags": [
+        "weave-tutorial",
+        "cards-and-notes"
+      ]
+    },
+    {
+      "content": "What is the biggest difference between Weave’s card-type system and many Anki-style plugins?\n\n---div---\n\nWeave has no fixed “pick a template first, then fill fields” model. You write Markdown in the card; the plugin dynamically parses special markers and previews different types. Change the markers, and detection/preview follow.\n\nMany Anki-style plugins pick Q&A / multiple-choice templates first, then fill fixed fields. In Weave the card body is the source of truth—that is dynamic card types.\n\n#weave-tutorial #dynamic-card-types",
+      "tags": [
+        "weave-tutorial",
+        "dynamic-card-types"
+      ]
+    },
+    {
+      "content": "In roughly what order does the plugin detect card types?\n\n---div---\n\n1. Cloze markers (e.g. ==text== or {{c1::text}}) → cloze / fill-in  \n2. Else, at least two lettered options (A. B. C. …) → multiple choice  \n3. Else → Q&A (often split front/back with ---div---)\n\nWrite the markers for the type you want—you do not “choose a template” first.\n\n#weave-tutorial #type-detection",
+      "tags": [
+        "weave-tutorial",
+        "type-detection"
+      ]
+    },
+    {
+      "content": "How do you usually split the front and back of a Q&A card?\n\n---div---\n\nUse ---div---:\n\n- Above: question (shown first in review)  \n- Below: answer and extras  \n\nWithout a separator, the whole text often stays on the front and the back feels empty—“flip to nothing”.\n\n#weave-tutorial #qa-cards",
+      "tags": [
+        "weave-tutorial",
+        "qa-cards"
+      ]
+    },
+    {
+      "content": "Official Weave Q&A sample—paste into a new card to preview.\n\nWhat is the core idea of spaced repetition?\n\n---div---\n\nReview just as you are about to forget, following the forgetting curve.\n\nHint: spaced repetition builds on the Ebbinghaus curve—reviewing near the point of decay strengthens long-term memory.\n\n> Note: ---div--- puts the question above and the answer below; “Hint” is extra text, not another card-type syntax.\n\n#weave-tutorial #official-sample #qa-cards",
+      "tags": [
+        "weave-tutorial",
+        "official-sample",
+        "qa-cards"
+      ]
+    },
+    {
+      "content": "What must a multiple-choice card make clear?\n\n---div---\n\nStem, options, and the correct answer; explanation optional.\n\n- Options: A. B. C. D. with a letter and a period (at least two lines)  \n- Answer: parentheses at the end of the stem, e.g. (B) or (AC); or Answer: B  \n- Explanation: after ---div---  \n\nMissing option lines usually fails MC detection; unmarked answers make scoring unreliable.\n\n#weave-tutorial #multiple-choice",
+      "tags": [
+        "weave-tutorial",
+        "multiple-choice"
+      ]
+    },
+    {
+      "content": "Official Weave multiple-choice sample—paste into a new card to preview.\n\nIn FSRS, what does “S” stand for? (B)\n\nA. Speed\nB. Stability\nC. Strength\nD. Success\n\n---div---\n\nS means Stability—one of FSRS’s core parameters.\n\n> Format note: (B) at the end of the stem is the correct answer; A.–D. are standard options; text under ---div--- is explanation for after flip, not part of option scoring. Swap stem/options the same way for other items.\n\n#weave-tutorial #official-sample #multiple-choice",
+      "tags": [
+        "weave-tutorial",
+        "official-sample",
+        "multiple-choice"
+      ]
+    },
+    {
+      "content": "Which two cloze / fill-in markers are common?\n\n---div---\n\n1. Obsidian highlight: ==hidden text==  \n2. Anki-style: {{c1::hidden text}}; with a hint: {{c1::answer::hint}}  \n\nOnce these markers appear, the type tends to become cloze. If you meant Q&A, do not leave cloze markers behind.\n\n#weave-tutorial #cloze",
+      "tags": [
+        "weave-tutorial",
+        "cloze"
+      ]
+    },
+    {
+      "content": "Official Weave cloze sample—paste into a new card to preview.\n\nFSRS predicts the ==optimal interval== for the next review by computing two core parameters: ==stability== (Stability) and ==difficulty== (Difficulty).\n\nHint: stability reflects how well memory holds; difficulty reflects how hard the material is—together they drive the next review timing.\n\n> Note: text inside == == is hidden during study; English in parentheses is a visible gloss. Keep or edit the hint as you like.\n\n#weave-tutorial #official-sample #cloze",
+      "tags": [
+        "weave-tutorial",
+        "official-sample",
+        "cloze"
+      ]
+    },
+    {
+      "content": "If preview type does not match what you intended, what should you check first?\n\n---div---\n\n1. Meant Q&A but left A. B. option lines → becomes multiple choice  \n2. Meant Q&A but left == == or {{c1::}} → becomes cloze  \n3. Meant multiple choice but used only - lists or checkboxes, no A. B. → often fails MC detection  \n\nClear the stray markers and preview usually catches up immediately.\n\n#weave-tutorial #type-troubleshooting",
+      "tags": [
+        "weave-tutorial",
+        "type-troubleshooting"
+      ]
+    },
+    {
+      "content": "About “dynamic card types”, which statement is correct? (B)\n\nA. You must pick a template in settings or the type will keep changing  \nB. Changing markers in the body changes type detection and preview  \nC. Only cards imported from APKG support dynamic types  \nD. Once saved, the type is locked forever\n\n---div---\n\nWeave treats body markers as the source of truth: change the writing, change the detection.\n\n#weave-tutorial #dynamic-card-types",
+      "tags": [
+        "weave-tutorial",
+        "dynamic-card-types"
+      ]
+    },
+    {
+      "content": "What are common everyday ways to create a card?\n\n---div---\n\n1. Desktop floating “New card” button (toggle in settings)  \n2. Command palette commands for new / selection-based create  \n3. New-card entries on card management, decks, and similar views  \n\nBeginners can start with the floating button; other entries are the same action from different places.\n\n#weave-tutorial #create-entry",
+      "tags": [
+        "weave-tutorial",
+        "create-entry"
+      ]
+    },
+    {
+      "content": "How do you create a card with the desktop floating button?\n\n---div---\n\n1. Click floating “New card”  \n2. Write in the new-card modal (paste an official sample to experiment)  \n3. Confirm the deck and save  \n\nMissing the button: Plugin settings → Basics → enable “Show floating new-card button”.\n\n#weave-tutorial #floating-create",
+      "tags": [
+        "weave-tutorial",
+        "floating-create"
+      ]
+    },
+    {
+      "content": "When is the command palette or an in-view button better than the floating button?\n\n---div---\n\n- You already selected text in a note and want a block-ref card → selection commands are more direct  \n- You are already in card management and want a quick new card → use the page toolbar  \n- On mobile, or you dislike a floating ball → command palette is steadier  \n\nDifferent doors, same goal: open the editor and turn a point into one card.\n\n#weave-tutorial #create-entry",
+      "tags": [
+        "weave-tutorial",
+        "create-entry"
+      ]
+    },
+    {
+      "content": "In the new-card modal, how do you confirm you wrote the type you want?\n\n---div---\n\nWatch preview as you write: add cloze markers → cloze; write A. B. options → choice; split with ---div--- without those markers → Q&A.\n\nWrite the content clearly first, then confirm type via preview—more Weave-like than worrying about “which template”.\n\n#weave-tutorial #card-preview #dynamic-card-types",
+      "tags": [
+        "weave-tutorial",
+        "card-preview",
+        "dynamic-card-types"
+      ]
+    },
+    {
+      "content": "What problem does block-reference card creation mainly solve?\n\n---div---\n\nAlign a deck card with that exact passage in a note: select text → generate a block link → auto-fill the new-card modal. During review you can source-jump to the precise spot.\n\nKeep writing in the source note; cards handle remembering—without shredding the note into flashcard leftovers.\n\n#weave-tutorial #block-ref",
+      "tags": [
+        "weave-tutorial",
+        "block-ref"
+      ]
+    },
+    {
+      "content": "How do you use the command “Create card from selection block embed”?\n\n---div---\n\n1. Select the text to turn into a card in Markdown  \n2. Run “Create card from selection block embed” from the command palette  \n3. The plugin writes a block id and opens the new-card modal  \n4. Confirm the auto-filled block embed; add answer, cloze, or explanation if needed  \n5. Save into a deck  \n\nNo selection prompts you to select first; the source must be Markdown.\n\n#weave-tutorial #block-ref-create",
+      "tags": [
+        "weave-tutorial",
+        "block-ref-create"
+      ]
+    },
+    {
+      "content": "After block-ref create, what does a common embed link look like, and what does it mean?\n\n---div---\n\nCommon form:\n\n![[note-path#^block-id]]\n\nIt aligns the card with the paragraph that carries that block id. You can still write Q&A, cloze, or explanation around it; the embed “anchors” the original text.\n\n#weave-tutorial #block-embed",
+      "tags": [
+        "weave-tutorial",
+        "block-embed"
+      ]
+    },
+    {
+      "content": "Why source during review? Can you delete ^block-id in the source note?\n\n---div---\n\nSourcing returns you to original context so you remember meaning, not only the sentence on the card.\n\n^block-id is the anchor—do not casually delete it, or jumps may coarsen or break. If you only open the whole note without a precise paragraph, the block link probably was never created—still usable, just coarser.\n\n#weave-tutorial #sourcing",
+      "tags": [
+        "weave-tutorial",
+        "sourcing"
+      ]
+    },
+    {
+      "content": "When creating via block ref, which best describes card body vs source text? (B)\n\nA. You must copy the whole passage into the card or you cannot review  \nB. Block embed / sourcing aligns with the source; the card can still add Q&A or cloze  \nC. Once created, the source paragraph is locked by the plugin  \nD. Only multiple-choice cards support block refs\n\n---div---\n\nThe block link handles alignment and jump-back; you can still organize what to remember with dynamic types.\n\n#weave-tutorial #block-ref",
+      "tags": [
+        "weave-tutorial",
+        "block-ref"
+      ]
+    },
+    {
+      "content": "What are formal decks for? Any tip when creating one?\n\n---div---\n\nA formal deck is a “study basket” you create on purpose—cards of one topic studied together.\n\nName is required; tags optional. Prefer decks per course, book, or exam subject—avoid dumping every card into one endless deck.\n\n#weave-tutorial #formal-deck",
+      "tags": [
+        "weave-tutorial",
+        "formal-deck"
+      ]
+    },
+    {
+      "content": "Can one card belong to multiple decks? Why is that useful?\n\n---div---\n\nYes (reference-style membership).\n\nThe same card can sit in “daily review” and “pre-exam sprint” without duplicating the body; edit once, every membership sees the same card.\n\n#weave-tutorial #deck-membership",
+      "tags": [
+        "weave-tutorial",
+        "deck-membership"
+      ]
+    },
+    {
+      "content": "Where does memory-deck study data mainly live? What should sync across devices?\n\n---div---\n\nBy default inside the Vault—often `.wdeck` files under weave/memory/ and similar. They travel with whatever syncs your Vault.\n\nCaches and local state under the plugin directory usually need not sync as study data. For multi-device study, keep Vault decks and related notes consistent first.\n\n#weave-tutorial #data-location #sync",
+      "tags": [
+        "weave-tutorial",
+        "data-location",
+        "sync"
+      ]
+    },
+    {
+      "content": "Is it safe to rename or delete .wdeck / .qbank files casually in a file manager?\n\n---div---\n\nNot unless you understand the consequences—avoid bulk renames or direct deletes.\n\nUse in-plugin deck and data management. If files and internal membership drift, decks may look empty, cards “vanish”, or progress misalign. For backups, copy Weave-related folders in the Vault rather than picking files at random.\n\n#weave-tutorial #data-safety",
+      "tags": [
+        "weave-tutorial",
+        "data-safety"
+      ]
+    },
+    {
+      "content": "What do the four rating buttons mean while studying?\n\n---div---\n\n- **Again**: blank / completely wrong—should return soon  \n- **Hard**: recalled, but with struggle  \n- **Good**: normal recall (most common)  \n- **Easy**: too easy—can wait longer  \n\nThe scheduler uses your choice for the next interval.\n\n#weave-tutorial #review-rating",
+      "tags": [
+        "weave-tutorial",
+        "review-rating"
+      ]
+    },
+    {
+      "content": "Why shouldn’t you keep pressing “Good” when you actually forgot?\n\n---div---\n\nIntervals stretch out; you only discover the gap when you truly needed the review. Forgot → press “Again”—short-term painful, long-term cheaper.\n\nHonestly report whether you recalled **in that moment**; FSRS6 schedules the gap.\n\n#weave-tutorial #review-rating",
+      "tags": [
+        "weave-tutorial",
+        "review-rating"
+      ]
+    },
+    {
+      "content": "What is the difference between new cards and due cards?\n\n---div---\n\n- **New**: first encounter—build an initial impression  \n- **Due**: returned by schedule—check whether you still remember  \n\nOpen a deck and follow the UI; you do not need every algorithm term first.\n\n#weave-tutorial #study-queue",
+      "tags": [
+        "weave-tutorial",
+        "study-queue"
+      ]
+    },
+    {
+      "content": "What if you tap the wrong rating?\n\n---div---\n\nPrefer Undo on the UI (when available) right away so a bad interval is not written into the schedule.\n\nHabit: glance at the next interval after rating; if it looks absurd, undo and re-rate.\n\n#weave-tutorial #undo-rating",
+      "tags": [
+        "weave-tutorial",
+        "undo-rating"
+      ]
+    },
+    {
+      "content": "How does Deck Study differ by default in the main content area vs a sidebar?\n\n---div---\n\n- **Main content** → board / kanban (multi-column; good for overview and grouping)  \n- **Sidebar** → grid of cards (reads better in a narrow pane)  \n\nSame feature adapts to placement—not two unrelated pages. With auto-switch on, dragging back to the center returns to the board.\n\n#weave-tutorial #deck-study #ui-layout",
+      "tags": [
+        "weave-tutorial",
+        "deck-study",
+        "ui-layout"
+      ]
+    },
+    {
+      "content": "Why does Card Management’s top toolbar look different in the content area vs an Obsidian sidebar?\n\n---div---\n\nBecause the two placements serve different mindsets:\n\n- **Content area**: browse, manage, batch-work cards—so the toolbar stays fully expanded.  \n- **Sidebar**: more about seeing “what cards the active document produced”, searching linked cards—so the bar collapses and exposes sidebar-friendly actions.\n\nYou can also treat sidebar card management as an idea inbox: while reading or editing the current Markdown, create a card sourced to that note; turn on “Link to active document” to dynamically see memory cards, quiz-related cards, and ideas already tied to this note.\n\nFewer sidebar buttons means a narrow-pane collapse—not deleted features. Drag the view back to the content area for the full toolkit.\n\n#weave-tutorial #card-management #ui-layout #idea-capture",
+      "tags": [
+        "weave-tutorial",
+        "card-management",
+        "ui-layout",
+        "idea-capture"
+      ]
+    },
+    {
+      "content": "What does “Link to active document” do in Card Management?\n\n---div---\n\nIt filters cards whose sourcing links point at the currently active document.\n\nAs you switch files in the content area—Markdown, Canvas, a book in a reader, etc.—a sidebar grid view auto-filters related cards. You immediately see which cards already exist for the active document.\n\n#weave-tutorial #link-active-document #card-management",
+      "tags": [
+        "weave-tutorial",
+        "link-active-document",
+        "card-management"
+      ]
+    },
+    {
+      "content": "How can you arrange the sidebar to watch “what cards this note has collected” while writing?\n\n---div---\n\nPut Card Management in a left/right sidebar, enable “Link to active document”, and keep writing or reading in the center.\n\nSwitching the active file refilters the sidebar grid; use locate/jump when you need the source. Good for carefully reading a chapter or drafting a long note without missing cards or ideas.\n\n#weave-tutorial #link-active-document #workflow",
+      "tags": [
+        "weave-tutorial",
+        "link-active-document",
+        "workflow"
+      ]
+    },
+    {
+      "content": "Which editor does the plugin use?\n\n---div---\n\nObsidian’s official editor.\n\nThat keeps editing native and helps community plugins that depend on the official editor extend card-editing scenarios (subject to each plugin’s real compatibility).\n\n#weave-tutorial #official-editor",
+      "tags": [
+        "weave-tutorial",
+        "official-editor"
+      ]
+    },
+    {
+      "content": "How does card preview render?\n\n---div---\n\nThrough Obsidian’s official rendering engine.\n\nFormulas, highlights, and common Markdown stay closer to notes; many community plugins that enhance render or look often apply to card preview automatically. Writing a card feels like a short note; viewing it uses the same render stack.\n\n#weave-tutorial #official-render",
+      "tags": [
+        "weave-tutorial",
+        "official-render"
+      ]
+    },
+    {
+      "content": "What is the main difference between memory decks and exam question banks? (B)\n\nA. Only exam banks can source back to notes  \nB. Memory decks emphasize spaced review; exam banks emphasize drilling and quiz checks  \nC. File formats are identical—only UI names differ  \nD. The basic experience cannot use any quiz-related ability\n\n---div---\n\n`.wdeck`-style memory decks serve “remember”; `.qbank`-style banks serve “test yourself”. Document quizzes can also start from Markdown. Full banks and some analytics may be advanced—follow in-plugin labels. For onboarding, get comfortable with memory decks first.\n\n#weave-tutorial #memory-deck #exam-bank",
+      "tags": [
+        "weave-tutorial",
+        "memory-deck",
+        "exam-bank"
+      ]
+    },
+    {
+      "content": "Which analytics charts do memory decks support, and what are they for?\n\n---div---\n\nAll of these target **memory decks** (separate from exam-bank analytics):\n\n- **Retention** (basic): deck retention and recall trends—“how much still sticks”.  \n- **Deck portrait**: a bird’s-eye of composition and status.  \n- **Card counts**: scale and structural change.  \n- **Tag difficulty**: difficulty distribution by tag.  \n- **Load forecast**: whether upcoming review load is too heavy.  \n- **Calibration**: compare ratings vs real recall—too easy/hard grading.  \n- **Review timing**: early / on-time / late review mix.  \n\nLater items are often advanced charts—availability follows in-plugin Basic / Advanced labels.\n\n#weave-tutorial #analytics #memory-deck",
+      "tags": [
+        "weave-tutorial",
+        "analytics",
+        "memory-deck"
+      ]
+    },
+    {
+      "content": "How do formal decks differ from emergent decks?\n\n---div---\n\n- **Formal deck**: you create it and put cards in—clear ownership; good for long-term study by subject/book.  \n- **Emergent deck**: an auto-aggregated study view by **tags and rules**—gather cards temporarily by condition without hand-moving them first.\n\nFormal = “I build the basket and fill it”; emergent = “when rules match, cards gather”. If emergent is advanced, follow in-plugin labels.\n\n#weave-tutorial #formal-deck #emergent-deck",
+      "tags": [
+        "weave-tutorial",
+        "formal-deck",
+        "emergent-deck"
+      ]
+    },
+    {
+      "content": "Which display modes does the memory study UI support, and when?\n\n---div---\n\nOn desktop, switch under study-side “More” (mobile usually stays on a tab):\n\n1. **Tab view**: opens as a normal Obsidian tab—easy to switch beside notes and other plugins.  \n2. **Floating modal**: centered window—does not take the whole screen; good for studying while glancing at notes.  \n3. **Fullscreen overlay (immersive)**: fills the workspace—fewer distractions for a focused due-card session.\n\nThree shells for the same study UI—not three unrelated features.\n\n#weave-tutorial #study-ui #display-modes",
+      "tags": [
+        "weave-tutorial",
+        "study-ui",
+        "display-modes"
+      ]
+    },
+    {
+      "content": "What is “Study ahead” for, and what are the rules?\n\n---div---\n\n**Purpose**: before travel or exams, pull cards that are **not due yet but will be soon**, so they do not pile up later.\n\n**Rules (essentials)**:\n\n- Includes **already due** cards plus cards **due within the next N days**.  \n- “Max study-ahead days” is adjustable in study settings; everyday **1–3 days** is sensible, cap often **5**—avoid repeatedly borrowing future load.  \n- Pick a deck first; if nothing qualifies, you get a “nothing to study ahead” notice.\n\nStudy ahead is bounded prepayment—not “clear every future card at once”.\n\n#weave-tutorial #study-ahead",
+      "tags": [
+        "weave-tutorial",
+        "study-ahead"
+      ]
+    },
+    {
+      "content": "Can you hide labels like “Question” / “Answer” in the memory study UI?\n\n---div---\n\nYes.\n\nOpen the study **side toolbar** → **More** → find something like **Show content labels**, then toggle question/answer (and similar) labels.\n\nTurn off for a cleaner screen; turn on when teaching or checking structure.\n\n#weave-tutorial #study-ui #content-labels",
+      "tags": [
+        "weave-tutorial",
+        "study-ui",
+        "content-labels"
+      ]
+    },
+    {
+      "content": "What does “Recycle” in the memory study side toolbar do?\n\n---div---\n\nRecycle tags the current card (e.g. `#回收` / `#recycle`) and **temporarily removes it from the study queue**.\n\n- The card is not deleted—content remains.  \n- Useful when “this card is poorly written—don’t bother me in review; I’ll fix it later”.  \n- After improving, remove the recycle tag to re-enter study.\n\nRecycle means “park for improvement”, not delete.\n\n#weave-tutorial #recycle #study-ui",
+      "tags": [
+        "回收",
+        "recycle",
+        "weave-tutorial",
+        "study-ui"
+      ]
+    },
+    {
+      "content": "What can you commonly do in the memory study UI?\n\n---div---\n\nIn the side toolbar and related menus (exact UI may vary):\n\n- **Edit / preview** card body  \n- **Delete** card (stronger than recycle)  \n- **Recycle** (park out of queue for later fix)  \n- **Undo** last rating (wrong tap)  \n- **Set reminder** (higher priority after the time)  \n- **Priority / favorite**-style marks (if the UI offers Priority, etc.)  \n- **Adjust deck membership** or study-order options  \n- **Auto-play audio/media** (toggle; first vs all; on card change or when showing answer)  \n- **Source / source-block text**, graph links, card details and timing, etc.  \n\nButtons may live on the main bar or under More; desktop can also switch study display mode.\n\n#weave-tutorial #study-ui #card-actions",
+      "tags": [
+        "weave-tutorial",
+        "study-ui",
+        "card-actions"
+      ]
+    },
+    {
+      "content": "How do you “draw” inside the memory study UI? Does Weave ship its own drawing engine?\n\n---div---\n\nWeave does **not** ship a separate drawing engine—it works with community plugins like **Excalidraw**:\n\n1. Draw in Excalidraw  \n2. Select what you need, group/frame, and create a render link (e.g. via context menu)  \n3. Insert that link into the card document  \n\nWeave shows it with Obsidian’s usual render habits. Install and learn Excalidraw when you need drawings; Weave embeds the link into the study flow.\n\n#weave-tutorial #Excalidraw #study-ui",
+      "tags": [
+        "weave-tutorial",
+        "Excalidraw",
+        "study-ui"
+      ]
+    },
+    {
+      "content": "Can you import Anki cards? What should you watch for?\n\n---div---\n\nYes—import offline packages such as **older Anki** APKG (see in-plugin import entries) to move legacy cards into Weave.\n\nRemember: Weave is built for **Obsidian workflows**, with strong emphasis on **sourcing links** and vault notes. Cards unrelated to this vault and without meaningful sourcing may not be worth bulk-importing—you can migrate content without meaning every card should move.\n\n#weave-tutorial #APKG #anki-import",
+      "tags": [
+        "weave-tutorial",
+        "APKG",
+        "anki-import"
+      ]
+    },
+    {
+      "content": "How do you add a “hint” on a memory-study card?\n\n---div---\n\nHints use **Obsidian footnotes**, not a custom hint language.\n\nIn card Markdown use footnote refs and definitions (e.g. `[^1]` and `[^1]: hint text`). Study/preview show them Obsidian-style—consistent with notes and official rendering.\n\n#weave-tutorial #hints #footnotes",
+      "tags": [
+        "weave-tutorial",
+        "hints",
+        "footnotes"
+      ]
+    },
+    {
+      "content": "Why does Weave still support Anki-style cloze {{c1::}}?\n\n---div---\n\nTwo main reasons:\n\n1. **Habit**: many users already know Anki cloze—lower switching cost.  \n2. **Progressive cloze**: when the plugin detects progressive cloze, it keys off Anki cloze markers and keeps them **separate** from `==highlight==` cloze so two syntaxes do not fight in one progressive pipeline.\n\nEveryday cloze can use either; for progressive cloze, write Anki-numbered cloze (if progressive is advanced, follow in-plugin labels).\n\n#weave-tutorial #cloze #anki-cloze #progressive-cloze",
+      "tags": [
+        "weave-tutorial",
+        "cloze",
+        "anki-cloze",
+        "progressive-cloze"
+      ]
+    },
+    {
+      "content": "Does Weave support mobile?\n\n---div---\n\nYes. Weave Deck targets environments where Obsidian runs: **Windows / macOS / Linux / iOS / Android**.\n\nMobile is tighter: study sessions are usually **tab**-based; deck study and card management lean toward compact grids. The core loop (create, review, source) works on mobile; floating buttons and some display switches follow the real UI.\n\n#weave-tutorial #mobile #cross-platform",
+      "tags": [
+        "weave-tutorial",
+        "mobile",
+        "cross-platform"
+      ]
+    }
+  ]
+}

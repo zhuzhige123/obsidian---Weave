@@ -2,13 +2,19 @@
 
 [简体中文](README.md#中文文档) | [English](README.md#english-documentation) | [Русский](README.ru.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md)
 
-![weave-series-banner-og](https://github.com/user-attachments/assets/a52c0875-9296-4dfd-bf94-114a225f2972)
-
 ![weave-series-banner-trinity](https://github.com/user-attachments/assets/8f748341-bb83-4cf9-b020-d8cd18a2aa92)
 
 ![weave-plugin-banner-deck](https://github.com/user-attachments/assets/2bd06511-2e12-4719-a4ae-64e590040986)
 
 ![weave-plugin-banner-deck](https://github.com/user-attachments/assets/767fd9be-6a9f-454b-8109-55a0b8c1adec)
+
+![QQ20260915-040906-HD](https://github.com/user-attachments/assets/500543b4-f7c8-4cdb-a3f1-d551ff16559f)
+
+![QQ20260915-042426-HD](https://github.com/user-attachments/assets/69004ae6-dd88-447c-ba46-c4dbe73660b7)
+
+![QQ20260915-041103-HD](https://github.com/user-attachments/assets/37f11676-119c-4549-b731-6a356d3ce815)
+
+![QQ20260915-041759-HD](https://github.com/user-attachments/assets/4ee38da8-c6f6-42b5-af7c-3992577cfca4)
 
 **Obsidian에서 「발췌 → 카드 생성 → 복습 → 테스트 → 추적」 학습 루프 완성**
 
@@ -20,16 +26,9 @@
 
 Obsidian Weave 플러그인 시리즈에는 Weave Deck, Weave EPUB Reader, Weave Incremental Reading **세 가지뿐** 포함됩니다. 이 시리즈는 Obsidian 전용으로, Obsidian 내 장기 학습을 위해 탄생했습니다.
 
-Weave Deck은 시리즈의 핵심 플러그인으로, 기능이 가장 풍부하고 적용 범위가 가장 넓습니다. Obsidian의 Markdown 내용을 바탕으로 기억 카드를 생성해 독립적인 deck 파일에 저장하여 원본 노트를 오염시키지 않으면서 중앙 집중 관리할 수 있습니다. 생성된 추적 링크로 원문 맥락으로 돌아가고, 연관 필터로 해당 문서에서 생성된 중요한 기억 카드와 발췌 카드를 표시합니다. 또한 생성한 각종 문제 카드를 시험지로 구성해 테스트할 수 있어, 기억을 더 잘 공고히 하고 내용을 제대로 습득했는지 검증할 수 있습니다.
-
 최소 Obsidian 버전: **1.7.0**
 
-**발췌 → 카드 생성 → FSRS6 복습 → 테스트 검증 → 추적·재구성** 학습 루프를 중심으로 설계되었습니다. 카드와 원본 노트는 분리 저장되며, 복습과 테스트 중에도 원문 맥락으로 돌아갈 수 있습니다.
-
 ### 기본 체험과 프리미엄 지원
-
-플러그인 내 활성화 안내를 기준으로: **기본 체험은 영구 이용 가능**; **프리미엄 지원**은 선택적 일회성 구매입니다. 아래 표는 현재 버전의 기능 구분을 카테고리별로 나열합니다(플러그인 내 「기본 사용 / 고급 기능」 표시와 일치). **분석 차트**는 대상에 따라 두 종류: **기억 덱** (`.wdeck`, FSRS 복습)과 **시험 문제 뱅크** (`.qbank`, 문제 풀이와 테스트) — 서로 혼용하지 않습니다.
-
 
 | 카테고리 | 기능 | 기본 체험 | 프리미엄 지원 |
 | --- | --- | --- | --- |
@@ -52,8 +51,7 @@ Weave Deck은 시리즈의 핵심 플러그인으로, 기능이 가장 풍부하
 | **시험 문제 뱅크** | 문제 뱅크 시스템, 모의 시험 | 🔒 | ✅ |
 | | 문서 퀴즈 (Markdown에서 문제 파싱 후 시험, 통계 기록 가능) | ✅ | ✅ |
 | | **분석 차트 · EWMA 숙련도 곡선** (과거 평균, 목표선, 신뢰도) | 🔒 | ✅ |
-| **관리 뷰** | 테이블 뷰 (필터, 정렬, 일괄 관리) | ✅ | ✅ |
-| | 그리드, masonry, Kanban, 타임라인 뷰 (전체 필터·그룹·정렬)‡ | 🔒 | ✅ |
+| **관리 뷰** | 그리드, masonry, Kanban, 타임라인 뷰 (전체 필터·그룹·정렬) | 🔒 | ✅ |
 | | Markdown 덱 뷰 (`weave-decks` 코드 블록 임베드) | 🔒 | ✅ |
 | | 현재 문서 필터 (사이드바가 활성 노트에 실시간 연동) | 🔒 | ✅ |
 | | 연관 카드 (동일 출처 / 동일 노트 / 연관 네트워크) | 🔒 | ✅ |
@@ -70,16 +68,6 @@ Weave Deck은 시리즈의 핵심 플러그인으로, 기능이 가장 풍부하
 | | 시험 문제 뱅크: `createQuestionBank`, `addCardsToQuestionBank`, 일괄 `importExamQuestions` | 🔒 | ✅ |
 | | 기능 탐지 `getInfo()` (`apiVersion` 및 `capabilities` 필드) | ✅ | ✅ |
 | **독서 워크플로** | 점진적 독서 워크플로 진입점 (Weave 체계; 독립 플러그인 설치 가능) | 🔒 | ✅ |
-
-
-> 범례: ✅ 포함 · 🔒 프리미엄 지원 활성화 필요
->
-> † EPUB CFI 추적은 [Weave EPUB Reader](https://github.com/zhuzhige123/obsidian-weave-reader) 설치가 필요합니다.
->
-> ‡ 미활성화 시 **카드 관리 페이지**의 그리드 뷰, **덱 학습 페이지**의 Kanban 뷰는 **기간 한정 개방**될 수 있습니다; **모바일 카드 관리 페이지**의 타임라인 뷰는 기본 체험에서 이용 가능합니다. 자세한 내용은 플러그인 내 표시를 따르세요.
-
-- **프리미엄 지원 활성화**: 플러그인 설정에서 활성화(이메일 바인딩 검증); **Weave EPUB Reader** 프리미엄 지원이 이미 활성화된 경우 제품 규칙에 따라 라이선스를 상속할 수 있습니다.
-- **일회성 구매**: 한 번 활성화, 장기 사용(자세한 내용은 저장소 내 라이선스 조항), 강제 구독이 아닙니다.
 
 ### 공개 API (서드파티 연동)
 
@@ -156,7 +144,7 @@ Weave는 다른 Obsidian 플러그인에 **WeaveDomainAPI**를 `app.plugins.plug
 
 #### 4. 왜 프리미엄 지원을 제공하나요?
 
-**지속적인 개발을 지원**하여 팀이 장기적으로 복습과 테스트 세부 사항을 다듬을 수 있게 합니다. **기본 체험은 무료**이며 FSRS 복습, 다양한 카드 형태, 추적, AI 카드 생성(자체 API), 테이블 뷰, 문서 퀴즈, 기억 덱 「기억 유지율」 분석, 공개 API 카드/덱 생성·일괄 가져오기, APKG 상호 운용 등 핵심 학습 루프를 포함합니다; 나머지 기억 덱 분석 차트, 그리드 / masonry / Kanban / 타임라인, 이머전트 덱, 시험 문제 뱅크 및 뱅크 분석, Markdown 임베드, 점진적 빈칸 등은 필요에 따라 프리미엄 지원을 활성화하세요.
+**지속적인 개발을 지원**하여 팀이 장기적으로 복습과 테스트 세부 사항을 다듬을 수 있게 합니다. **기본 체험은 무료**이며 FSRS 복습, 다양한 카드 형태, 추적, AI 카드 생성(자체 API), 문서 퀴즈, 기억 덱 「기억 유지율」 분석, 공개 API 카드/덱 생성·일괄 가져오기, APKG 상호 운용 등 핵심 학습 루프를 포함합니다; 나머지 기억 덱 분석 차트, 그리드 / masonry / Kanban / 타임라인, 이머전트 덱, 시험 문제 뱅크 및 뱅크 분석, Markdown 임베드, 점진적 빈칸 등은 필요에 따라 프리미엄 지원을 활성화하세요.
 
 #### 5. 구독인가요, 일회성 구매인가요?
 

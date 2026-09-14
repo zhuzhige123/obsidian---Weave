@@ -2,8 +2,6 @@
 
 [简体中文](#中文文档) | [English](#english-documentation) | [Русский](README.ru.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md)
 
-
-
 ![weave-series-banner-trinity](https://github.com/user-attachments/assets/8f748341-bb83-4cf9-b020-d8cd18a2aa92)
 
 ![weave-plugin-banner-deck](https://github.com/user-attachments/assets/2bd06511-2e12-4719-a4ae-64e590040986)
@@ -18,13 +16,6 @@
 
 ![QQ20260915-041759-HD](https://github.com/user-attachments/assets/4ee38da8-c6f6-42b5-af7c-3992577cfca4)
 
-
-
-
-
-
-
-
 **在 Obsidian 中完成「摘录 → 制卡 → 复习 → 测试 → 溯源」的学习闭环**
 
 **Complete the learning loop in Obsidian: Excerpt → Cards → Review → Test → Trace**
@@ -37,13 +28,9 @@
 
 Obsidian Weave插件系列包含Weave Deck，Weave epub reader，Weave incremental reading三款插件，有且仅有三款。该系列完全服务于obsidian，围绕在obsidian中长期学习而诞生。
 
-
 最低 Obsidian 版本：**1.7.0**
 
-
 ### 基础体验与高级支持
-
-
 
 | 类别 | 能力 | 基础体验 | 高级支持 |
 | --- | --- | --- | --- |
@@ -66,8 +53,7 @@ Obsidian Weave插件系列包含Weave Deck，Weave epub reader，Weave increment
 | **考试题组** | 题库系统、模拟考试 | 🔒 | ✅ |
 | | 文档测验（从 Markdown 解析题目开考，可写回统计） | ✅ | ✅ |
 | | **分析图表 · EWMA 掌握度曲线**（含历史平均、目标线、置信度） | 🔒 | ✅ |
-| **管理视图** | 表格视图（筛选、排序、批量管理） | ✅ | ✅ |
-| | 网格视图、瀑布流布局、看板视图、时间线视图（完整筛选、分组、排序）‡ | 🔒 | ✅ |
+| **管理视图** | 网格视图、瀑布流布局、看板视图、时间线视图（完整筛选、分组、排序） | 🔒 | ✅ |
 | | Markdown 牌组视图（`weave-decks` 代码块嵌入） | 🔒 | ✅ |
 | | 当前文档筛选（侧边栏随活动笔记实时筛选） | 🔒 | ✅ |
 | | 关联卡片（同源 / 同笔记 / 关联网络） | 🔒 | ✅ |
@@ -84,8 +70,6 @@ Obsidian Weave插件系列包含Weave Deck，Weave epub reader，Weave increment
 | | 考试题组：新建 `createQuestionBank`、引用加入 `addCardsToQuestionBank`、批量出卷 `importExamQuestions` | 🔒 | ✅ |
 | | 能力探测 `getInfo()`（`apiVersion` 与 `capabilities` 字段） | ✅ | ✅ |
 | **阅读工作流** | 渐进性阅读工作流入口（Weave 体系；可安装独立插件） | 🔒 | ✅ |
-
-
 
 ### 公开 API（第三方集成）
 
@@ -162,7 +146,7 @@ Weave 向其它 Obsidian 插件开放 **WeaveDomainAPI**，通过 `app.plugins.p
 
 #### 4. 为何提供高级支持？
 
-用于**支持持续开发**，让团队能长期投入、打磨复习与测验细节。**基础体验免费**，已覆盖 FSRS 复习、多形态卡片、溯源、AI 制卡（自备 API）、表格视图、文档测验、记忆牌组「记忆保持率」分析、公开 API 建卡/建组/批量导入、APKG 互通等核心学习闭环；其余记忆牌组分析图表、网格 / 瀑布流 / 看板 / 时间线视图、涌现牌组、考试题组与题组分析、Markdown 嵌入、渐进式挖空等可按需启用高级支持。
+用于**支持持续开发**，让团队能长期投入、打磨复习与测验细节。**基础体验免费**，已覆盖 FSRS 复习、多形态卡片、溯源、AI 制卡（自备 API）、文档测验、记忆牌组「记忆保持率」分析、公开 API 建卡/建组/批量导入、APKG 互通等核心学习闭环；其余记忆牌组分析图表、网格 / 瀑布流 / 看板 / 时间线视图、涌现牌组、考试题组与题组分析、Markdown 嵌入、渐进式挖空等可按需启用高级支持。
 
 #### 5. 是订阅还是买断？
 
@@ -197,16 +181,9 @@ npm run build
 
 The Obsidian Weave plugin series includes **exactly three** plugins: Weave Deck, Weave EPUB Reader, and Weave Incremental Reading. The series is built entirely for Obsidian and designed for long-term learning inside Obsidian.
 
-Weave Deck is the core plugin of the series—with the richest feature set and the widest coverage. It helps you turn Obsidian Markdown into memory cards stored in separate deck files, so source notes stay clean while cards stay centrally managed. Source-trace links jump back to the original context, and related filters show which important memory cards and excerpt cards were created from a given document. You can also assemble question cards into exams for testing—so you can consolidate memory and verify whether you have truly mastered the material.
-
 Minimum Obsidian version: **1.7.0**
 
-Built around the learning loop **excerpt → cards → FSRS6 review → assessment → trace & reorganize**: cards are stored separately from source notes, so you can still jump back to original context during review and testing.
-
 ### Essential experience and Premium support
-
-Aligned with the in-plugin activation prompt: **essential experience stays free**; **Premium support** is optional buy-once. The table below lists current capabilities by category (matching the in-plugin “Essential / Premium” presentation). **Analytics charts** are split by target: **memory decks** (`.wdeck`, FSRS review) and **exam question banks** (`.qbank`, practice and testing)—they are not mixed.
-
 
 | Category | Capability | Essential | Premium |
 | --- | --- | --- | --- |
@@ -229,8 +206,7 @@ Aligned with the in-plugin activation prompt: **essential experience stays free*
 | **Exam question banks** | Question bank system and mock exams | 🔒 | ✅ |
 | | Document quiz (parse questions from Markdown, run a quiz, optionally write stats back) | ✅ | ✅ |
 | | **Analytics · EWMA mastery curve** (historical average, target line, confidence) | 🔒 | ✅ |
-| **Management views** | Table view (filter, sort, bulk manage) | ✅ | ✅ |
-| | Grid, masonry, Kanban, and Timeline views (full filter, group, sort)‡ | 🔒 | ✅ |
+| **Management views** | Grid, masonry, Kanban, and Timeline views (full filter, group, sort) | 🔒 | ✅ |
 | | Markdown deck views (`weave-decks` code block embeds) | 🔒 | ✅ |
 | | Active-document filter (sidebar updates with the active note) | 🔒 | ✅ |
 | | Related cards (same source / same note / relation network) | 🔒 | ✅ |
@@ -247,16 +223,6 @@ Aligned with the in-plugin activation prompt: **essential experience stays free*
 | | Exam banks: `createQuestionBank`, `addCardsToQuestionBank`, bulk `importExamQuestions` | 🔒 | ✅ |
 | | Capability probe `getInfo()` (`apiVersion` and `capabilities`) | ✅ | ✅ |
 | **Reading workflow** | Incremental reading workflow entry (Weave family; optional standalone plugin) | 🔒 | ✅ |
-
-
-> Legend: ✅ included · 🔒 requires Premium support
->
-> † EPUB CFI tracing requires [Weave EPUB Reader](https://github.com/zhuzhige123/obsidian-weave-reader).
->
-> ‡ Without activation, **grid view** on the card-management page and **Kanban view** on the deck-study page may be **limited-time access**; **Timeline view** on mobile card management is available in the essential experience. See in-plugin labels for details.
-
-- **Enable Premium support**: Activate in settings (email binding). EPUB Reader Premium may inherit per product rules.
-- **Buy-once** licensing, not a forced subscription.
 
 ### Public API (third-party integration)
 
@@ -333,7 +299,7 @@ Beyond Deck itself, you can extend reading and card-creation sources with other 
 
 #### 4. Why is Premium support paid?
 
-It **funds ongoing development** so the team can keep polishing review and assessment details. The **essential experience is free**—FSRS review, multiple card types, traceability, AI card creation (your API), table view, document quiz, memory-deck retention analytics, public API create/import/bulk flows, APKG interchange, and the core learning loop. Enable Premium for the remaining memory-deck analytics, grid / masonry / Kanban / Timeline views, emergent decks, exam banks and bank analytics, Markdown embeds, progressive cloze, and more.
+It **funds ongoing development** so the team can keep polishing review and assessment details. The **essential experience is free**—FSRS review, multiple card types, traceability, AI card creation (your API), document quiz, memory-deck retention analytics, public API create/import/bulk flows, APKG interchange, and the core learning loop. Enable Premium for the remaining memory-deck analytics, grid / masonry / Kanban / Timeline views, emergent decks, exam banks and bank analytics, Markdown embeds, progressive cloze, and more.
 
 #### 5. Subscription or buy-once?
 

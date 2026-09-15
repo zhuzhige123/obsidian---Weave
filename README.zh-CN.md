@@ -1,6 +1,6 @@
 # Weave Deck
 
-[简体中文](README.md#中文文档) | [English](README.md#english-documentation) | [Русский](README.ru.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md)
+[English](README.md#english-documentation) | [简体中文](README.md#中文文档) | [Русский](README.ru.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md)
 
 中文内容已合并进主文档 [README.md](README.md#中文文档)。
 

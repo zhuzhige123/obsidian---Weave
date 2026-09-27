@@ -20,15 +20,47 @@
 
 **在 Obsidian 中完成「摘录 → 制卡 → 复习 → 测试 → 溯源」的学习闭环**
 
+**Website / 官网**: [https://zhuzhige123.github.io/obsidian-weave-website/](https://zhuzhige123.github.io/obsidian-weave-website/)
+
 ---
 
 ## English Documentation
 
 ### Introduction
 
+Weave Deck embeds spaced review in Obsidian’s file world: memory cards grow from your notes, stay linked to them, and can jump back to the source when you review. Card creation follows Markdown editing habits—you write in agreed formats; the plugin dynamically parses and previews that structure as different question types, instead of traditional Anki-style field forms. Editing and display rely on Obsidian’s own editor and rendering engine, so many community plugins can extend the same learning loop. Your data stays fully local in your vault.
+
 The Obsidian Weave plugin series includes **exactly three** plugins: Weave Deck, Weave EPUB Reader, and Weave Incremental Reading. The series is built entirely for Obsidian and designed for long-term learning inside Obsidian.
 
 Minimum Obsidian version: **1.7.0**
+
+#### Four principles
+
+1. **Cards from files, linked to files**  
+   Memory cards are generated from Obsidian content and stay associated with their sources—review and notes are not two disconnected worlds.
+
+2. **Traceability: answers with context**  
+   When you need it, jump back to the exact source, so a card keeps the context it came from.
+
+3. **Markdown thinking, not form-field thinking**  
+   You write in Obsidian-native Markdown; the plugin dynamically parses and previews that structure as Q&A, cloze, fill-in, choice, and more.  
+   This is a fundamental departure from Anki’s Front / Back / field-template workflow: you author structure like a note first; parsing turns it into a question.
+
+4. **Expand through Obsidian’s ecosystem, don’t wall it off**  
+   Editing and rendering use Obsidian’s native capabilities (including community renderers). Weave can collaborate with many Obsidian plugins—bringing more content forms into the same memory loop, instead of locking you into a single closed card-creation UI.
+
+#### Data
+
+Learning data stays fully local by default—in your Vault—under your control for backup and sync.
+
+#### How this differs from “like Anki” (brief)
+
+| Traditional Anki approach | Weave Deck approach |
+| --- | --- |
+| Fields / forms / templates | Markdown structure + dynamic parse & preview |
+| Cards often disconnected from source text | Linked files + source jump-back |
+| Relatively independent app boundary | Built on Obsidian’s editor, rendering, and plugin ecosystem |
+| Often a separate library and sync stack | Local Vault first |
 
 ### Essential experience and Premium support
 
@@ -85,10 +117,9 @@ Common capabilities:
 
 See `docs/WEAVE_OFFICIAL_API_GUIDE.md` in the development repository (type source: `src/services/weave-domain/types.ts`).
 
-### Ecosystem (optional)
+### Plugin collaboration (optional)
 
 Beyond Deck itself, you can extend reading and card-creation sources with other plugins in the series and the community.
-
 
 | Plugin / capability | Role |
 | --- | --- |
@@ -160,6 +191,7 @@ It **funds ongoing development** so the team can keep polishing review and asses
 
 Released under [GPL-3.0-or-later](LICENSE).
 
+- **Website**: [Official site](https://zhuzhige123.github.io/obsidian-weave-website/)
 - **Issues**: [GitHub Issues](https://github.com/zhuzhige123/obsidian---Weave/issues)
 - **Licensing**: [tutaoyuan8@outlook.com](mailto:tutaoyuan8@outlook.com)
 
@@ -179,9 +211,39 @@ npm run build
 
 ### 插件介绍
 
-Obsidian Weave插件系列包含Weave Deck，Weave epub reader，Weave incremental reading三款插件，有且仅有三款。该系列完全服务于obsidian，围绕在obsidian中长期学习而诞生。
+Weave Deck 把间隔复习嵌进 Obsidian 的文件世界：从笔记生成关联记忆卡片，复习时可溯源定位回原文。制卡遵循 Markdown 编辑习惯——按约定格式书写，插件动态解析预览为不同题型，而不是传统 Anki 式字段表单。卡片编辑与显示依托 Obsidian 自身的编辑器与渲染引擎，因而能与众多社区插件协同，扩展学习边界。数据完全本地化，留在你的库里。
+
+Obsidian Weave 插件系列包含 **Weave Deck**、**Weave EPUB Reader**、**Weave Incremental Reading** 三款插件，有且仅有三款。该系列完全服务于 Obsidian，围绕在 Obsidian 中长期学习而诞生。
 
 最低 Obsidian 版本：**1.7.0**
+
+#### 四条原则
+
+1. **卡片从文件中来，并与文件关联**  
+   记忆卡片基于 Obsidian 内容生成，与来源保持关联——复习与笔记不是两套断裂的世界。
+
+2. **溯源：不仅记住答案，还能回到语境**  
+   需要时定位跳转到原文，让卡片始终连着它诞生的上下文。
+
+3. **Markdown 思维，而非表单字段思维**  
+   你用契合 Obsidian 的 Markdown 方式书写；插件按特定格式动态解析并预览为问答、挖空、填空、选择等题型。  
+   这与传统 Anki「Front / Back / 字段模板」的工作方式有本质差别：先像写笔记一样写结构，再由解析预览变成题。
+
+4. **站在 Obsidian 生态上扩展，而不是另起围墙**  
+   编辑与渲染走 Obsidian 原生能力（含社区渲染器）。因此插件可以和许多 Obsidian 插件协同——把更多内容形态接进同一条记忆链路，而不是把你锁进单一封闭制卡界面。
+
+#### 数据
+
+学习数据完全本地化，默认在你的 Vault 中，由你决定如何备份与同步。
+
+#### 和「像 Anki」有什么不同（简要）
+
+| 传统 Anki 思路 | Weave Deck 思路 |
+| --- | --- |
+| 字段 / 表单 / 模板 | Markdown 结构 + 动态解析预览 |
+| 卡片常与原文脱节 | 关联文件 + 溯源跳转 |
+| 相对独立的应用边界 | 依托 Obsidian 编辑器、渲染与插件生态 |
+| 常有独立库与同步体系 | 本地 Vault 优先 |
 
 ### 基础体验与高级支持
 
@@ -238,10 +300,9 @@ Weave 向其它 Obsidian 插件开放 **WeaveDomainAPI**，通过 `app.plugins.p
 
 集成说明见开发文档 `docs/WEAVE_OFFICIAL_API_GUIDE.md`（类型真源：`src/services/weave-domain/types.ts`）。
 
-### 生态协同（可选）
+### 插件协同（可选）
 
 除上表所列 Deck 本体能力外，还可与系列内其它插件及社区工具协作，扩展阅读与制卡来源。
-
 
 | 插件 / 能力 | 作用 |
 | --- | --- |
@@ -313,6 +374,7 @@ Weave 向其它 Obsidian 插件开放 **WeaveDomainAPI**，通过 `app.plugins.p
 
 源码基于 [GPL-3.0-or-later](LICENSE) 发布。
 
+- **官网**：[Obsidian Weave 官网](https://zhuzhige123.github.io/obsidian-weave-website/)
 - **Issues**：[GitHub Issues](https://github.com/zhuzhige123/obsidian---Weave/issues)
 - **授权联系**：[tutaoyuan8@outlook.com](mailto:tutaoyuan8@outlook.com)
 

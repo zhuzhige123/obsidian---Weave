@@ -18,7 +18,7 @@
 
 **Complete the learning loop in Obsidian: Excerpt → Cards → Review → Test → Trace**
 
-**在 Obsidian 中完成「摘录 → 制卡 → 复习 → 测试 → 溯源」的学习闭环**
+**在 Obsidian 中完成「摘录 → 制卡 → 复习 → 测试 → 溯源」的学习闭环**  0.0
 
 **Website / 官网**: [https://zhuzhige123.github.io/obsidian-weave-website/](https://zhuzhige123.github.io/obsidian-weave-website/)
 

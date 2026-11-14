@@ -1,6 +1,8 @@
 # Weave Deck（日本語）
 
-[English](README.md#english-documentation) · [简体中文](README.md#中文文档) · [日本語](README.ja.md) · [Website](https://obsidian-weave.xyz/#pricing) · [Tutorials](https://obsidian-weave.xyz/tutorials.html#welcome)
+**文档语言：** [English](README.md#english-documentation) · [简体中文](README.md#中文文档) · [日本語](README.ja.md)
+
+完整介绍、社区渠道与官方教程视频见主文档 **[README.md](README.md)**。
 
 <div align="center">
 

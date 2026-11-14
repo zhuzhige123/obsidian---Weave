@@ -1,12 +1,17 @@
 # Weave Deck
 
-[简体中文](#中文文档) · [English](#english-documentation) · [Русский](README.ru.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Español](README.es.md) · [官网](https://obsidian-weave.xyz/#pricing) · [使用教程](https://obsidian-weave.xyz/tutorials.html#welcome)
+**Weave Deck** 把间隔复习嵌进 Obsidian 的文件世界：从笔记生成关联记忆卡片，复习时可溯源定位回原文。按约定 Markdown 书写，插件动态解析预览为不同题型，而不是传统 Anki 式字段表单。编辑与显示依托 Obsidian 自身编辑器与渲染引擎，因而能与众多社区插件协同。数据完全本地化，留在你的库里。
+
+**文档语言：** [简体中文](#中文文档) · [English](#english-documentation) · [Русский](README.ru.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Español](README.es.md)
+
+| 渠道 | 链接 |
+|------|------|
+| QQ 公开群 | [点击链接加入群聊【Obsidan-Weave系列 反馈群】](https://qm.qq.com/q/TNnSmywgeW) |
+| Discord | [Obsidian-Weave 反馈频道](https://discord.com/channels/1553861810665554023/1553867320311677039) |
+| 官方正式教程视频 | [Bilibili · Weave 系列教程](https://www.bilibili.com/video/BV1Zcs56NE9C/) |
+| 官网与图文教程 | [官网 · 价格](https://obsidian-weave.xyz/#pricing) · [使用教程](https://obsidian-weave.xyz/tutorials.html#welcome) |
 
 <div align="center">
-
-<img src="https://img.shields.io/badge/简体中文-2d333b?style=flat-square" alt="简体中文" /> <img src="https://img.shields.io/badge/English-2d333b?style=flat-square" alt="English" /> <img src="https://img.shields.io/badge/日本語-2d333b?style=flat-square" alt="日本語" /> <img src="https://img.shields.io/badge/한국어-2d333b?style=flat-square" alt="한국어" /> <img src="https://img.shields.io/badge/Русский-2d333b?style=flat-square" alt="Русский" /> <img src="https://img.shields.io/badge/其它语言_后续支持-6b7280?style=flat-square" alt="其它语言后续支持" />
-
-<br/>
 
 ![weave-series-banner-trinity](https://github.com/user-attachments/assets/8f748341-bb83-4cf9-b020-d8cd18a2aa92)
 
@@ -22,6 +27,10 @@
 
 ![QQ20260915-041759-HD](https://github.com/user-attachments/assets/4ee38da8-c6f6-42b5-af7c-3992577cfca4)
 
+<br/>
+
+[![序章｜Weave 官方系列教程](https://i2.hdslb.com/bfs/archive/34dd29f15e73487ff8cc51a7eee4836367cbaf39.jpg)](https://www.bilibili.com/video/BV1Zcs56NE9C/)
+
 </div>
 
 ---
@@ -29,8 +38,6 @@
 ## 中文文档
 
 ### 插件概述
-
-**Weave Deck** 把间隔复习嵌进 Obsidian 的文件世界：从笔记生成关联记忆卡片，复习时可溯源定位回原文。按约定 Markdown 书写，插件动态解析预览为不同题型，而不是传统 Anki 式字段表单。编辑与显示依托 Obsidian 自身编辑器与渲染引擎，因而能与众多社区插件协同。数据完全本地化，留在你的库里。
 
 | 概念 | 说明 |
 |------|------|
@@ -42,7 +49,7 @@
 
 最低 Obsidian 版本：**1.7.0**。桌面端与移动端均可用。
 
-完整教程见官网：[Weave Deck 教程](https://obsidian-weave.xyz/tutorials.html#welcome)。价格见 [官网 · 价格](https://obsidian-weave.xyz/#pricing)。
+社区、官方视频与官网图文教程见文首渠道表。
 
 #### 四条原则
 
@@ -233,8 +240,6 @@ FSRS6 间隔复习、牌组学习、问答 / 挖空 / 填空 / 选择，以及�
 
 | 资源 | 链接 |
 |------|------|
-| 官网 / 价格 | [obsidian-weave.xyz](https://obsidian-weave.xyz/#pricing) |
-| 使用教程 | [tutorials.html · Weave Deck](https://obsidian-weave.xyz/tutorials.html#welcome) |
 | Issues | [GitHub Issues](https://github.com/zhuzhige123/obsidian---Weave/issues) |
 | 许可证 | [GPL-3.0-or-later](LICENSE) |
 
@@ -274,7 +279,7 @@ It is the memory plugin in the **Obsidian Weave series** (exactly three: Weave D
 
 Minimum Obsidian version: **1.7.0**. Desktop and mobile are supported.
 
-Tutorials: [Weave Deck tutorials](https://obsidian-weave.xyz/tutorials.html#welcome). Pricing: [Website · Pricing](https://obsidian-weave.xyz/#pricing).
+See the channel table at the top of this README for tutorials, pricing, QQ, Discord, and the official video.
 
 #### Four principles
 
@@ -465,8 +470,6 @@ Email: tutaoyuan8@outlook.com.
 
 | Resource | Link |
 |----------|------|
-| Website / Pricing | [obsidian-weave.xyz](https://obsidian-weave.xyz/#pricing) |
-| Tutorials | [tutorials.html · Weave Deck](https://obsidian-weave.xyz/tutorials.html#welcome) |
 | Issues | [GitHub Issues](https://github.com/zhuzhige123/obsidian---Weave/issues) |
 | License | [GPL-3.0-or-later](LICENSE) |
 

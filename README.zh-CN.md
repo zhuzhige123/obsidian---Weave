@@ -1,5 +1,5 @@
 # Weave Deck
 
-[English](README.md#english-documentation) · [简体中文](README.md#中文文档) · [官网](https://obsidian-weave.xyz/#pricing) · [使用教程](https://obsidian-weave.xyz/tutorials.html#welcome)
+**文档语言：** [English](README.md#english-documentation) · [简体中文](README.md#中文文档)
 
-中文内容已合并进主文档 **[README.md → 中文文档](README.md#中文文档)**。
+完整介绍、社区渠道与官方教程视频见主文档 **[README.md](README.md)**。

@@ -15,10 +15,46 @@
       "id": "weave-intro-en",
       "name": "Weave Intro Tutorial 1.1",
       "description": "Practical Weave Deck intro 1.1: dynamic card types, sourcing, AI/parse preview, study UI, and common workflows.",
-      "locale": "en",
+      "locale": "en-US",
       "version": "1.1",
       "cardCount": 58,
       "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-en.json"
+    },
+    {
+      "id": "weave-intro-ja",
+      "name": "Weave 入門チュートリアル 1.1",
+      "description": "Weave Deck 入門チュートリアル 1.1：動的な問題タイプ、出典、AI/解析プレビュー、学習UIと主要ワークフロー。",
+      "locale": "ja-JP",
+      "version": "1.1",
+      "cardCount": 58,
+      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-ja.json"
+    },
+    {
+      "id": "weave-intro-ko",
+      "name": "Weave 입문 튜토리얼 1.1",
+      "description": "Weave Deck 입문 튜토리얼 1.1: 동적 문제 유형, 출처, AI/파싱 미리보기, 학습 UI와 주요 워크플로.",
+      "locale": "ko-KR",
+      "version": "1.1",
+      "cardCount": 58,
+      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-ko.json"
+    },
+    {
+      "id": "weave-intro-ru",
+      "name": "Обучающая колода Weave 1.1",
+      "description": "Вводный курс Weave Deck 1.1: динамические типы, источники, AI/parse preview, учебный UI и основные сценарии.",
+      "locale": "ru-RU",
+      "version": "1.1",
+      "cardCount": 58,
+      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-ru.json"
+    },
+    {
+      "id": "weave-intro-es",
+      "name": "Tutorial introductorio de Weave 1.1",
+      "description": "Tutorial introductorio de Weave Deck 1.1: tipos dinámicos, fuentes, IA/parse preview, UI de estudio y flujos habituales.",
+      "locale": "es-ES",
+      "version": "1.1",
+      "cardCount": 58,
+      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-es.json"
     }
   ]
 }

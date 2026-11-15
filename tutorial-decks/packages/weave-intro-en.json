@@ -3,7 +3,7 @@
   "id": "weave-intro-en",
   "name": "Weave Intro Tutorial 1.1",
   "description": "Practical Weave Deck intro 1.1: dynamic card types, sourcing, AI/parse preview, study UI, and common workflows.",
-  "locale": "en",
+  "locale": "en-US",
   "version": "1.1",
   "cards": [
     {

@@ -1,0 +1,445 @@
+{
+  "schemaVersion": 1,
+  "id": "weave-intro-es",
+  "name": "Tutorial introductorio de Weave 1.1",
+  "description": "Tutorial introductorio de Weave Deck 1.1: tipos dinámicos, fuentes, IA/parse preview, UI de estudio y flujos habituales.",
+  "locale": "es-ES",
+  "version": "1.1",
+  "cards": [
+    {
+      "content": "¿Cuál es el ciclo de aprendizaje de Weave Deck?\n\n---div---\n\nExtracto → crear tarjetas → repasar → hacer un test → volver a la fuente.\n\nLleva los puntos clave de las notas o de la lectura a tarjetas de memoria, reforzándolos con repetición espaciada y haciendo tests cuando haga falta; durante el repaso aún puedes saltar al contexto original en lugar de quedarte solo con frases aisladas.\n\n#weave-tutorial #learning-loop",
+      "tags": [
+        "weave-tutorial",
+        "learning-loop"
+      ]
+    },
+    {
+      "content": "¿Por qué guardar las tarjetas de memoria en mazos separados en lugar de escribirlo todo en la nota de origen?\n\n---div---\n\nLas notas de origen siguen para leer y escribir; las tarjetas se gestionan y se programan para repaso por su cuenta. Ambos lados quedan enlazados por el sourcing: salta atrás cuando necesites contexto.\n\nAsí las notas se mantienen limpias mientras reúnes en un solo sitio «lo que hay que recordar».\n\n#weave-tutorial #cards-and-notes",
+      "tags": [
+        "weave-tutorial",
+        "cards-and-notes"
+      ]
+    },
+    {
+      "content": "¿Cuál es la mayor diferencia entre el sistema de tipos de tarjeta de Weave y muchos plugins al estilo Anki?\n\n---div---\n\nWeave no tiene el modelo fijo «elige primero una plantilla y luego rellena campos». Escribes Markdown en la tarjeta; el plugin analiza dinámicamente marcadores especiales y previsualiza tipos distintos. Cambias los marcadores y la detección/vista previa siguen.\n\nMuchos plugins al estilo Anki eligen primero plantillas de pregunta–respuesta / opción múltiple y luego rellenan campos fijos. En Weave el cuerpo de la tarjeta es la fuente de verdad: eso son los tipos de tarjeta dinámicos.\n\n#weave-tutorial #dynamic-card-types",
+      "tags": [
+        "weave-tutorial",
+        "dynamic-card-types"
+      ]
+    },
+    {
+      "content": "¿En qué orden aproximado detecta el plugin los tipos de tarjeta?\n\n---div---\n\n1. Marcadores cloze (p. ej. ==texto== o {{c1::texto}}) → cloze / rellenar huecos  \n2. Si no, al menos dos opciones con letra (A. B. C. …) → opción múltiple  \n3. Si no → pregunta–respuesta (a menudo se separa anverso/reverso con ---div---)\n\nEscribe los marcadores del tipo que quieres: no hace falta «elegir plantilla» primero.\n\n#weave-tutorial #type-detection",
+      "tags": [
+        "weave-tutorial",
+        "type-detection"
+      ]
+    },
+    {
+      "content": "¿Cómo se suele separar el anverso y el reverso de una tarjeta pregunta–respuesta?\n\n---div---\n\nUsa ---div---:\n\n- Arriba: la pregunta (se muestra primero en el repaso)  \n- Abajo: la respuesta y extras  \n\nSin separador, todo el texto suele quedarse en el anverso y el reverso se siente vacío: «giro y no hay nada».\n\n#weave-tutorial #qa-cards",
+      "tags": [
+        "weave-tutorial",
+        "qa-cards"
+      ]
+    },
+    {
+      "content": "Muestra oficial de pregunta–respuesta de Weave: pégala en una tarjeta nueva para previsualizar.\n\n¿Cuál es la idea central de la repetición espaciada?\n\n---div---\n\nRepasar justo cuando estás a punto de olvidar, siguiendo la curva del olvido.\n\nPista: la repetición espaciada se apoya en la curva de Ebbinghaus: repasar cerca del punto de decadencia refuerza la memoria a largo plazo.\n\n> Nota: ---div--- pone la pregunta arriba y la respuesta abajo; «Pista» es texto extra, no otra sintaxis de tipo de tarjeta.\n\n#weave-tutorial #official-sample #qa-cards",
+      "tags": [
+        "weave-tutorial",
+        "official-sample",
+        "qa-cards"
+      ]
+    },
+    {
+      "content": "¿Qué debe quedar claro en una tarjeta de opción múltiple?\n\n---div---\n\nEl enunciado, las opciones y la respuesta correcta; la explicación es opcional.\n\n- Opciones: A. B. C. D. con letra y punto (al menos dos líneas)  \n- Respuesta: paréntesis al final del enunciado, p. ej. (B) o (AC); o Answer: B  \n- Explicación: después de ---div---  \n\nSi faltan líneas de opciones suele fallar la detección MC; sin marcar la respuesta, la puntuación no es fiable.\n\n#weave-tutorial #multiple-choice",
+      "tags": [
+        "weave-tutorial",
+        "multiple-choice"
+      ]
+    },
+    {
+      "content": "Muestra oficial de opción múltiple de Weave: pégala en una tarjeta nueva para previsualizar.\n\nEn FSRS, ¿qué significa la «S»? (B)\n\nA. Speed\nB. Stability\nC. Strength\nD. Success\n\n---div---\n\nS significa Stability (estabilidad): uno de los parámetros centrales de FSRS.\n\n> Nota de formato: (B) al final del enunciado es la respuesta correcta; A.–D. son opciones estándar; el texto bajo ---div--- es explicación tras el volteo, no parte de la puntuación de opciones. Cambia enunciado/opciones igual para otros ítems.\n\n#weave-tutorial #official-sample #multiple-choice",
+      "tags": [
+        "weave-tutorial",
+        "official-sample",
+        "multiple-choice"
+      ]
+    },
+    {
+      "content": "¿Cuáles son los dos marcadores cloze / de huecos más usados?\n\n---div---\n\n1. Resaltado de Obsidian: ==contenido oculto==  \n2. Estilo Anki: {{c1::contenido oculto}}; con pista: {{c1::respuesta::pista}}  \n\nEn cuanto aparecen estos marcadores, el tipo suele resolverse como cloze. Si querías pregunta–respuesta, no dejes marcadores cloze.\n\n#weave-tutorial #cloze",
+      "tags": [
+        "weave-tutorial",
+        "cloze"
+      ]
+    },
+    {
+      "content": "Muestra oficial de cloze de Weave: pégala en una tarjeta nueva para previsualizar.\n\nFSRS predice el ==intervalo óptimo de repaso== calculando dos parámetros centrales de una tarjeta: ==estabilidad== (Stability) y ==dificultad== (Difficulty).\n\nPista: la estabilidad refleja cuán bien se sostiene la memoria; la dificultad, cuán duro es recordar el material. Juntos impulsan el siguiente intervalo.\n\n> Nota: el texto dentro de == == se oculta durante el estudio; el inglés entre paréntesis es comentario visible. Conserva o edita la pista a tu gusto.\n\n#weave-tutorial #official-sample #cloze",
+      "tags": [
+        "weave-tutorial",
+        "official-sample",
+        "cloze"
+      ]
+    },
+    {
+      "content": "Si la vista previa muestra un tipo distinto al que querías, ¿qué debes comprobar primero?\n\n---div---\n\n1. Querías pregunta–respuesta pero dejaste líneas de opciones A. B. → se vuelve opción múltiple  \n2. Querías pregunta–respuesta pero dejaste == == o {{c1::}} → se vuelve cloze  \n3. Querías opción múltiple pero solo usaste listas - o casillas, sin A. B. → a menudo falla la detección MC  \n\nLimpia los marcadores sobrantes y la vista previa suele seguir al momento.\n\n#weave-tutorial #type-troubleshooting",
+      "tags": [
+        "weave-tutorial",
+        "type-troubleshooting"
+      ]
+    },
+    {
+      "content": "¿Qué afirmación sobre los «tipos de tarjeta dinámicos» es correcta? (B)\n\nA. Debes elegir una plantilla en ajustes o el tipo seguirá cambiando  \nB. Cambias los marcadores en el cuerpo y la detección/vista previa siguen  \nC. Solo las tarjetas importadas desde APKG admiten tipos dinámicos  \nD. Una vez guardada, el tipo queda bloqueado para siempre\n\n---div---\n\nWeave trata los marcadores del cuerpo como fuente de verdad: cambias la escritura, cambia la detección.\n\n#weave-tutorial #dynamic-card-types",
+      "tags": [
+        "weave-tutorial",
+        "dynamic-card-types"
+      ]
+    },
+    {
+      "content": "¿Qué es la image occlusion y cuándo ayuda?\n\n---div---\n\nCubres regiones de una imagen en una tarjeta; durante el estudio, primero recuerdas y luego revelas (con «Mostrar respuesta» para todas, o tocando una máscara).\n\nSirve bien para láminas de anatomía, diagramas y etiquetas de mapas: tareas de «¿dónde está?». Para palabras clave de texto, prefiere ==cloze== o {{c1::}}.\n\nCamino inicial: pon una imagen en la tarjeta → coloca el cursor en la línea de la imagen → menú del editor / comando «Weave Deck image occlusion». Detalles: tutoriales del sitio oficial.\n\n#weave-tutorial #image-occlusion",
+      "tags": [
+        "weave-tutorial",
+        "image-occlusion"
+      ]
+    },
+    {
+      "content": "¿Qué es una tarjeta de vocabulario y cómo se suele añadir?\n\n---div---\n\nUna tarjeta centrada en «lema + pronunciación/definición + audio», a menudo con reproducción automática en el repaso.\n\nCamino habitual: instala el plugin de comunidad fingertip translation → consulta una selección → «Add to Weave Deck» en el popup y elige un mazo.\n\nLos valores por defecto US/UK suelen seguir los ajustes de fingertip; en estudio, en «Más», activa «Auto-play media».\n\n#weave-tutorial #vocabulary-cards",
+      "tags": [
+        "weave-tutorial",
+        "vocabulary-cards"
+      ]
+    },
+    {
+      "content": "¿Cuáles son las formas cotidianas de crear una tarjeta?\n\n---div---\n\n1. Botón flotante de escritorio «Nueva tarjeta» (activar en ajustes)  \n2. Paleta de comandos: comandos de crear nueva / a partir de selección  \n3. Entradas de nueva tarjeta en gestión de tarjetas, mazos y UI similar  \n4. En la UI principal «Creación de tarjetas con IA»: chat/generar o parse preview, luego importar  \n5. Importación externa: CSV / APKG legado (etiquetas de menú según el plugin)  \n\nEmpieza por el botón flotante; para material largo o notas ya formateadas, prueba la creación con IA / parse preview.\n\n#weave-tutorial #create-entry-points",
+      "tags": [
+        "weave-tutorial",
+        "create-entry-points"
+      ]
+    },
+    {
+      "content": "¿Cómo creas una tarjeta con el botón flotante de escritorio?\n\n---div---\n\n1. Haz clic en el flotante «Nueva tarjeta»  \n2. Escribe el contenido en el modal (pega una muestra oficial para experimentar)  \n3. Confirma el mazo y guarda  \n\n¿No ves el botón? Ajustes del plugin → Basic → activa «Show floating create button».\n\n#weave-tutorial #floating-create",
+      "tags": [
+        "weave-tutorial",
+        "floating-create"
+      ]
+    },
+    {
+      "content": "¿Qué hace «Pin» arriba del modal de nueva tarjeta?\n\n---div---\n\nCon el pin activado, guardar una tarjeta **no cierra** el modal, así puedes escribir la siguiente de inmediato.\n\nÚtil para una racha de tarjetas sobre un tema, o extractos continuos con PDF++. Desancla cuando no necesites esa racha.\n\n#weave-tutorial #pin #floating-create",
+      "tags": [
+        "weave-tutorial",
+        "pin",
+        "floating-create"
+      ]
+    },
+    {
+      "content": "¿Cuándo es mejor la paleta de comandos o un botón de la UI que el botón flotante?\n\n---div---\n\n- Ya seleccionaste texto en una nota y quieres una tarjeta con block-ref → los comandos de selección son más directos  \n- Ya estás en gestión de tarjetas y quieres una nueva rápida → usa la barra de la página  \n- En móvil, o no te gusta la bola flotante → la paleta de comandos es más estable  \n\nPuertas distintas, mismo objetivo: abrir un editor y convertir un punto en tarjeta.\n\n#weave-tutorial #create-entry-points",
+      "tags": [
+        "weave-tutorial",
+        "create-entry-points"
+      ]
+    },
+    {
+      "content": "En el modal de nueva tarjeta, ¿cómo confirmas que escribiste el tipo que querías?\n\n---div---\n\nMira la vista previa mientras escribes: marcadores cloze → cloze; opciones A. B. → opción múltiple; ---div--- anverso/reverso sin esos marcadores → pregunta–respuesta.\n\nEscribe primero el contenido con claridad y luego confirma el tipo en la vista previa: mejor que preocuparte por «qué plantilla».\n\n#weave-tutorial #card-preview #dynamic-card-types",
+      "tags": [
+        "weave-tutorial",
+        "card-preview",
+        "dynamic-card-types"
+      ]
+    },
+    {
+      "content": "¿Qué problema resuelve la «creación de tarjetas con IA» y en qué se diferencia de las tarjetas nuevas escritas a mano?\n\n---div---\n\nEntrega una nota (o un pasaje) a un modelo para borradores de muchas tarjetas; inspecciona y elige en un área de vista previa, luego importa a un mazo.\n\nLo mejor cuando el material es largo y necesita resumen. Las tarjetas nuevas a mano encajan cuando el punto ya está claro y quieres una tarjeta precisa cada vez.\n\nÁbrelo por el menú superior izquierdo de la UI principal → **AI card creation** (o la entrada del asistente de IA: sigue las etiquetas en pantalla). Configura primero los servicios de IA en ajustes; la generación no estará disponible hasta configurarlos: detalles en ajustes y tutoriales del sitio.\n\n#weave-tutorial #ai-cards",
+      "tags": [
+        "weave-tutorial",
+        "ai-cards"
+      ]
+    },
+    {
+      "content": "¿En qué se diferencia «Parse preview» de «AI card creation»?\n\n---div---\n\n- **Parse preview**: parte cuerpos de tarjeta **ya escritos** de una nota con separadores / plantillas regex, previsualiza y luego importa: **no** hace falta llamar al modelo.  \n- **AI card creation / AI chat**: el modelo **genera** borradores a partir del material; suele necesitar tu propia API (Premium: sigue las etiquetas del plugin).  \n\nAmbos suelen vivir en la misma página «AI card creation» mediante interruptores superiores. Notas ya en formato limpio pregunta–respuesta/cloze → prefiere parse preview; prosa larga que necesita resumen → usa IA.\n\n#weave-tutorial #parse-preview #ai-cards",
+      "tags": [
+        "weave-tutorial",
+        "parse-preview",
+        "ai-cards"
+      ]
+    },
+    {
+      "content": "¿Qué problema resuelve principalmente la creación de tarjetas por block-reference?\n\n---div---\n\nMantener una tarjeta del mazo alineada con un pasaje concreto de la nota: selecciona texto → crea un enlace de bloque → rellena el modal de nueva tarjeta. Durante el repaso puedes saltar a la fuente exactamente ahí.\n\nLas notas siguen para escribir; las tarjetas, para recordar: sin trocear la nota en restos de flashcards.\n\n#weave-tutorial #block-refs",
+      "tags": [
+        "weave-tutorial",
+        "block-refs"
+      ]
+    },
+    {
+      "content": "¿Cómo usas el comando «Create card from selection with block embed»?\n\n---div---\n\n1. Selecciona el texto a convertir en tarjeta en Markdown  \n2. Ejecuta «Create card from selection with block embed» desde la paleta de comandos  \n3. El plugin escribe un block id y abre el modal de nueva tarjeta  \n4. Confirma el block embed autocompletado; añade respuesta, cloze o explicación si hace falta  \n5. Guarda en un mazo  \n\nSin selección → te pedirán seleccionar primero; la fuente debe ser Markdown.\n\n#weave-tutorial #block-ref-create",
+      "tags": [
+        "weave-tutorial",
+        "block-ref-create"
+      ]
+    },
+    {
+      "content": "Tras crear por block-ref, ¿cómo suele verse un embed y qué significa?\n\n---div---\n\nForma habitual:\n\n![[Note path#^blockId]]\n\nVincula la tarjeta al párrafo que tiene ese block id. Aún puedes escribir pregunta–respuesta, cloze o explicación alrededor; el embed «ancla» la fuente.\n\n#weave-tutorial #block-embed",
+      "tags": [
+        "weave-tutorial",
+        "block-embed"
+      ]
+    },
+    {
+      "content": "¿Por qué saltar a la fuente durante el repaso? ¿Puedes borrar ^blockId en la nota de origen?\n\n---div---\n\nEl sourcing te devuelve al contexto original para recordar el significado, no solo la frase de la tarjeta.\n\n^blockId es el ancla: no lo borres a la ligera, o los saltos pueden volverse más toscos o romperse. Si solo abres la nota entera y fallas el párrafo, probablemente el enlace de bloque nunca se creó: sigue siendo usable, solo más grueso.\n\n#weave-tutorial #sourcing",
+      "tags": [
+        "weave-tutorial",
+        "sourcing"
+      ]
+    },
+    {
+      "content": "Además de los block embeds, ¿cómo más puedes añadir una fuente a una tarjeta?\n\n---div---\n\nAl crear/editar una tarjeta, rellena el campo YAML (properties) **we_source** con un enlace de fuente.\n\nValores habituales (compatibilidad según la implementación):\n\n- Enlaces a nota / encabezado / bloque de Obsidian  \n- Enlaces de extracto PDF++  \n- Enlaces de Excalidraw, Weave Reader y material similar  \n- URL externas  \n\nAl guardar, el plugin lo interpreta como sourcing de la tarjeta. Los block embeds encajan cuando «el cuerpo sigue sincronizado con el pasaje de origen»; `we_source` encaja con clips de PDF, posiciones del lector y URL donde un block embed puede no aplicar.\n\n#weave-tutorial #sourcing #we_source",
+      "tags": [
+        "weave-tutorial",
+        "sourcing",
+        "we_source"
+      ]
+    },
+    {
+      "content": "¿Qué describe mejor cuerpo vs fuente al crear desde un block ref? (B)\n\nA. Debes copiar todo el pasaje a la tarjeta o no puedes repasar  \nB. El block embed / sourcing mantiene la alineación; la tarjeta aún puede llevar pregunta–respuesta o cloze  \nC. Una vez convertida en tarjeta, el párrafo de origen queda bloqueado por el plugin  \nD. Solo las tarjetas de opción múltiple admiten block refs\n\n---div---\n\nEl enlace gestiona la alineación y el salto atrás; la tarjeta aún puede organizar lo que hay que recordar con tipos dinámicos.\n\n#weave-tutorial #block-refs",
+      "tags": [
+        "weave-tutorial",
+        "block-refs"
+      ]
+    },
+    {
+      "content": "¿Qué es un mazo formal y hay consejos al crearlo?\n\n---div---\n\nUn mazo formal es una «cesta de estudio» que creas a propósito: las tarjetas de un tema viven juntas.\n\nEl nombre es obligatorio; las etiquetas son opcionales. Prefiere agrupaciones por curso / libro / asignatura de examen en lugar de un mega-mazo interminable.\n\n#weave-tutorial #formal-decks",
+      "tags": [
+        "weave-tutorial",
+        "formal-decks"
+      ]
+    },
+    {
+      "content": "¿Puede una tarjeta pertenecer a varios mazos? ¿Por qué ayuda?\n\n---div---\n\nSí (membresía por referencia).\n\nLa misma tarjeta puede estar en «Repaso diario» y en «Sprint previo al examen» sin duplicar el cuerpo; editas una vez y cada referencia ve la misma tarjeta.\n\n#weave-tutorial #deck-membership",
+      "tags": [
+        "weave-tutorial",
+        "deck-membership"
+      ]
+    },
+    {
+      "content": "¿En qué se diferencian los mazos formales de los mazos emergent?\n\n---div---\n\n- **Formal deck**: lo creas tú y metes tarjetas: propiedad clara, bueno para asignaturas/libros a largo plazo.  \n- **Emergent deck**: una vista de estudio autoarmada por **etiquetas y reglas**, útil para reunir temporalmente tarjetas sin moverlas a mano.\n\nFormal = «yo construyo la cesta»; emergent = «disparan las reglas, las tarjetas se reúnen». Emergent puede ser Premium: sigue las etiquetas del plugin.\n\n#weave-tutorial #formal-decks #emergent-decks",
+      "tags": [
+        "weave-tutorial",
+        "formal-decks",
+        "emergent-decks"
+      ]
+    },
+    {
+      "content": "¿Dónde viven principalmente los datos de estudio de los mazos de memoria? ¿Qué conviene sincronizar entre dispositivos?\n\n---div---\n\nPor defecto dentro del vault: a menudo archivos `.wdeck` bajo weave/memory/, viajando con lo que sincronice el vault.\n\nLas cachés y el estado local bajo el directorio del plugin normalmente no deben tratarse como datos de estudio a sincronizar. Para estudiar en varios dispositivos, mantén primero coherentes los mazos del vault y las notas relacionadas.\n\n#weave-tutorial #data-location #sync",
+      "tags": [
+        "weave-tutorial",
+        "data-location",
+        "sync"
+      ]
+    },
+    {
+      "content": "¿Es seguro renombrar o borrar .wdeck / .qbank en un gestor de archivos?\n\n---div---\n\nNo de forma masiva ni a la ligera, a menos que sepas las consecuencias.\n\nUsa la gestión de mazos y datos dentro del plugin. Si los archivos y la membresía interna se desalinean, los mazos pueden verse vacíos, las tarjetas «desaparecen» o el progreso no cuadra. Para copias de seguridad, copiar carpetas del vault relacionadas con Weave suele ser más seguro que elegir archivos uno a uno.\n\n#weave-tutorial #data-safety",
+      "tags": [
+        "weave-tutorial",
+        "data-safety"
+      ]
+    },
+    {
+      "content": "¿Qué hace aproximadamente «Memory Config» por mazo?\n\n---div---\n\nVincula plantillas/parámetros relacionados con el repaso (p. ej. retención objetivo) a **un mazo de memoria**, en lugar de forzar un solo ajuste para toda la biblioteca.\n\nAbre «Memory Config» desde el menú del mazo o ajustes relacionados del mazo, elige y confirma. Los valores por defecto valen al principio; ajústalos cuando una asignatura sea claramente más difícil/fácil. Los detalles siguen la ayuda del plugin.\n\n#weave-tutorial #memory-config",
+      "tags": [
+        "weave-tutorial",
+        "memory-config"
+      ]
+    },
+    {
+      "content": "¿Cuál es la principal diferencia entre mazos de memoria y bancos de preguntas? (B)\n\nA. Solo los bancos de preguntas pueden volver a las notas  \nB. Los mazos de memoria se centran en el repaso espaciado; los bancos de preguntas, en drills y verificación con test  \nC. Los formatos de archivo son idénticos; solo cambia el nombre en la UI  \nD. La experiencia básica no puede usar ninguna capacidad relacionada con tests\n\n---div---\n\nLos mazos de memoria `.wdeck` sirven para «recordar»; los bancos de preguntas `.qbank`, para «ponerte a prueba». Los tests de documento también pueden analizar Markdown en una sesión. Bancos completos y parte de la analítica pueden ser Premium: sigue las etiquetas; para el onboarding, domina primero los mazos de memoria.\n\n#weave-tutorial #memory-decks #question-banks",
+      "tags": [
+        "weave-tutorial",
+        "memory-decks",
+        "question-banks"
+      ]
+    },
+    {
+      "content": "¿Qué gráficos de analítica admiten los mazos de memoria y para qué?\n\n---div---\n\nTodo esto apunta a **mazos de memoria** (aparte de la analítica de bancos de preguntas):\n\n- **Retention** (básico): tasa de memoria y tendencias de recuerdo: «cuánto aún se sostiene».  \n- **Deck profile**: vista de conjunto de composición/estado.  \n- **Card count**: escala y estructura a lo largo del tiempo.  \n- **Tag difficulty**: distribución de dificultad por etiqueta.  \n- **Load forecast**: si la carga de repaso próxima parece demasiado pesada.  \n- **Calibration**: valoraciones frente al recuerdo real: calificación demasiado fácil/difícil.  \n- **Review timing**: distribución temprano / a tiempo / tarde.  \n\nLos ítems posteriores suelen ser gráficos avanzados: la disponibilidad sigue las etiquetas Basic / Premium del plugin.\n\n#weave-tutorial #analytics #memory-decks",
+      "tags": [
+        "weave-tutorial",
+        "analytics",
+        "memory-decks"
+      ]
+    },
+    {
+      "content": "¿Qué significan los cuatro botones de valoración?\n\n---div---\n\n- **Again**: en blanco / totalmente incorrecto: debería volver pronto  \n- **Hard**: recordado, pero con esfuerzo  \n- **Good**: recuerdo normal (el más habitual)  \n- **Easy**: demasiado fácil: un intervalo más largo está bien  \n\nEl algoritmo programa la siguiente aparición a partir de tu elección.\n\n#weave-tutorial #ratings",
+      "tags": [
+        "weave-tutorial",
+        "ratings"
+      ]
+    },
+    {
+      "content": "¿Por qué no debes seguir pulsando «Good» cuando no recordaste?\n\n---div---\n\nLos intervalos se alargan; solo notas el fallo cuando la tarjeta está realmente due. Usa **Again** cuando fallaste: feo a corto plazo, más barato a largo.\n\nSolo informa si pudiste recordar en ese momento; FSRS6 se ocupa del espaciado.\n\n#weave-tutorial #ratings",
+      "tags": [
+        "weave-tutorial",
+        "ratings"
+      ]
+    },
+    {
+      "content": "¿En qué se diferencian las tarjetas nuevas de las due?\n\n---div---\n\n- **New**: primera exposición, se forma una huella inicial  \n- **Due**: vuelven por el horario, comprueba si aún recuerdas  \n\nAbre un mazo y sigue la UI: no hace falta dominar primero todos los términos del algoritmo.\n\n#weave-tutorial #study-queue",
+      "tags": [
+        "weave-tutorial",
+        "study-queue"
+      ]
+    },
+    {
+      "content": "¿Qué pasa si valoras por error?\n\n---div---\n\nPrefiere Undo en la UI (cuando esté disponible) de inmediato para que un intervalo incorrecto no se escriba en el horario.\n\nHábito: mira el siguiente intervalo predicho tras valorar; si parece absurdo, deshaz y vuelve a valorar.\n\n#weave-tutorial #undo-rating",
+      "tags": [
+        "weave-tutorial",
+        "undo-rating"
+      ]
+    },
+    {
+      "content": "¿Qué modos de visualización de estudio existen y cuándo usar cada uno?\n\n---div---\n\nEn escritorio, cambia bajo «Más» en el lateral de estudio (en móvil suele quedarse en pestaña):\n\n1. **Floating modal** (**predeterminado en escritorio**): ventana centrada, no a pantalla completa: bien mientras miras notas al lado.  \n2. **Tab view**: una pestaña normal de Obsidian, fácil de aparcar junto a otras.  \n3. **Fullscreen overlay (immersive)**: cubre el espacio de trabajo para pasadas concentradas de tarjetas due.\n\nTres envoltorios, una misma UI de estudio. Tu elección se recuerda; vuelve a cambiar bajo «Más» cuando quieras.\n\n#weave-tutorial #study-ui #display-modes",
+      "tags": [
+        "weave-tutorial",
+        "study-ui",
+        "display-modes"
+      ]
+    },
+    {
+      "content": "¿Qué es «Study ahead» y cuáles son las reglas?\n\n---div---\n\n**Uso**: antes de un viaje o exámenes, adelanta tarjetas que **aún no están due pero lo estarán pronto**, para que no se acumulen después.\n\n**Reglas (esenciales)**:\n\n- Incluye tarjetas **ya due** más tarjetas due dentro de una **ventana de días futuros**.  \n- «Max advance days» está en ajustes relacionados con el estudio; en el día a día **1–3 días** es sensato, tope duro **5**, para no pedir prestada demasiada carga futura.  \n- Elige primero un mazo; si no hay nada adelantable, verás un aviso de «no cards to study ahead».\n\nStudy ahead es un préstamo acotado, no «vaciar toda la cola futura».\n\n#weave-tutorial #study-ahead",
+      "tags": [
+        "weave-tutorial",
+        "study-ahead"
+      ]
+    },
+    {
+      "content": "¿Puedes ocultar etiquetas tipo «Question» / «Answer» en la UI de estudio?\n\n---div---\n\nSí.\n\nBarra lateral de estudio → **More** → busca algo como **Show content labels**, luego activa/desactiva las etiquetas de sección pregunta/respuesta.\n\nApágalo para un aspecto más limpio; enciéndelo al enseñar o inspeccionar la estructura.\n\n#weave-tutorial #study-ui #content-labels",
+      "tags": [
+        "weave-tutorial",
+        "study-ui",
+        "content-labels"
+      ]
+    },
+    {
+      "content": "¿Qué hace «Recycle» en la barra lateral de estudio?\n\n---div---\n\nRecycle etiqueta la tarjeta actual (p. ej. `#回收` / `#recycle`) y la **quita temporalmente de la cola de estudio**.\n\n- La tarjeta no se borra; el contenido permanece.  \n- Sirve para «mal escrita: no me molestes en el repaso; la arreglaré luego».  \n- Tras arreglarla, quita la etiqueta recycle para volver a entrar en el estudio.\n\nRecycle significa «aparcar para mejorar», no borrar.\n\n#weave-tutorial #recycle #study-ui",
+      "tags": [
+        "回收",
+        "recycle",
+        "weave-tutorial",
+        "study-ui"
+      ]
+    },
+    {
+      "content": "¿Qué puedes hacer habitualmente dentro de la UI de estudio de memoria?\n\n---div---\n\nLa barra lateral y menús relacionados suelen incluir (sigue la UI en vivo):\n\n- **Edit / preview** del cuerpo de la tarjeta  \n- **Delete** (más permanente que recycle)  \n- **Recycle** (aparcar fuera de la cola para arreglar luego)  \n- **Undo** de la última valoración  \n- **Reminders** (mayor prioridad cuando esté due)  \n- Marcas **Priority / star-like** (si la UI expone Priority)  \n- **Deck membership** u opciones de orden relacionadas  \n- **Auto-play audio/media** (on/off; primera vs todas; al cambiar de tarjeta o al mostrar respuesta)  \n- **Source / source-block text**, detalles de la tarjeta, temporizadores y similares  \n\nLos botones pueden estar en la barra principal o bajo «More»; en escritorio también puedes cambiar el modo de visualización.\n\n#weave-tutorial #study-ui #card-actions",
+      "tags": [
+        "weave-tutorial",
+        "study-ui",
+        "card-actions"
+      ]
+    },
+    {
+      "content": "¿Cómo «dibujas» en el estudio de memoria? ¿Weave trae su propio motor de dibujo?\n\n---div---\n\nWeave **no** trae un motor de dibujo aparte; colabora con **Excalidraw** y plugins de comunidad similares:\n\n1. Dibuja en Excalidraw  \n2. Selecciona lo que necesites; usa acciones contextuales para **agrupar y crear un enlace de render**  \n3. Inserta ese enlace en el documento de la tarjeta  \n\nWeave lo muestra mediante los hábitos de renderizado de Obsidian. Instala y aprende Excalidraw cuando necesites dibujos; Weave embebe el enlace en el flujo de estudio.\n\n#weave-tutorial #excalidraw #study-ui",
+      "tags": [
+        "weave-tutorial",
+        "excalidraw",
+        "study-ui"
+      ]
+    },
+    {
+      "content": "¿Cómo añades una «pista» en una tarjeta durante el estudio de memoria?\n\n---div---\n\nLas pistas usan **notas al pie de Obsidian**, no una sintaxis de hint personalizada.\n\nEscribe referencias y definiciones de notas al pie en el Markdown de la tarjeta (p. ej. `[^1]` y `[^1]: texto de pista`). Estudio/vista previa las muestra al estilo Obsidian: igual que en las notas, a cargo del renderizado oficial.\n\n#weave-tutorial #hints #footnotes",
+      "tags": [
+        "weave-tutorial",
+        "hints",
+        "footnotes"
+      ]
+    },
+    {
+      "content": "¿Por qué Weave sigue admitiendo cloze al estilo Anki {{c1::}}?\n\n---div---\n\nDos razones principales:\n\n1. **Hábito**: muchos usuarios ya conocen el cloze de Anki; reutilizarlo sale más barato.  \n2. **Progressive cloze**: cuando se detecta progressive cloze, el cloze numerado de Anki es la autoridad y se mantiene **separado** del cloze `==highlight==` para que las dos sintaxis no choquen en un mismo pipeline progressive.\n\nEl cloze cotidiano puede usar cualquiera; para progressive cloze, escribe cloze numerado de Anki (progressive puede ser Premium: sigue las etiquetas).\n\n#weave-tutorial #cloze #anki-cloze #progressive-cloze",
+      "tags": [
+        "weave-tutorial",
+        "cloze",
+        "anki-cloze",
+        "progressive-cloze"
+      ]
+    },
+    {
+      "content": "Cuando la vista de estudio del mazo se mueve entre el panel principal y una barra lateral, ¿cómo difiere el diseño por defecto?\n\n---div---\n\n- **Main pane** → kanban (visión general multicolumna)  \n- **Sidebar** → cuadrícula de tarjetas (más estrecha, más fácil de leer)  \n\nMisma función, adaptada a la posición: no son dos páginas sin relación. Con el auto-cambio activado, arrastrar de vuelta al centro vuelve al kanban. Activa/desactiva «auto-switch by position» en ajustes Basic.\n\n#weave-tutorial #deck-study #layout",
+      "tags": [
+        "weave-tutorial",
+        "deck-study",
+        "layout"
+      ]
+    },
+    {
+      "content": "¿Qué vistas son habituales en la gestión de tarjetas y para qué?\n\n---div---\n\nCambia arriba de **Card management** (en móvil pueden usarse puntos de color):\n\n1. **Table**: explorar en masa, buscar/filtrar, ordenar, editar en línea, limpieza por lotes (a menudo el predeterminado).  \n2. **Grid**: escaneo tipo tarjeta de contenido y badges.  \n3. **Kanban**: arrastre por columnas (p. ej. por estado).  \n4. **Timeline**: grupos por fecha dentro de **grid layout** para revisar depósitos recientes (puede ser Premium: sigue las etiquetas).  \n\nEl estudio de mazo pregunta «¿qué mazo?»; la gestión de tarjetas pregunta «¿qué tarjeta?».\n\n#weave-tutorial #card-management #views",
+      "tags": [
+        "weave-tutorial",
+        "card-management",
+        "views"
+      ]
+    },
+    {
+      "content": "¿Por qué la barra superior de gestión de tarjetas se ve distinta en el panel principal frente a una barra lateral de Obsidian?\n\n---div---\n\nLas dos ubicaciones sirven a intenciones distintas:\n\n- **Main pane**: explorar, gestionar, procesar tarjetas: la barra se expande para acciones por lotes/admin.  \n- **Sidebar**: vigilar «qué tarjetas nacieron del documento activo», buscar tarjetas relacionadas: la barra se pliega y deja visibles las herramientas pensadas para la barra lateral.\n\nPuedes tratar la gestión de tarjetas en sidebar como bandeja de inspiración: mientras lees/editas Markdown, crea tarjetas con fuente a esa nota; activa «Filter by active document» para ver tarjetas de memoria, relacionadas con bancos y sparks ya vinculadas a ella.\n\nMenos botones en la sidebar significa plegado de diseño estrecho, no funciones faltantes: arrastra la vista de vuelta al panel principal para la barra completa.\n\n#weave-tutorial #card-management #layout #inspiration",
+      "tags": [
+        "weave-tutorial",
+        "card-management",
+        "layout",
+        "inspiration"
+      ]
+    },
+    {
+      "content": "¿Qué hace «Filter by active document» en la gestión de tarjetas?\n\n---div---\n\nFiltra a las tarjetas cuyos enlaces de sourcing apuntan al documento activo actual.\n\nAl cambiar de archivos en el panel principal —Markdown, Canvas, libros en un lector—, la cuadrícula de la sidebar sigue y muestra tarjetas relacionadas, así ves de inmediato qué existe ya para este documento.\n\n#weave-tutorial #filter-active-document #card-management",
+      "tags": [
+        "weave-tutorial",
+        "filter-active-document",
+        "card-management"
+      ]
+    },
+    {
+      "content": "¿Cómo puedes disponer la barra lateral para escribir una nota mientras ves «qué tarjetas ha generado esta nota»?\n\n---div---\n\nPon la gestión de tarjetas en una barra lateral izquierda/derecha, activa «Filter by active document» y sigue escribiendo o leyendo en el centro.\n\nCambiar el documento activo refresca la cuadrícula de la sidebar; salta a la fuente cuando haga falta. Bien al leer a fondo un capítulo o redactar una nota larga para pillar tarjetas o sparks que falten.\n\n#weave-tutorial #filter-active-document #workflow",
+      "tags": [
+        "weave-tutorial",
+        "filter-active-document",
+        "workflow"
+      ]
+    },
+    {
+      "content": "¿Para qué sirve «Important Schedule»?\n\n---div---\n\nUn centro de la UI principal que reúne planes de estudio, exámenes, lectura y notas en un solo sitio (suele haber calendario arriba y lista abajo).\n\nÚsalo para responder «¿qué hoy?» de un vistazo en lugar de entrar en cada módulo. Los planes de lectura y los arreglos de examen también pueden aparecer aquí. Los detalles siguen la UI en vivo.\n\n#weave-tutorial #important-schedule",
+      "tags": [
+        "weave-tutorial",
+        "important-schedule"
+      ]
+    },
+    {
+      "content": "¿Cómo insertas una vista de estudio de mazo en una nota Markdown normal?\n\n---div---\n\nEn el editor de la nota, clic derecho → **Weave Deck actions** → **Insert deck view** → marca mazos de memoria → inserta.\n\nObtienes un bloque de código `weave-decks`; Reading / Live Preview renderiza tarjetas de mazo clicables. Bien para apuntes de curso, listas de repaso y paneles.\n\nInserta **mazos de memoria**, no bancos de preguntas. Esto es distinto de arrastrar la ventana principal del plugin a una barra lateral.\n\n#weave-tutorial #insert-deck-view",
+      "tags": [
+        "weave-tutorial",
+        "insert-deck-view"
+      ]
+    },
+    {
+      "content": "¿Qué editor usa el plugin?\n\n---div---\n\nEl editor oficial de Obsidian.\n\nAsí se conserva la sensación nativa de edición y muchos plugins de comunidad que dependen del editor oficial pueden ampliar escenarios de edición de tarjetas (la compatibilidad varía según el plugin).\n\n#weave-tutorial #official-editor",
+      "tags": [
+        "weave-tutorial",
+        "official-editor"
+      ]
+    },
+    {
+      "content": "¿Cómo se renderiza la vista previa de la tarjeta?\n\n---div---\n\nEl motor de renderizado oficial de Obsidian.\n\nFórmulas, resaltados y Markdown habitual se quedan más cerca de las notas; muchos plugins de comunidad de render/tema suelen aplicarse automáticamente a la vista previa de tarjetas. Escribir una tarjeta se siente como una nota corta; verla usa la misma pila de render que las notas.\n\n#weave-tutorial #official-render",
+      "tags": [
+        "weave-tutorial",
+        "official-render"
+      ]
+    },
+    {
+      "content": "¿Se pueden importar tarjetas de Anki? ¿Alguna salvedad?\n\n---div---\n\nSí: paquetes Anki APKG legados y CSV (entradas de importación del plugin; algunas pueden ser Premium).\n\nRecuerda que Weave está pensado para **flujos de Obsidian**, con énfasis en **enlaces de fuente** y notas del vault. Las tarjetas ajenas al vault actual y sin sourcing significativo pueden no merecer una importación masiva: migrar contenido ≠ que cada tarjeta merezca un hogar.\n\n#weave-tutorial #apkg #anki-import #csv",
+      "tags": [
+        "weave-tutorial",
+        "apkg",
+        "anki-import",
+        "csv"
+      ]
+    },
+    {
+      "content": "¿Weave admite móvil?\n\n---div---\n\nSí. Weave Deck apunta a entornos donde corre Obsidian: **Windows / macOS / Linux / iOS / Android**.\n\nEn móvil es más estrecho: las sesiones de estudio suelen ser **pestañas**; el estudio de mazos y la gestión de tarjetas tienden a cuadrículas compactas. El ciclo central (crear, repasar, fuente) funciona en móvil; los botones flotantes solo de escritorio y algunos cambios de visualización siguen la UI en vivo.\n\n#weave-tutorial #mobile #cross-platform",
+      "tags": [
+        "weave-tutorial",
+        "mobile",
+        "cross-platform"
+      ]
+    }
+  ]
+}

@@ -5,16 +5,30 @@
 托管位置（推荐）：Weave 公开仓根目录 `tutorial-decks/`  
 仓库：https://github.com/zhuzhige123/obsidian---Weave
 
+## 语言（与插件 SupportedLanguage 对齐）
+
+| locale | 牌组显示名 | 包 id |
+| --- | --- | --- |
+| zh-CN | Weave 入门教程 1.1 | weave-intro-zh |
+| en-US | Weave Intro Tutorial 1.1 | weave-intro-en |
+| ja-JP | Weave 入門チュートリアル 1.1 | weave-intro-ja |
+| ko-KR | Weave 입문 튜토리얼 1.1 | weave-intro-ko |
+| ru-RU | Обучающая колода Weave 1.1 | weave-intro-ru |
+| es-ES | Tutorial introductorio de Weave 1.1 | weave-intro-es |
+
 ## 文件
 
 - `catalog.json`：目录列表
-- `packages/weave-intro-zh.json`：简体入门教程 **1.1**
-- `packages/weave-intro-en.json`：英文入门教程 **1.1**
+- `packages/weave-intro-*.json`：各语言入门教程 **1.1**（约 58 张）
 
-牌组显示名带版本号（如 `Weave 入门教程 1.1`）。文稿真源：
+文稿真源：
 
 - `../Weave-Deck-新手教程文稿.md`
 - `../Weave-Deck-intro-tutorial-en.md`
+- `../Weave-Deck-intro-tutorial-ja.md`
+- `../Weave-Deck-intro-tutorial-ko.md`
+- `../Weave-Deck-intro-tutorial-ru.md`
+- `../Weave-Deck-intro-tutorial-es.md`
 
 ## 重新生成
 
@@ -31,4 +45,4 @@ node 10-Project-Weave\docs\tutorial-deck\build-remote-package.cjs
 2. **GitHub raw（回退）**  
    `https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/catalog.json`
 
-内容真源仍在 GitHub；用户端默认走 CDN，以降低中国大陆等地区访问 raw.githubusercontent.com 的不稳定问题。
+内容真源仍在 GitHub；用户端默认走 CDN。

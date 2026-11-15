@@ -1,0 +1,445 @@
+{
+  "schemaVersion": 1,
+  "id": "weave-intro-ja",
+  "name": "Weave 入門チュートリアル 1.1",
+  "description": "Weave Deck 入門チュートリアル 1.1：動的な問題タイプ、出典、AI/解析プレビュー、学習UIと主要ワークフロー。",
+  "locale": "ja-JP",
+  "version": "1.1",
+  "cards": [
+    {
+      "content": "Weave Deck の学習ループとは？\n\n---div---\n\n抜粋 → カード作成 → 復習 → クイズ → 出典へ戻る。\n\nノートや読書から要点を記憶カードにし、間隔反復で定着させ、必要ならクイズ；復習中でも元の文脈へ戻れるので、孤立した一文だけを覚えずに済む。\n\n#weave-tutorial #learning-loop",
+      "tags": [
+        "weave-tutorial",
+        "learning-loop"
+      ]
+    },
+    {
+      "content": "なぜソースノートに全部書かず、記憶カードを別デッキに置くのか？\n\n---div---\n\nソースノートは読み書き用；カードは管理と復習スケジュール専用。双方は出典でつながり、文脈が必要ならすぐ戻れる。\n\nノートはきれいなまま、「覚えること」だけを一か所に集められる。\n\n#weave-tutorial #cards-and-notes",
+      "tags": [
+        "weave-tutorial",
+        "cards-and-notes"
+      ]
+    },
+    {
+      "content": "Weave のカード種別システムと、多くの Anki 系プラグインとの最大の違いは？\n\n---div---\n\nWeave に「先にテンプレを選んで欄を埋める」固定モデルはない。カードに Markdown を書き、プラグインが特殊マーカーを動的に解析して種別をプレビューする。マーカーを変えれば検出／プレビューも追従する。\n\n多くの Anki 系は先に Q&A／選択問題テンプレを選び、固定欄を埋める。Weave ではカード本文が真実の源—それが動的カード種別。\n\n#weave-tutorial #dynamic-card-types",
+      "tags": [
+        "weave-tutorial",
+        "dynamic-card-types"
+      ]
+    },
+    {
+      "content": "プラグインはだいたいどの順でカード種別を検出するか？\n\n---div---\n\n1. 穴埋めマーカー（例: ==text== や {{c1::text}}）→ 穴埋め／記入  \n2. それ以外で、文字付き選択肢が2つ以上（A. B. C. …）→ 選択問題  \n3. それ以外 → Q&A（多くは ---div--- で表／裏を分割）\n\n欲しい種別に合わせてマーカーを書く—先に「テンプレを選ぶ」必要はない。\n\n#weave-tutorial #type-detection",
+      "tags": [
+        "weave-tutorial",
+        "type-detection"
+      ]
+    },
+    {
+      "content": "Q&A カードの表と裏は通常どう分けるか？\n\n---div---\n\n---div--- を使う:\n\n- 上: 質問（復習で先に表示）  \n- 下: 答えと補足  \n\n区切りがないと全文が表に残り、裏が空に感じやすい—「めくっても何もない」。\n\n#weave-tutorial #qa-cards",
+      "tags": [
+        "weave-tutorial",
+        "qa-cards"
+      ]
+    },
+    {
+      "content": "公式 Weave Q&A サンプル—新しいカードに貼ってプレビュー。\n\n間隔反復の核心アイデアは？\n\n---div---\n\n忘却曲線に沿い、忘れかけたタイミングで復習する。\n\nヒント: 間隔反復はエビングハウスの曲線に基づき、減衰点の近くで復習すると長期記憶が強まる。\n\n> 注: ---div--- は上を質問・下を答えにする；「ヒント」は補足文であり、別のカード種別構文ではない。\n\n#weave-tutorial #official-sample #qa-cards",
+      "tags": [
+        "weave-tutorial",
+        "official-sample",
+        "qa-cards"
+      ]
+    },
+    {
+      "content": "選択問題カードで明確にすべきことは？\n\n---div---\n\n問題文、選択肢、正解；解説は任意。\n\n- 選択肢: A. B. C. D. のように文字＋ピリオド（少なくとも2行）  \n- 正解: 問題文末の括弧、例 (B) や (AC)；または Answer: B  \n- 解説: ---div--- の後  \n\n選択肢行がないと MC 検出に失敗しやすく、正解未記入だと採点が不安定になる。\n\n#weave-tutorial #multiple-choice",
+      "tags": [
+        "weave-tutorial",
+        "multiple-choice"
+      ]
+    },
+    {
+      "content": "公式 Weave 選択問題サンプル—新しいカードに貼ってプレビュー。\n\nFSRS で「S」は何を指す？ (B)\n\nA. Speed\nB. Stability\nC. Strength\nD. Success\n\n---div---\n\nS は Stability（安定性）—FSRS の核心パラメータの一つ。\n\n> 書式注: 問題文末の (B) が正解；A.–D. は標準選択肢；---div--- 下の文はめくった後の解説で、選択肢採点には含まれない。他の問題も問題文／選択肢を同様に差し替える。\n\n#weave-tutorial #official-sample #multiple-choice",
+      "tags": [
+        "weave-tutorial",
+        "official-sample",
+        "multiple-choice"
+      ]
+    },
+    {
+      "content": "よく使う穴埋め／記入マーカーはどれか？\n\n---div---\n\n1. Obsidian ハイライト: ==hidden content==  \n2. Anki 風: {{c1::hidden content}}；ヒント付き: {{c1::answer::hint}}  \n\nこれらのマーカーが出ると種別は穴埋めになりやすい。Q&A のつもりなら穴埋めマーカーを残さない。\n\n#weave-tutorial #cloze",
+      "tags": [
+        "weave-tutorial",
+        "cloze"
+      ]
+    },
+    {
+      "content": "公式 Weave 穴埋めサンプル—新しいカードに貼ってプレビュー。\n\nFSRS はカードの二つの核心パラメータ ==stability==（Stability）と ==difficulty==（Difficulty）を計算し、==optimal review interval== を予測する。\n\nヒント: 安定性は記憶の持ち具合、難易度は覚えにくさを表す。二つが次の間隔を決める。\n\n> 注: == == 内のテキストは学習中に隠れる；括弧内の英語は見える解説。ヒントは残しても編集してもよい。\n\n#weave-tutorial #official-sample #cloze",
+      "tags": [
+        "weave-tutorial",
+        "official-sample",
+        "cloze"
+      ]
+    },
+    {
+      "content": "プレビューの種別が意図と違うとき、まず何を確認するか？\n\n---div---\n\n1. Q&A のつもりなのに A. B. 選択肢行が残っている → 選択問題になる  \n2. Q&A のつもりなのに == == や {{c1::}} が残っている → 穴埋めになる  \n3. 選択問題のつもりなのに - リストやチェックボックスだけで A. B. がない → MC 検出に失敗しやすい  \n\n余分なマーカーを消すと、プレビューはすぐ追従することが多い。\n\n#weave-tutorial #type-troubleshooting",
+      "tags": [
+        "weave-tutorial",
+        "type-troubleshooting"
+      ]
+    },
+    {
+      "content": "「動的カード種別」について正しいのはどれ？ (B)\n\nA. 設定でテンプレを選ばないと種別がずっと変わる  \nB. 本文のマーカーを変えれば検出／プレビューが追従する  \nC. APKG から取り込んだカードだけが動的種別対応  \nD. 一度保存したら種別は永久に固定される\n\n---div---\n\nWeave は本文マーカーを真実の源とする: 書き方を変えれば検出も変わる。\n\n#weave-tutorial #dynamic-card-types",
+      "tags": [
+        "weave-tutorial",
+        "dynamic-card-types"
+      ]
+    },
+    {
+      "content": "画像遮蔽とは何か、いつ役立つか？\n\n---div---\n\nカード上の画像の領域を覆い、学習中は先に想起し、その後で表示する（全部「答えを表示」、またはマスクを一つタップ）。\n\n解剖図、図表、地図ラベルなど「どこにある？」課題に向く。テキストのキーワードなら ==cloze== や {{c1::}} を優先。\n\n始め方: カードに画像を置く → 画像行にカーソル → エディタメニュー／コマンド「Weave Deck image occlusion」。詳細は公式サイトのチュートリアル。\n\n#weave-tutorial #image-occlusion",
+      "tags": [
+        "weave-tutorial",
+        "image-occlusion"
+      ]
+    },
+    {
+      "content": "単語カードとは何か、どう追加することが多いか？\n\n---div---\n\n「見出し語＋発音／定義＋音声」を軸にしたカードで、復習中に自動再生することも多い。\n\nよくある経路: コミュニティプラグイン fingertip translation を入れ → 選択して調べる → ポップアップの「Add to Weave Deck」でデッキを選ぶ。\n\n米／英デフォルトは通常 fingertip 設定に従う；学習の「More」で「Auto-play media」を有効にする。\n\n#weave-tutorial #vocabulary-cards",
+      "tags": [
+        "weave-tutorial",
+        "vocabulary-cards"
+      ]
+    },
+    {
+      "content": "日常的なカード作成の方法は？\n\n---div---\n\n1. デスクトップのフローティング「New card」ボタン（設定で切替）  \n2. コマンドパレット: 新規／選択ベースの作成コマンド  \n3. カード管理・デッキなど UI 上の新規カード入口  \n4. メイン UI「AI card creation」: チャット／生成または解析プレビュー後に取り込み  \n5. 外部取り込み: CSV／レガシー APKG（プラグイン内のメニュー表示に従う）  \n\nまずはフローティングボタン；長い素材や既に整形済みのノートなら AI カード作成／解析プレビューを試す。\n\n#weave-tutorial #create-entry-points",
+      "tags": [
+        "weave-tutorial",
+        "create-entry-points"
+      ]
+    },
+    {
+      "content": "デスクトップのフローティングボタンでカードを作る手順は？\n\n---div---\n\n1. フローティング「New card」をクリック  \n2. モーダルに内容を書く（公式サンプルを貼って試せる）  \n3. デッキを確認して保存  \n\nボタンが見えない？ プラグイン設定 → Basic → 「Show floating create button」をオン。\n\n#weave-tutorial #floating-create",
+      "tags": [
+        "weave-tutorial",
+        "floating-create"
+      ]
+    },
+    {
+      "content": "新規カードモーダル上部の「Pin」は何をするか？\n\n---div---\n\nピンオンだと、保存してもモーダルが**閉じない**ので、すぐ次のカードを書ける。\n\n同じテーマで一気に作るときや、PDF++ で連続抜粋するときに便利。連続が不要ならピンを外す。\n\n#weave-tutorial #pin #floating-create",
+      "tags": [
+        "weave-tutorial",
+        "pin",
+        "floating-create"
+      ]
+    },
+    {
+      "content": "フローティングボタンより、コマンドパレットや UI 内ボタンが向くのはいつ？\n\n---div---\n\n- ノートで既にテキストを選び、ブロック参照カードにしたい → 選択コマンドの方が直接的  \n- 既にカード管理にいて素早く新規したい → ページのツールバー  \n- モバイル、またはフローティング球が嫌い → コマンドパレットの方が安定  \n\n入口は違っても目標は同じ: エディタを開き、要点をカードにする。\n\n#weave-tutorial #create-entry-points",
+      "tags": [
+        "weave-tutorial",
+        "create-entry-points"
+      ]
+    },
+    {
+      "content": "新規カードモーダルで、意図した種別になっているかどう確認するか？\n\n---div---\n\n書きながらプレビューを見る: 穴埋めマーカー → 穴埋め；A. B. 選択肢 → 選択問題；それらがなく ---div--- で表／裏 → Q&A。\n\nまず内容をはっきり書き、プレビューで種別を確認する—「どのテンプレか」で悩むより良い。\n\n#weave-tutorial #card-preview #dynamic-card-types",
+      "tags": [
+        "weave-tutorial",
+        "card-preview",
+        "dynamic-card-types"
+      ]
+    },
+    {
+      "content": "「AI card creation」は何を解決し、手書きの新規カードとどう違うか？\n\n---div---\n\nノート（または一節）をモデルに渡し、多数のカード下書きを作らせる；プレビュー領域で確認・選んでデッキに取り込む。\n\n長い素材を要約したいときに最適。要点が既に明確で、一枚ずつ精密に作りたいときは手書きが合う。\n\n開き方: メイン UI 左上メニュー → **AI card creation**（または AI アシスタント入口—画面表示に従う）。先に設定で AI サービスを構成；未設定だと生成は使えない—詳細は設定と公式チュートリアル。\n\n#weave-tutorial #ai-cards",
+      "tags": [
+        "weave-tutorial",
+        "ai-cards"
+      ]
+    },
+    {
+      "content": "「Parse preview」は「AI card creation」とどう違うか？\n\n---div---\n\n- **Parse preview**: ノート内の**既に書かれた**カード本文を区切り／正規表現テンプレで分割し、プレビューしてから取り込む—モデル呼び出しは**不要**。  \n- **AI card creation / AI chat**: モデルが素材から下書きを**生成**；通常は自分の API が必要（Premium—プラグイン内表示に従う）。  \n\nどちらも同じ「AI card creation」ページの上部切替に多い。きれいに Q&A／穴埋め済みのノート → 解析プレビュー優先；要約が必要な長い散文 → AI。\n\n#weave-tutorial #parse-preview #ai-cards",
+      "tags": [
+        "weave-tutorial",
+        "parse-preview",
+        "ai-cards"
+      ]
+    },
+    {
+      "content": "ブロック参照でのカード作成が主に解決する問題は？\n\n---div---\n\nデッキのカードをノートの特定箇所と揃え続ける: テキスト選択 → ブロックリンク作成 → 新規カードモーダルに流し込む。復習中に出典ジャンプで正確な場所へ戻れる。\n\nノートは書く場、カードは覚える場—ノートをフラッシュカードの破片に切り刻まない。\n\n#weave-tutorial #block-refs",
+      "tags": [
+        "weave-tutorial",
+        "block-refs"
+      ]
+    },
+    {
+      "content": "コマンド「Create card from selection with block embed」の使い方は？\n\n---div---\n\n1. Markdown でカードにしたいテキストを選択  \n2. コマンドパレットから「Create card from selection with block embed」を実行  \n3. プラグインがブロック id を書き、新規カードモーダルを開く  \n4. 自動入力されたブロック埋め込みを確認；必要なら答え・穴埋め・解説を追加  \n5. デッキに保存  \n\n選択なし → 先に選ぶよう促される；ソースは Markdown である必要がある。\n\n#weave-tutorial #block-ref-create",
+      "tags": [
+        "weave-tutorial",
+        "block-ref-create"
+      ]
+    },
+    {
+      "content": "ブロック参照作成後、典型的な埋め込みはどんな形で、何を意味するか？\n\n---div---\n\nよくある形:\n\n![[Note path#^blockId]]\n\nそのブロック id を持つ段落にカードを結びつける。その周りに Q&A・穴埋め・解説を書いてもよい；埋め込みが出典を「錨留め」する。\n\n#weave-tutorial #block-embed",
+      "tags": [
+        "weave-tutorial",
+        "block-embed"
+      ]
+    },
+    {
+      "content": "復習中に出典ジャンプする理由は？ソースノートの ^blockId を消してよいか？\n\n---div---\n\n出典は元の文脈へ戻し、カード上の一文だけでなく意味を思い出させる。\n\n^blockId は錨—不用意に消すとジャンプが粗くなったり壊れる。ノート全体だけ開けて段落に届かないなら、ブロックリンクが作られていなかった可能性が高い—使えるが粗い。\n\n#weave-tutorial #sourcing",
+      "tags": [
+        "weave-tutorial",
+        "sourcing"
+      ]
+    },
+    {
+      "content": "ブロック埋め込み以外で、カードに出典を付ける方法は？\n\n---div---\n\nカード作成／編集時、YAML（プロパティ）欄 **we_source** に出典リンクを入れる。\n\nよくある値（実装どおりの互換）:\n\n- Obsidian ノート／見出し／ブロックリンク  \n- PDF++ 抜粋リンク  \n- Excalidraw、Weave Reader などの素材リンク  \n- 外部 URL  \n\n保存時、プラグインがこれをカード出典に解析する。ブロック埋め込みは「本文がソース箇所と同期し続ける」向き；`we_source` はブロック埋め込みが向かない PDF クリップ、リーダー位置、URL 向き。\n\n#weave-tutorial #sourcing #we_source",
+      "tags": [
+        "weave-tutorial",
+        "sourcing",
+        "we_source"
+      ]
+    },
+    {
+      "content": "ブロック参照から作るとき、本文と出典の関係を最もよく表すのは？ (B)\n\nA. 全文をカードにコピーしないと復習できない  \nB. ブロック埋め込み／出典が揃えを保ち、カードにはまだ Q&A や穴埋めを書ける  \nC. カード化した後、ソース段落はプラグインがロックする  \nD. 選択問題だけがブロック参照対応\n\n---div---\n\nリンクが揃えとジャンプを担い、カードは動的種別で覚える内容を整理できる。\n\n#weave-tutorial #block-refs",
+      "tags": [
+        "weave-tutorial",
+        "block-refs"
+      ]
+    },
+    {
+      "content": "正式デッキとは何か、作るときのコツは？\n\n---div---\n\n正式デッキは意図して作る「学習のかご」—一つのテーマのカードをまとめる。\n\n名前は必須、タグは任意。一つの巨大デッキより、コース／本／試験科目ごとのまとまりを優先。\n\n#weave-tutorial #formal-decks",
+      "tags": [
+        "weave-tutorial",
+        "formal-decks"
+      ]
+    },
+    {
+      "content": "1枚のカードは複数デッキに所属できるか？なぜ役立つか？\n\n---div---\n\nできる（参照所属）。\n\n同じカードを「日常復習」と「試験直前スプリント」に置け、本文は複製しない；一度編集すればすべての参照が同じカードを見る。\n\n#weave-tutorial #deck-membership",
+      "tags": [
+        "weave-tutorial",
+        "deck-membership"
+      ]
+    },
+    {
+      "content": "正式デッキと創発デッキの違いは？\n\n---div---\n\n- **正式デッキ**: 自分で作りカードを入れる—所有が明確、長期の科目／本向き。  \n- **創発デッキ**: **タグとルール**で自動組み立てる学習ビュー、手で移さず一時的に集める向き。  \n\n正式＝「かごを自分で組む」；創発＝「ルールが発火しカードが集まる」。創発は Premium の場合あり—プラグイン内表示に従う。\n\n#weave-tutorial #formal-decks #emergent-decks",
+      "tags": [
+        "weave-tutorial",
+        "formal-decks",
+        "emergent-decks"
+      ]
+    },
+    {
+      "content": "記憶デッキの学習データは主にどこにあり、デバイス間で何を同期すべきか？\n\n---div---\n\n既定ではボルト内—よくあるのは weave/memory/ 下の `.wdeck` ファイルで、ボルトを同期するものに乗って移動する。\n\nプラグインディレクトリ下のキャッシュやローカル状態は、通常は同期すべき学習データと見なさない。複数デバイスで学ぶなら、まずボルトのデッキと関連ノートの一貫性を保つ。\n\n#weave-tutorial #data-location #sync",
+      "tags": [
+        "weave-tutorial",
+        "data-location",
+        "sync"
+      ]
+    },
+    {
+      "content": "ファイルマネージャで .wdeck / .qbank を改名・削除してよいか？\n\n---div---\n\nまとめて、また軽々しくはしない—結果を理解している場合を除く。\n\nプラグイン内のデッキ／データ管理を使う。ファイルと内部所属がずれると、デッキが空に見えたり、カードが「消えた」ように見えたり、進捗が食い違う。バックアップは、ファイルを一つずつ選ぶより Weave 関連のボルトフォルダをコピーする方が通常安全。\n\n#weave-tutorial #data-safety",
+      "tags": [
+        "weave-tutorial",
+        "data-safety"
+      ]
+    },
+    {
+      "content": "デッキごとの「Memory Config」はだいたい何をするか？\n\n---div---\n\n復習関連のテンプレ／パラメータ（例: 目標保持率）を**一つの記憶デッキ**に結び、ライブラリ全体で一つの設定を強制しない。\n\nデッキメニューや関連設定から「Memory Config」を開き、選んで確定。最初は既定でよく、科目が明らかに難／易なら調整。詳細はプラグイン内ヘルプに従う。\n\n#weave-tutorial #memory-config",
+      "tags": [
+        "weave-tutorial",
+        "memory-config"
+      ]
+    },
+    {
+      "content": "記憶デッキと問題集の主な違いは？ (B)\n\nA. ノートへ出典できるのは問題集だけ  \nB. 記憶デッキは間隔復習に焦点；問題集はドリルとクイズ検証に焦点  \nC. ファイル形式は同じで UI 名だけ違う  \nD. Basic 体験ではクイズ関連能力は一切使えない\n\n---div---\n\n`.wdeck` 記憶デッキは「覚える」用；`.qbank` 問題集は「自分を試す」用。文書クイズは Markdown をセッションに解析もできる。フルバンクや一部分析は Premium の場合あり—表示に従う；導入ではまず記憶デッキに慣れる。\n\n#weave-tutorial #memory-decks #question-banks",
+      "tags": [
+        "weave-tutorial",
+        "memory-decks",
+        "question-banks"
+      ]
+    },
+    {
+      "content": "記憶デッキが対応する分析チャートは何か、何のためか？\n\n---div---\n\nいずれも**記憶デッキ**向け（問題集分析とは別）:\n\n- **Retention**（基本）: 記憶率と想起の傾向—「どれだけ残っているか」。  \n- **Deck profile**: 構成／状態の俯瞰。  \n- **Card count**: 規模と構造の時間推移。  \n- **Tag difficulty**: タグ別の難易度分布。  \n- **Load forecast**: これから復習負荷が重すぎないか。  \n- **Calibration**: 評価と実際の想起—採点が甘すぎ／厳しすぎ。  \n- **Review timing**: 早い／予定どおり／遅いの分布。  \n\n後段は高度チャートが多い—利用可否はプラグイン内の Basic／Premium 表示に従う。\n\n#weave-tutorial #analytics #memory-decks",
+      "tags": [
+        "weave-tutorial",
+        "analytics",
+        "memory-decks"
+      ]
+    },
+    {
+      "content": "四つの評価ボタンの意味は？\n\n---div---\n\n- **Again**: 空白／完全に誤り—すぐ戻すべき  \n- **Hard**: 思い出したが出苦労  \n- **Good**: 普通の想起（最も多い）  \n- **Easy**: 簡単すぎ—間隔を延ばしてよい  \n\nアルゴリズムは選択から次の出現をスケジュールする。\n\n#weave-tutorial #ratings",
+      "tags": [
+        "weave-tutorial",
+        "ratings"
+      ]
+    },
+    {
+      "content": "覚えていないのに「Good」を押し続けてはいけない理由は？\n\n---div---\n\n間隔が伸び、本当に期限が来たとき初めて取りこぼしに気づく。失敗したら **Again**—短期はつらいが長期は安い。\n\nその瞬間に思い出せたかを報告するだけ；間隔は FSRS6 が担う。\n\n#weave-tutorial #ratings",
+      "tags": [
+        "weave-tutorial",
+        "ratings"
+      ]
+    },
+    {
+      "content": "新規カードと期限カードの違いは？\n\n---div---\n\n- **New**: 初回接触、初期の印象を作る  \n- **Due**: スケジュールで戻ってきた、まだ覚えているか確認  \n\nデッキを開いて UI に従えばよい—最初からすべてのアルゴリズム用語は不要。\n\n#weave-tutorial #study-queue",
+      "tags": [
+        "weave-tutorial",
+        "study-queue"
+      ]
+    },
+    {
+      "content": "誤って評価したときは？\n\n---div---\n\nUI の Undo（あるとき）をすぐ使い、誤った間隔がスケジュールに書かれないようにする。\n\n習慣: 評価後の予測次間隔を見る；おかしく見えたら取り消して再評価。\n\n#weave-tutorial #undo-rating",
+      "tags": [
+        "weave-tutorial",
+        "undo-rating"
+      ]
+    },
+    {
+      "content": "学習の表示モードは何か、それぞれいつ使うか？\n\n---div---\n\nデスクトップでは学習サイドの「More」で切替（モバイルは通常タブのまま）:\n\n1. **Floating modal**（**デスクトップ既定**）: 中央の窓、全画面ではない—横でノートを眺めながら向く。  \n2. **Tab view**: 通常の Obsidian タブ、他タブの隣に置きやすい。  \n3. **Fullscreen overlay (immersive)**: ワークスペースを覆い、期限カードに集中。  \n\nシェルは三つ、学習 UI は一つ。選択は記憶され、「More」からいつでも再切替。\n\n#weave-tutorial #study-ui #display-modes",
+      "tags": [
+        "weave-tutorial",
+        "study-ui",
+        "display-modes"
+      ]
+    },
+    {
+      "content": "「Study ahead」とは何か、ルールは？\n\n---div---\n\n**用途**: 旅行や試験前に、**まだ期限ではないが近いうちに来る**カードを前倒しし、後で積み上がらないようにする。\n\n**ルール（要点）**:\n\n- **既に期限**のカードに加え、**将来の日数ウィンドウ**内に期限が来るカードを含む。  \n- 「Max advance days」は学習関連設定；日常は **1–3 日**が妥当、上限 **5**、未来負荷を借りすぎない。  \n- 先にデッキを選ぶ；先行できるものがなければ「先行学習するカードなし」の通知。\n\nStudy ahead は範囲付きの前借り—「未来キュー全部を消す」ではない。\n\n#weave-tutorial #study-ahead",
+      "tags": [
+        "weave-tutorial",
+        "study-ahead"
+      ]
+    },
+    {
+      "content": "学習 UI の「Question」／「Answer」風ラベルは隠せるか？\n\n---div---\n\nできる。\n\n学習サイドツールバー → **More** → **Show content labels** のような項目で、質問／答えセクションのラベルを切替。\n\n見た目をすっきりさせたいときはオフ；教えたり構造を見るときはオン。\n\n#weave-tutorial #study-ui #content-labels",
+      "tags": [
+        "weave-tutorial",
+        "study-ui",
+        "content-labels"
+      ]
+    },
+    {
+      "content": "学習サイドツールバーの「Recycle」は何をするか？\n\n---div---\n\nRecycle は現在のカードにタグ（例: `#回收` / `#recycle`）を付け、学習キューから**一時的に外す**。\n\n- カードは削除されない；内容は残る。  \n- 「書きが悪い—復習で邪魔しないで；後で直す」向き。  \n- 直したら recycle タグを外して学習に戻す。\n\nRecycle は「改善待ちで保留」であり、削除ではない。\n\n#weave-tutorial #recycle #study-ui",
+      "tags": [
+        "回收",
+        "recycle",
+        "weave-tutorial",
+        "study-ui"
+      ]
+    },
+    {
+      "content": "記憶学習 UI の中でよくできることは？\n\n---div---\n\nサイドツールバーと関連メニューに通常あるもの（ライブ UI に従う）:\n\n- カード本文の **Edit / preview**  \n- **Delete**（recycle より恒久的）  \n- **Recycle**（直すまでキュー外に駐車）  \n- 直前評価の **Undo**  \n- **Reminders**（期限時に優先度高め）  \n- **Priority / star-like** マーク（UI が Priority を出す場合）  \n- **Deck membership** や関連の並びオプション  \n- **Auto-play audio/media**（オン／オフ；最初のみ vs 全部；カード切替時 or 答え表示時）  \n- **Source / source-block text**、カード詳細、タイマーなど  \n\nボタンはメインバーか「More」下；デスクトップは表示モードも切替可能。\n\n#weave-tutorial #study-ui #card-actions",
+      "tags": [
+        "weave-tutorial",
+        "study-ui",
+        "card-actions"
+      ]
+    },
+    {
+      "content": "記憶学習で「描画」するには？Weave は独自の描画エンジンを同梱するか？\n\n---div---\n\nWeave は独自の描画エンジンを**同梱しない**；**Excalidraw** などのコミュニティプラグインと連携する:\n\n1. Excalidraw で描く  \n2. 必要な部分を選び、コンテキスト操作で**グループ化し描画リンクを作成**  \n3. そのリンクをカード文書に挿入  \n\nWeave は Obsidian の描画習慣で表示する。描画が必要なら Excalidraw を入れて学び、Weave はリンクを学習フローに埋め込む。\n\n#weave-tutorial #excalidraw #study-ui",
+      "tags": [
+        "weave-tutorial",
+        "excalidraw",
+        "study-ui"
+      ]
+    },
+    {
+      "content": "記憶学習中にカードへ「ヒント」を付けるには？\n\n---div---\n\nヒントはカスタム構文ではなく、**Obsidian 脚注**を使う。\n\nカード Markdown に脚注参照と定義を書く（例: `[^1]` と `[^1]: hint text`）。学習／プレビューは Obsidian 流で表示—ノートと同じ、公式描画が運ぶ。\n\n#weave-tutorial #hints #footnotes",
+      "tags": [
+        "weave-tutorial",
+        "hints",
+        "footnotes"
+      ]
+    },
+    {
+      "content": "なぜ Weave は Anki 風穴埋め {{c1::}} もまだサポートするか？\n\n---div---\n\n主な理由は二つ:\n\n1. **習慣**: 多くのユーザーが既に Anki 穴埋めを知っており、再利用の方が安い。  \n2. **段階的穴埋め**: 段階的穴埋めが検出されると、Anki 番号付き穴埋めが権威となり、`==highlight==` 穴埋めと**分離**され、一つの段階パイプラインで二つの構文が衝突しない。\n\n日常の穴埋めはどちらでも可；段階的穴埋めでは Anki 番号付きを書く（段階的は Premium の場合あり—表示に従う）。\n\n#weave-tutorial #cloze #anki-cloze #progressive-cloze",
+      "tags": [
+        "weave-tutorial",
+        "cloze",
+        "anki-cloze",
+        "progressive-cloze"
+      ]
+    },
+    {
+      "content": "デッキ学習ビューがメインペインとサイドバーを移るとき、既定レイアウトはどう違うか？\n\n---div---\n\n- **メインペイン** → カンバン（多列の俯瞰）  \n- **サイドバー** → グリッドカード（狭く読みやすい）  \n\n同じ機能の位置適応—無関係な二ページではない。自動切替オンなら中央へドラッグでカンバンに戻る。Basic 設定で「位置による自動切替」をトグル。\n\n#weave-tutorial #deck-study #layout",
+      "tags": [
+        "weave-tutorial",
+        "deck-study",
+        "layout"
+      ]
+    },
+    {
+      "content": "カード管理でよく使うビューは何か、何のためか？\n\n---div---\n\n**Card management** 上部で切替（モバイルは色付きドットの場合あり）:\n\n1. **Table**: 一括閲覧、検索／フィルタ、並べ替え、インライン編集、一括整理（しばしば既定）。  \n2. **Grid**: 内容とバッジをカード風に眺める。  \n3. **Kanban**: 列ドラッグ（例: ステータス別）。  \n4. **Timeline**: **グリッドレイアウト**内の日付グループで最近の投入を見る（Premium の場合あり—表示に従う）。  \n\nデッキ学習は「どのデッキ？」；カード管理は「どのカード？」。\n\n#weave-tutorial #card-management #views",
+      "tags": [
+        "weave-tutorial",
+        "card-management",
+        "views"
+      ]
+    },
+    {
+      "content": "カード管理のトップバーがメインペインと Obsidian サイドバーで違う理由は？\n\n---div---\n\n二つの配置は意図が違う:\n\n- **メインペイン**: 閲覧・管理・処理—バーが広がり一括／管理操作が並ぶ。  \n- **サイドバー**: 「アクティブ文書から何のカードが育ったか」を見守り、関連カードを探す—バーが折りたたまれサイドバー優先ツールが残る。\n\nサイドバーのカード管理はインスピレーション受信箱として使える: Markdown を読み書きしながらそのノートを出典にしたカードを作り、「Filter by active document」で既に結びついた記憶カード、バンク関連、スパークを見る。\n\nサイドバーのボタンが少ないのは狭いレイアウトの折りたたみであり、機能欠落ではない—メインペインに戻せばフルツールバー。\n\n#weave-tutorial #card-management #layout #inspiration",
+      "tags": [
+        "weave-tutorial",
+        "card-management",
+        "layout",
+        "inspiration"
+      ]
+    },
+    {
+      "content": "カード管理の「Filter by active document」は何をするか？\n\n---div---\n\n出典リンクが現在のアクティブ文書を指すカードに絞り込む。\n\nメインペインでファイルを切り替えると—Markdown、Canvas、リーダー内の本—サイドバーのグリッドが追従し、その文書に既にあるカードがすぐ見える。\n\n#weave-tutorial #filter-active-document #card-management",
+      "tags": [
+        "weave-tutorial",
+        "filter-active-document",
+        "card-management"
+      ]
+    },
+    {
+      "content": "ノートを書きながら「このノートから生えたカード」を見るサイドバー配置は？\n\n---div---\n\nカード管理を左右サイドバーに置き、「Filter by active document」をオン、中央で書き続け／読み続ける。\n\nアクティブ文書を切り替えるとサイドバーのグリッドが更新；必要なら出典へジャンプ。章を深読みしたり長いノートを下書きするとき、欠けたカードやスパークを拾うのに向く。\n\n#weave-tutorial #filter-active-document #workflow",
+      "tags": [
+        "weave-tutorial",
+        "filter-active-document",
+        "workflow"
+      ]
+    },
+    {
+      "content": "「Important Schedule」は何のためか？\n\n---div---\n\n学習・試験・読書・ノート関連の予定を一か所に集めるメイン UI ハブ（よくあるのは上がカレンダー、下がリスト）。\n\n各モジュールに潜らず「今日は何？」を一目で答える。読書計画や試験手配もここに出ることがある。詳細はライブ UI に従う。\n\n#weave-tutorial #important-schedule",
+      "tags": [
+        "weave-tutorial",
+        "important-schedule"
+      ]
+    },
+    {
+      "content": "通常の Markdown ノートにデッキ学習ビューを埋め込むには？\n\n---div---\n\nノートエディタで右クリック → **Weave Deck actions** → **Insert deck view** → 記憶デッキにチェック → 挿入。\n\n`weave-decks` コードブロックが入り、Reading／Live Preview でクリック可能なデッキカードが描画される。コースノート、復習チェックリスト、ダッシュボード向き。\n\n埋め込むのは**記憶デッキ**であり問題集ではない。プラグインのメイン窓をサイドバーへドラッグするのとは別。\n\n#weave-tutorial #insert-deck-view",
+      "tags": [
+        "weave-tutorial",
+        "insert-deck-view"
+      ]
+    },
+    {
+      "content": "プラグインはどのエディタを使うか？\n\n---div---\n\nObsidian の公式エディタ。\n\nネイティブな編集感を保ち、公式エディタに依存する多くのコミュニティプラグインがカード編集の場面にも広がりやすい（互換はプラグインによる）。\n\n#weave-tutorial #official-editor",
+      "tags": [
+        "weave-tutorial",
+        "official-editor"
+      ]
+    },
+    {
+      "content": "カードプレビューはどう描画されるか？\n\n---div---\n\nObsidian の公式描画エンジン。\n\n数式、ハイライト、一般的な Markdown がノートに近く；多くの描画／テーマ系コミュニティプラグインがカードプレビューにも自動で効きやすい。カードを書く感覚は短いノート；見るときはノートと同じ描画スタック。\n\n#weave-tutorial #official-render",
+      "tags": [
+        "weave-tutorial",
+        "official-render"
+      ]
+    },
+    {
+      "content": "Anki カードは取り込めるか？注意点は？\n\n---div---\n\nできる—レガシー Anki APKG と CSV（プラグインの取り込み入口；一部は Premium の場合あり）。\n\nWeave は**Obsidian ワークフロー**向けで、**出典リンク**とボルトノートを重視する。現ボルトと無関係で意味のある出典もないカードは、まとめて取り込む価値が薄いことがある—内容移行 ≠ すべてのカードが居場所を得る。\n\n#weave-tutorial #apkg #anki-import #csv",
+      "tags": [
+        "weave-tutorial",
+        "apkg",
+        "anki-import",
+        "csv"
+      ]
+    },
+    {
+      "content": "Weave はモバイル対応か？\n\n---div---\n\n対応。Weave Deck は Obsidian が動く環境—**Windows / macOS / Linux / iOS / Android**—を対象とする。\n\nモバイルは狭い: 学習セッションは通常**タブ**；デッキ学習とカード管理はコンパクトなグリッド寄り。コアのループ（作成、復習、出典）はモバイルでも動く；デスクトップ専用のフローティングボタンや一部の表示切替はライブ UI に従う。\n\n#weave-tutorial #mobile #cross-platform",
+      "tags": [
+        "weave-tutorial",
+        "mobile",
+        "cross-platform"
+      ]
+    }
+  ]
+}

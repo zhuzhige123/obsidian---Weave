@@ -9,7 +9,7 @@
       "locale": "zh-CN",
       "version": "1.1",
       "cardCount": 58,
-      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-zh.json"
+      "packageUrl": "https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/packages/weave-intro-zh.json"
     },
     {
       "id": "weave-intro-en",
@@ -18,7 +18,7 @@
       "locale": "en-US",
       "version": "1.1",
       "cardCount": 58,
-      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-en.json"
+      "packageUrl": "https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/packages/weave-intro-en.json"
     },
     {
       "id": "weave-intro-ja",
@@ -27,7 +27,7 @@
       "locale": "ja-JP",
       "version": "1.1",
       "cardCount": 58,
-      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-ja.json"
+      "packageUrl": "https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/packages/weave-intro-ja.json"
     },
     {
       "id": "weave-intro-ko",
@@ -36,7 +36,7 @@
       "locale": "ko-KR",
       "version": "1.1",
       "cardCount": 58,
-      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-ko.json"
+      "packageUrl": "https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/packages/weave-intro-ko.json"
     },
     {
       "id": "weave-intro-ru",
@@ -45,7 +45,7 @@
       "locale": "ru-RU",
       "version": "1.1",
       "cardCount": 58,
-      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-ru.json"
+      "packageUrl": "https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/packages/weave-intro-ru.json"
     },
     {
       "id": "weave-intro-es",
@@ -54,7 +54,7 @@
       "locale": "es-ES",
       "version": "1.1",
       "cardCount": 58,
-      "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-es.json"
+      "packageUrl": "https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/packages/weave-intro-es.json"
     }
   ]
 }

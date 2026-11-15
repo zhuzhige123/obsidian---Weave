@@ -40,9 +40,15 @@ node 10-Project-Weave\docs\tutorial-deck\build-remote-package.cjs
 
 ## 插件默认拉取顺序
 
-1. **jsDelivr（优先）**  
-   `https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/catalog.json`
-2. **GitHub raw（回退）**  
+1. **GitHub raw（优先，发版后立刻新鲜）**  
    `https://raw.githubusercontent.com/zhuzhige123/obsidian---Weave/main/tutorial-decks/catalog.json`
+2. **jsDelivr（回退）**  
+   `https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/catalog.json`
 
-内容真源仍在 GitHub；用户端默认走 CDN。
+`@main` 的 jsDelivr 可能缓存较久。每次推送 `tutorial-decks/` 后建议 purge：
+
+```bat
+node scripts\purge-tutorial-deck-cdn.cjs
+```
+
+（或对 `catalog.json` 与各 `packages/*.json` 访问 `https://purge.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/...`）

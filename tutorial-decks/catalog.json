@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-11",
+  "updatedAt": "2026-11-16",
   "decks": [
     {
       "id": "weave-intro-zh",
-      "name": "Weave 入门教程 1.0",
-      "description": "Weave Deck 新手实用教程 1.0：动态题型、制卡溯源、学习界面与常用工作流（后续版本会继续完善）。",
+      "name": "Weave 入门教程 1.1",
+      "description": "Weave Deck 新手实用教程 1.1：动态题型、制卡溯源、AI/解析预览、学习界面与常用工作流。",
       "locale": "zh-CN",
-      "version": "1.0",
-      "cardCount": 48,
+      "version": "1.1",
+      "cardCount": 58,
       "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-zh.json"
     },
     {
       "id": "weave-intro-en",
-      "name": "Weave Intro Tutorial 1.0",
-      "description": "Practical Weave Deck intro 1.0: dynamic card types, sourcing, study UI, and common workflows (will keep improving in later versions).",
+      "name": "Weave Intro Tutorial 1.1",
+      "description": "Practical Weave Deck intro 1.1: dynamic card types, sourcing, AI/parse preview, study UI, and common workflows.",
       "locale": "en",
-      "version": "1.0",
-      "cardCount": 48,
+      "version": "1.1",
+      "cardCount": 58,
       "packageUrl": "https://cdn.jsdelivr.net/gh/zhuzhige123/obsidian---Weave@main/tutorial-decks/packages/weave-intro-en.json"
     }
   ]

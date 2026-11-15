@@ -8,10 +8,13 @@
 ## 文件
 
 - `catalog.json`：目录列表
-- `packages/weave-intro-zh.json`：简体入门教程 **1.0**
-- `packages/weave-intro-en.json`：英文入门教程 **1.0**
+- `packages/weave-intro-zh.json`：简体入门教程 **1.1**
+- `packages/weave-intro-en.json`：英文入门教程 **1.1**
 
-牌组显示名带版本号（如 `Weave 入门教程 1.0`），后续完善会升到 1.1 / 2.0 等。
+牌组显示名带版本号（如 `Weave 入门教程 1.1`）。文稿真源：
+
+- `../Weave-Deck-新手教程文稿.md`
+- `../Weave-Deck-intro-tutorial-en.md`
 
 ## 重新生成
 
@@ -19,7 +22,7 @@
 node 10-Project-Weave\docs\tutorial-deck\build-remote-package.cjs
 ```
 
-再把 `remote/` 内容同步到公开仓的 `tutorial-decks/`。
+再把 `remote/` 内容同步到公开仓的 `tutorial-decks/`（只推教程资源，不推 `src/`）。
 
 ## 插件默认拉取顺序
 

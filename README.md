@@ -1,5 +1,13 @@
 # Weave Deck
 
+<p>
+<a href="https://github.com/zhuzhige123/obsidian---Weave/releases"><img alt="downloads" src="https://img.shields.io/github/downloads/zhuzhige123/obsidian---Weave/total"></a>
+<a href="https://github.com/zhuzhige123/obsidian---Weave/releases"><img alt="release" src="https://img.shields.io/github/v/release/zhuzhige123/obsidian---Weave?display_name=tag&label=release"></a>
+<a href="./LICENSE"><img alt="license" src="https://img.shields.io/github/license/zhuzhige123/obsidian---Weave"></a>
+<a href="https://obsidian.md/plugins?search=weave%20deck"><img alt="Obsidian Plugin" src="https://img.shields.io/badge/Obsidian-Plugin-blue?logo=obsidian&logoColor=white"></a>
+<a href="https://github.com/zhuzhige123/obsidian---Weave/stargazers"><img alt="stars" src="https://img.shields.io/github/stars/zhuzhige123/obsidian---Weave"></a>
+</p>
+
 **Weave Deck** 把间隔复习嵌进 Obsidian 的文件世界：从笔记生成关联记忆卡片，复习时可溯源定位回原文。按约定 Markdown 书写，插件动态解析预览为不同题型，而不是传统 Anki 式字段表单。编辑与显示依托 Obsidian 自身编辑器与渲染引擎，因而能与众多社区插件协同。数据完全本地化，留在你的库里。
 
 **文档语言：** [简体中文](#中文文档) · [English](#english-documentation) · [Русский](README.ru.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Español](README.es.md)
@@ -10,6 +18,8 @@
 | Discord | [Obsidian-Weave 反馈频道](https://discord.com/channels/1553861810665554023/1553867320311677039) |
 | 官方正式教程视频 | [Bilibili · Weave 系列教程](https://www.bilibili.com/video/BV1Zcs56NE9C/) |
 | 官网与图文教程 | [官网 · 价格](https://obsidian-weave.xyz/#pricing) · [使用教程](https://obsidian-weave.xyz/tutorials.html#welcome) |
+
+> **核心学习闭环免费可用。少数进阶能力需付费解锁以支持持续开发；插件已迭代百余版，可放心长期使用！谢谢支持！**
 
 <div align="center">
 
@@ -264,6 +274,8 @@ npm run build
 ---
 
 ## English Documentation
+
+> **The core learning loop is free. A few advanced features require Premium to support ongoing development; the plugin has gone through 100+ releases and is ready for long-term use. Thanks for your support!**
 
 ### Overview
 

@@ -1,5 +1,15 @@
 # Weave Deck（Español）
 
+<p>
+<a href="https://github.com/zhuzhige123/obsidian---Weave/releases"><img alt="downloads" src="https://img.shields.io/github/downloads/zhuzhige123/obsidian---Weave/total"></a>
+<a href="https://github.com/zhuzhige123/obsidian---Weave/releases"><img alt="release" src="https://img.shields.io/github/v/release/zhuzhige123/obsidian---Weave?display_name=tag&label=release"></a>
+<a href="./LICENSE"><img alt="license" src="https://img.shields.io/github/license/zhuzhige123/obsidian---Weave"></a>
+<a href="https://obsidian.md/plugins?search=weave%20deck"><img alt="Obsidian Plugin" src="https://img.shields.io/badge/Obsidian-Plugin-blue?logo=obsidian&logoColor=white"></a>
+<a href="https://github.com/zhuzhige123/obsidian---Weave/stargazers"><img alt="stars" src="https://img.shields.io/github/stars/zhuzhige123/obsidian---Weave"></a>
+</p>
+
+> **El ciclo de aprendizaje esencial es gratis. Algunas funciones avanzadas requieren Premium para apoyar el desarrollo continuo; el complemento lleva más de 100 versiones y puede usarse a largo plazo. ¡Gracias por el apoyo!**
+
 **文档语言：** [English](README.md#english-documentation) · [简体中文](README.md#中文文档) · [Español](README.es.md)
 
 完整介绍、社区渠道与官方教程视频见主文档 **[README.md](README.md)**。

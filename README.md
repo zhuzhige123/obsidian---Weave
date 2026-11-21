@@ -1,4 +1,4 @@
-# Weave Deck
+# Weave Review
 
 <p>
 <a href="https://github.com/zhuzhige123/obsidian---Weave/releases"><img alt="downloads" src="https://img.shields.io/github/downloads/zhuzhige123/obsidian---Weave/total"></a>
@@ -8,7 +8,7 @@
 <a href="https://github.com/zhuzhige123/obsidian---Weave/stargazers"><img alt="stars" src="https://img.shields.io/github/stars/zhuzhige123/obsidian---Weave"></a>
 </p>
 
-**Weave Deck** 把间隔复习嵌进 Obsidian 的文件世界：从笔记生成关联记忆卡片，复习时可溯源定位回原文。按约定 Markdown 书写，插件动态解析预览为不同题型，而不是传统 Anki 式字段表单。编辑与显示依托 Obsidian 自身编辑器与渲染引擎，因而能与众多社区插件协同。数据完全本地化，留在你的库里。
+**Weave Review** 把间隔复习嵌进 Obsidian 的文件世界：从笔记生成关联记忆卡片，复习时可溯源定位回原文。按约定 Markdown 书写，插件动态解析预览为不同题型，而不是传统 Anki 式字段表单。编辑与显示依托 Obsidian 自身编辑器与渲染引擎，因而能与众多社区插件协同。数据完全本地化，留在你的库里。
 
 **文档语言：** [简体中文](#中文文档) · [English](#english-documentation) · [Русский](README.ru.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Español](README.es.md)
 
@@ -55,7 +55,7 @@
 | **记忆牌组（`.wdeck`）** | 卡片容器；支持正式牌组与引用式归属 |
 | **溯源** | 复习时需要语境即可跳回原文位置 |
 
-它是 **Obsidian Weave 插件系列**中的记忆插件（系列有且仅有三款：Weave Deck、Weave EPUB Reader、Weave Incremental Reading）。可单独用于 Markdown 制卡与 FSRS 复习；需要库内读书或增量阅读队列时再组合其它成员。
+它是 **Obsidian Weave 插件系列**中的记忆插件（系列有且仅有三款：Weave Review、Weave EPUB Reader、Weave Incremental Reading）。可单独用于 Markdown 制卡与 FSRS 复习；需要库内读书或增量阅读队列时再组合其它成员。
 
 最低 Obsidian 版本：**1.7.0**。桌面端与移动端均可用。
 
@@ -68,7 +68,7 @@
 3. **Markdown 思维，而非表单字段思维** — 先像写笔记一样写结构，再由解析预览变成题。
 4. **站在 Obsidian 生态上扩展** — 走原生编辑 / 渲染与社区插件，而不是另起围墙。
 
-| 传统 Anki 思路 | Weave Deck 思路 |
+| 传统 Anki 思路 | Weave Review 思路 |
 | --- | --- |
 | 字段 / 表单 / 模板 | Markdown 结构 + 动态解析预览 |
 | 卡片常与原文脱节 | 关联文件 + 溯源跳转 |
@@ -123,7 +123,7 @@
 
 > 图例：✅ 已包含 · 🔒 需启用高级支持
 
-- **启用高级支持**：在 Weave Deck 设置中激活。一次性买断见 [官网 · 价格](https://obsidian-weave.xyz/#pricing)（系列激活码可解锁三款高级支持）。部分功能可能提供限时试用。
+- **启用高级支持**：在 Weave Review 设置中激活。一次性买断见 [官网 · 价格](https://obsidian-weave.xyz/#pricing)（系列激活码可解锁三款高级支持）。部分功能可能提供限时试用。
 
 ---
 
@@ -160,7 +160,7 @@ FSRS6 间隔复习、牌组学习、问答 / 挖空 / 填空 / 选择，以及�
 #### 方式一：社区插件（推荐）
 
 1. 打开 **设置 → 社区插件 → 浏览**（必要时关闭「限制模式」）
-2. 搜索 **Weave Deck**，安装并启用
+2. 搜索 **Weave Review**，安装并启用
 
 #### 方式二：手动安装
 
@@ -177,7 +177,7 @@ FSRS6 间隔复习、牌组学习、问答 / 挖空 / 填空 / 选择，以及�
 
 ### 快速上手
 
-1. 打开 Weave Deck 视图，初始化卡片库（`weave/memory/` 等）
+1. 打开 Weave Review 视图，初始化卡片库（`weave/memory/` 等）
 2. 可选：配置 OpenAI 兼容 API，用于 AI 制卡（高级支持）
 3. 从 Markdown 或 EPUB 摘录，创建记忆卡片并开始复习
 4. 可选：把卡片管理放到侧边栏，开启「关联当前活动文档」
@@ -206,7 +206,7 @@ FSRS6 间隔复习、牌组学习、问答 / 挖空 / 填空 / 选择，以及�
 
 | 插件 | 职责 |
 |------|------|
-| **Weave Deck**（本插件） | 记忆牌组、制卡、FSRS 复习、考试 |
+| **Weave Review**（本插件） | 记忆牌组、制卡、FSRS 复习、考试 |
 | **Weave EPUB Reader** | 库内多格式阅读、摘录、书籍锚点 |
 | **Weave Incremental Reading** | 阅读点、专题、日历调度、续读 |
 
@@ -224,7 +224,7 @@ FSRS6 间隔复习、牌组学习、问答 / 挖空 / 填空 / 选择，以及�
 
 #### 1. 与 EPUB 阅读器、增量阅读的关系？
 
-**Weave Deck 可独立使用**。EPUB Reader 负责书中摘录与锚点跳回；Incremental Reading 负责阅读队列与排期。授权可按产品规则联动。三者**分工协作**，不是硬依赖。
+**Weave Review 可独立使用**。EPUB Reader 负责书中摘录与锚点跳回；Incremental Reading 负责阅读队列与排期。授权可按产品规则联动。三者**分工协作**，不是硬依赖。
 
 #### 2. 卡片能否全平台同步？
 
@@ -279,7 +279,7 @@ npm run build
 
 ### Overview
 
-**Weave Deck** embeds spaced review in Obsidian’s file world: memory cards grow from your notes, stay linked to them, and can jump back to the source when you review. You write in Markdown; the plugin parses and previews that structure as question types—instead of Anki-style field forms. Editing and display use Obsidian’s own editor and rendering, so community plugins can extend the same loop. Data stays local in your vault.
+**Weave Review** embeds spaced review in Obsidian’s file world: memory cards grow from your notes, stay linked to them, and can jump back to the source when you review. You write in Markdown; the plugin parses and previews that structure as question types—instead of Anki-style field forms. Editing and display use Obsidian’s own editor and rendering, so community plugins can extend the same loop. Data stays local in your vault.
 
 | Concept | Meaning |
 |---------|---------|
@@ -287,7 +287,7 @@ npm run build
 | **Memory deck (`.wdeck`)** | Container for cards; formal and reference-based membership |
 | **Trace** | Jump back from a card to the exact source passage when you need context |
 
-It is the memory plugin in the **Obsidian Weave series** (exactly three: Weave Deck, Weave EPUB Reader, Weave Incremental Reading). Use it alone for Markdown cards and FSRS review; add the other two when you need in-vault reading or incremental reading queues.
+It is the memory plugin in the **Obsidian Weave series** (exactly three: Weave Review, Weave EPUB Reader, Weave Incremental Reading). Use it alone for Markdown cards and FSRS review; add the other two when you need in-vault reading or incremental reading queues.
 
 Minimum Obsidian version: **1.7.0**. Desktop and mobile are supported.
 
@@ -300,7 +300,7 @@ See the channel table at the top of this README for tutorials, pricing, QQ, Disc
 3. **Markdown thinking, not form-field thinking** — author structure like a note; parsing turns it into a question.
 4. **Expand through Obsidian’s ecosystem** — native editor/rendering and community plugins, not a walled-off card UI.
 
-| Traditional Anki approach | Weave Deck approach |
+| Traditional Anki approach | Weave Review approach |
 | --- | --- |
 | Fields / forms / templates | Markdown structure + dynamic parse & preview |
 | Cards often disconnected from source text | Linked files + source jump-back |
@@ -355,7 +355,7 @@ The core learning loop is **free**. Premium unlocks advanced analytics, manageme
 
 > Legend: ✅ included · 🔒 requires Premium support
 
-- **Enable Premium support**: activate in Weave Deck settings. Buy-once via [Website · Pricing](https://obsidian-weave.xyz/#pricing) (series code unlocks all three plugins’ Premium). Some features may offer limited-time trials.
+- **Enable Premium support**: activate in Weave Review settings. Buy-once via [Website · Pricing](https://obsidian-weave.xyz/#pricing) (series code unlocks all three plugins’ Premium). Some features may offer limited-time trials.
 
 ---
 
@@ -392,7 +392,7 @@ Common API capabilities: `createCard` / `importCards`, `createDeck` / list / upd
 #### Option 1: Community plugins (recommended)
 
 1. **Settings → Community plugins → Browse** (disable Restricted mode if needed)
-2. Search for **Weave Deck**, install, and enable
+2. Search for **Weave Review**, install, and enable
 
 #### Option 2: Manual installation
 
@@ -409,7 +409,7 @@ Common API capabilities: `createCard` / `importCards`, `createDeck` / list / upd
 
 ### Quick start
 
-1. Open the Weave Deck view and initialize the card library (`weave/memory/`, etc.)
+1. Open the Weave Review view and initialize the card library (`weave/memory/`, etc.)
 2. Optional: configure an OpenAI-compatible API for AI card creation (Premium)
 3. Excerpt from Markdown or EPUB, create memory cards, and start reviewing
 4. Optional: put card management in the sidebar and enable “filter by active document”
@@ -438,7 +438,7 @@ Exactly three Weave plugins, composing **read → capture → schedule → revie
 
 | Plugin | Responsibility |
 |--------|----------------|
-| **Weave Deck** (this plugin) | Memory decks, card-making, FSRS review, exams |
+| **Weave Review** (this plugin) | Memory decks, card-making, FSRS review, exams |
 | **Weave EPUB Reader** | In-vault multi-format reading, excerpts, book anchors |
 | **Weave Incremental Reading** | Reading points, topics, calendar scheduling, resume |
 
@@ -456,7 +456,7 @@ Exactly three Weave plugins, composing **read → capture → schedule → revie
 
 #### 1. How does this relate to the EPUB reader and Incremental Reading?
 
-**Weave Deck works standalone** for Markdown cards, FSRS, and question banks. EPUB Reader adds in-book excerpts and book-anchor jumps; Incremental Reading handles reading queues and scheduling. Licensing may be shared per product rules. They are **complementary**, not hard dependencies.
+**Weave Review works standalone** for Markdown cards, FSRS, and question banks. EPUB Reader adds in-book excerpts and book-anchor jumps; Incremental Reading handles reading queues and scheduling. Licensing may be shared per product rules. They are **complementary**, not hard dependencies.
 
 #### 2. Can cards sync across platforms?
 

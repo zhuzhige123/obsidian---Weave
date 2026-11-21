@@ -1,4 +1,4 @@
-# Weave Deck（한국어）
+# Weave Review（한국어）
 
 <p>
 <a href="https://github.com/zhuzhige123/obsidian---Weave/releases"><img alt="downloads" src="https://img.shields.io/github/downloads/zhuzhige123/obsidian---Weave/total"></a>

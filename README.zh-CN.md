@@ -1,4 +1,4 @@
-# Weave Deck
+# Weave Review
 
 <p>
 <a href="https://github.com/zhuzhige123/obsidian---Weave/releases"><img alt="downloads" src="https://img.shields.io/github/downloads/zhuzhige123/obsidian---Weave/total"></a>

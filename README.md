@@ -37,6 +37,9 @@
 
 ![QQ20260915-041759-HD](https://github.com/user-attachments/assets/4ee38da8-c6f6-42b5-af7c-3992577cfca4)
 
+<img width="2485" height="1361" alt="image" src="https://github.com/user-attachments/assets/2b8a619a-5d78-4b87-817f-1d1532fb90d6" />
+
+
 <br/>
 
 [![序章｜Weave 官方系列教程](https://i2.hdslb.com/bfs/archive/34dd29f15e73487ff8cc51a7eee4836367cbaf39.jpg)](https://www.bilibili.com/video/BV1Zcs56NE9C/)

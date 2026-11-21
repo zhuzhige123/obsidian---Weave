@@ -1,12 +1,6 @@
 # Weave Review
 
-<p>
-<a href="https://github.com/zhuzhige123/obsidian---Weave/releases"><img alt="downloads" src="https://img.shields.io/github/downloads/zhuzhige123/obsidian---Weave/total"></a>
-<a href="https://github.com/zhuzhige123/obsidian---Weave/releases"><img alt="release" src="https://img.shields.io/github/v/release/zhuzhige123/obsidian---Weave?display_name=tag&label=release"></a>
-<a href="./LICENSE"><img alt="license" src="https://img.shields.io/github/license/zhuzhige123/obsidian---Weave"></a>
-<a href="https://obsidian.md/plugins?search=weave%20deck"><img alt="Obsidian Plugin" src="https://img.shields.io/badge/Obsidian-Plugin-blue?logo=obsidian&logoColor=white"></a>
-<a href="https://github.com/zhuzhige123/obsidian---Weave/stargazers"><img alt="stars" src="https://img.shields.io/github/stars/zhuzhige123/obsidian---Weave"></a>
-</p>
+![downloads](https://img.shields.io/github/downloads/zhuzhige123/obsidian---Weave/total)![release](https://img.shields.io/github/v/release/zhuzhige123/obsidian---Weave?display_name=tag&label=release)![license](https://img.shields.io/github/license/zhuzhige123/obsidian---Weave)![Obsidian Plugin](https://img.shields.io/badge/Obsidian-Plugin-blue?logo=obsidian&logoColor=white)![stars](https://img.shields.io/github/stars/zhuzhige123/obsidian---Weave)
 
 **Weave Review** 把间隔复习嵌进 Obsidian 的文件世界：从笔记生成关联记忆卡片，复习时可溯源定位回原文。按约定 Markdown 书写，插件动态解析预览为不同题型，而不是传统 Anki 式字段表单。编辑与显示依托 Obsidian 自身编辑器与渲染引擎，因而能与众多社区插件协同。数据完全本地化，留在你的库里。
 
@@ -21,30 +15,45 @@
 
 > **核心学习闭环免费可用。少数进阶能力需付费解锁以支持持续开发；插件已迭代百余版，可放心长期使用！谢谢支持！**
 
-<div align="center">
+
 
 ![weave-series-banner-trinity](https://github.com/user-attachments/assets/8f748341-bb83-4cf9-b020-d8cd18a2aa92)
 
-![weave-plugin-banner-deck](https://github.com/user-attachments/assets/2bd06511-2e12-4719-a4ae-64e590040986)
+![deck-study-sidebar](https://github.com/user-attachments/assets/767fd9be-6a9f-454b-8109-55a0b8c1adec)
 
-![weave-plugin-banner-deck](https://github.com/user-attachments/assets/767fd9be-6a9f-454b-8109-55a0b8c1adec)
+> 左侧为侧边栏中的牌组学习界面（牌组列表）：移入侧边栏后自适应宽度，牌组可自定义背景图。侧边栏与内容区文档联动——可按当前活动 Markdown 筛选相关卡片，并基于当前文档批量制卡、生成测验或发起 AI 对话。内容区为记忆学习界面，图中为选择题。
+>
+> Left: deck-study list in the sidebar (adaptive width, custom backgrounds). It links to the active note—filter related cards, batch-create cards, generate quizzes, or start AI chat. Right: memory study as multiple choice.
 
-![QQ20260915-040906-HD](https://github.com/user-attachments/assets/500543b4-f7c8-4cdb-a3f1-d551ff16559f)
+![study-modal](https://github.com/user-attachments/assets/500543b4-f7c8-4cdb-a3f1-d551ff16559f)
 
-![QQ20260915-042426-HD](https://github.com/user-attachments/assets/69004ae6-dd88-447c-ba46-c4dbe73660b7)
+> 记忆学习界面（模态窗）。学习界面支持模态窗、标签页与沉浸式全屏三种展示方式。
+>
+> Memory study in a modal. Also available as a tab or immersive fullscreen.
 
-![QQ20260915-041103-HD](https://github.com/user-attachments/assets/37f11676-119c-4549-b731-6a356d3ce815)
+![exam-study](https://github.com/user-attachments/assets/69004ae6-dd88-447c-ba46-c4dbe73660b7)
 
-![QQ20260915-041759-HD](https://github.com/user-attachments/assets/4ee38da8-c6f6-42b5-af7c-3992577cfca4)
+> 考试学习界面：按自定义配置生成试卷并开考。
+>
+> Exam study: build a paper from your config and take the exam.
 
-<img width="2485" height="1361" alt="image" src="https://github.com/user-attachments/assets/2b8a619a-5d78-4b87-817f-1d1532fb90d6" />
+![deck-analytics](https://github.com/user-attachments/assets/37f11676-119c-4549-b731-6a356d3ce815)
 
+> 牌组多分析视图：可汇总多个牌组，也可聚焦单个牌组；并可从中查看牌组内卡片、随时编辑内容。
+>
+> Deck analytics: aggregate multiple decks or focus on one; browse cards in a deck and edit them anytime.
 
-<br/>
+![deck-cards](https://github.com/user-attachments/assets/4ee38da8-c6f6-42b5-af7c-3992577cfca4)
 
-[![序章｜Weave 官方系列教程](https://i2.hdslb.com/bfs/archive/34dd29f15e73487ff8cc51a7eee4836367cbaf39.jpg)](https://www.bilibili.com/video/BV1Zcs56NE9C/)
+> 查看该牌组内有哪些卡片，并支持随时编辑卡片内容。
+>
+> Browse cards in the deck and edit them anytime.
 
-</div>
+![card-management](https://github.com/user-attachments/assets/2b8a619a-5d78-4b87-817f-1d1532fb90d6)
+
+> 卡片管理界面：支持表格、网格（固定尺寸与瀑布流）、看板与时间线等视图。置于侧边栏时可关联当前活动文档筛选卡片，也能按创建时间浏览，并支持随时编辑。
+>
+> Card management: table, grid (fixed size & masonry), Kanban, and timeline. In the sidebar it can follow the active document; timeline can show creation time. Edit anytime.
 
 ---
 
@@ -52,11 +61,11 @@
 
 ### 插件概述
 
-| 概念 | 说明 |
-|------|------|
-| **记忆卡片** | 以 Markdown 结构书写、可复习、并与来源关联的条目 |
-| **记忆牌组（`.wdeck`）** | 卡片容器；支持正式牌组与引用式归属 |
-| **溯源** | 复习时需要语境即可跳回原文位置 |
+| 概念                     | 说明                            |
+| ---------------------- | ----------------------------- |
+| **记忆卡片**               | 以 Markdown 结构书写、可复习、并与来源关联的条目 |
+| **记忆牌组（**`.wdeck`**）** | 卡片容器；支持正式牌组与引用式归属             |
+| **溯源**                 | 复习时需要语境即可跳回原文位置               |
 
 它是 **Obsidian Weave 插件系列**中的记忆插件（系列有且仅有三款：Weave Review、Weave EPUB Reader、Weave Incremental Reading）。可单独用于 Markdown 制卡与 FSRS 复习；需要库内读书或增量阅读队列时再组合其它成员。
 
@@ -284,11 +293,11 @@ npm run build
 
 **Weave Review** embeds spaced review in Obsidian’s file world: memory cards grow from your notes, stay linked to them, and can jump back to the source when you review. You write in Markdown; the plugin parses and previews that structure as question types—instead of Anki-style field forms. Editing and display use Obsidian’s own editor and rendering, so community plugins can extend the same loop. Data stays local in your vault.
 
-| Concept | Meaning |
-|---------|---------|
-| **Memory card** | A reviewable item authored as Markdown structure, linked to its source |
-| **Memory deck (`.wdeck`)** | Container for cards; formal and reference-based membership |
-| **Trace** | Jump back from a card to the exact source passage when you need context |
+| Concept                        | Meaning                                                                 |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| **Memory card**                | A reviewable item authored as Markdown structure, linked to its source  |
+| **Memory deck (**`.wdeck`**)** | Container for cards; formal and reference-based membership              |
+| **Trace**                      | Jump back from a card to the exact source passage when you need context |
 
 It is the memory plugin in the **Obsidian Weave series** (exactly three: Weave Review, Weave EPUB Reader, Weave Incremental Reading). Use it alone for Markdown cards and FSRS review; add the other two when you need in-vault reading or incremental reading queues.
 

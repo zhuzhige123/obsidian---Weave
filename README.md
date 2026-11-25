@@ -6,13 +6,6 @@
 
 **文档语言：** [简体中文](#中文文档) · [English](#english-documentation) · [Русский](README.ru.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Español](README.es.md)
 
-| 渠道 | 链接 |
-|------|------|
-| QQ 公开群 | [点击链接加入群聊【Obsidan-Weave系列 反馈群】](https://qm.qq.com/q/TNnSmywgeW) |
-| Discord | [Obsidian-Weave 反馈频道](https://discord.com/channels/1553861810665554023/1553867320311677039) |
-| 官方正式教程视频 | [Bilibili · Weave 系列教程](https://www.bilibili.com/video/BV1Zcs56NE9C/) |
-| 官网与图文教程 | [官网 · 价格](https://obsidian-weave.xyz/#pricing) · [使用教程](https://obsidian-weave.xyz/tutorials.html#welcome) |
-
 > **核心学习闭环免费可用。少数进阶能力需付费解锁以支持持续开发；插件已迭代百余版，可放心长期使用！谢谢支持！**
 
 
@@ -70,8 +63,6 @@
 它是 **Obsidian Weave 插件系列**中的记忆插件（系列有且仅有三款：Weave Review、Weave EPUB Reader、Weave Incremental Reading）。可单独用于 Markdown 制卡与 FSRS 复习；需要库内读书或增量阅读队列时再组合其它成员。
 
 最低 Obsidian 版本：**1.7.0**。桌面端与移动端均可用。
-
-社区、官方视频与官网图文教程见文首渠道表。
 
 #### 四条原则
 
@@ -302,8 +293,6 @@ npm run build
 It is the memory plugin in the **Obsidian Weave series** (exactly three: Weave Review, Weave EPUB Reader, Weave Incremental Reading). Use it alone for Markdown cards and FSRS review; add the other two when you need in-vault reading or incremental reading queues.
 
 Minimum Obsidian version: **1.7.0**. Desktop and mobile are supported.
-
-See the channel table at the top of this README for tutorials, pricing, QQ, Discord, and the official video.
 
 #### Four principles
 
